@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AGB – ChainMore</title>
+  <meta name="robots" content="index, follow">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
+    .legal-prose h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin-bottom: 1.5rem; }
+    .legal-prose h2 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .legal-prose p { color: #334155; line-height: 1.7; margin-bottom: 1rem; }
+    .legal-prose strong { color: #0f172a; font-weight: 600; }
+    .legal-prose a { color: #00bfe6; text-decoration: none; }
+    .legal-prose a:hover { color: #00a3c4; text-decoration: underline; }
+    .legal-prose ul { list-style: disc; padding-left: 1.5rem; color: #334155; margin-bottom: 1rem; }
+    .legal-prose li { margin-bottom: 0.4rem; line-height: 1.6; }
+    .legal-prose code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 0.25rem; }
+    .legal-prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+    .legal-prose .note { background: #fef3c7; border-left: 4px solid #eab308; padding: 0.75rem 1rem; border-radius: 0.25rem; color: #713f12; margin: 1rem 0; font-size: 0.95em; }
+  </style>
+</head>
+<body class="bg-white text-slate-700">
+
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
+          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
+        </svg>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        </span>
+      </a>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Zurück zur Startseite</a>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <article class="legal-prose">
+      <h1>Allgemeine Geschäftsbedingungen (AGB)</h1>
+      <p class="text-slate-500"><strong>Stand:</strong> April 2026 · <strong>Anbieter:</strong> Chainmore OÜ, Kotkapoja tn 2a-10, 10615 Tallinn, Estland (Registrikood: 17448638)</p>
+
+      <div class="note">
+        <strong>Hinweis:</strong> Diese AGB sind eine B2B-SaaS-Vorlage. Vor produktivem Einsatz mit echten Merchants sollte eine Rechtsprüfung in der Ziel-Jurisdiktion (Deutschland und Estland) erfolgen. Konkrete Service-Level-Agreements und Pricing werden in separaten Master Service Agreements (MSA) zwischen Chainmore OÜ und dem jeweiligen Merchant geregelt.
+      </div>
+
+      <h2>1. Geltungsbereich</h2>
+      <p>(1) Die nachfolgenden Allgemeinen Geschäftsbedingungen ("AGB") gelten für alle Verträge zwischen der Chainmore OÜ ("ChainMore", "Anbieter") und ihren Kunden ("Merchant", "Kunde") über die Bereitstellung und Nutzung der Payment-Orchestration-Plattform ChainMore und der zugehörigen Dienste.</p>
+      <p>(2) Diese AGB richten sich ausschließlich an Unternehmer im Sinne des § 14 BGB bzw. juristische Personen. Eine Nutzung durch Verbraucher ist ausgeschlossen.</p>
+      <p>(3) Abweichende, entgegenstehende oder ergänzende Allgemeine Geschäftsbedingungen des Kunden werden nicht Vertragsbestandteil, es sei denn, ihrer Geltung wird ausdrücklich schriftlich zugestimmt.</p>
+
+      <h2>2. Leistungsbeschreibung</h2>
+      <p>(1) ChainMore stellt eine Payment-Orchestration-Middleware bereit, die es Merchants ermöglicht, Zahlungen über mehrere Fiat- und Stablecoin-Rails zu orchestrieren. Die konkreten Leistungen umfassen insbesondere:</p>
+      <ul>
+        <li>Dynamische Routing-Engine für die Wahl optimaler Zahlungspfade</li>
+        <li>Pre-Flight Validation zur Sicherstellung der Durchführbarkeit gewählter Pfade</li>
+        <li>Adapter-Infrastruktur zur Anbindung an Drittanbieter (Payment Service Provider, On-/Off-Ramps, Cross-Chain-Bridges, Wallet-Connect-Provider)</li>
+        <li>Stablecoin Abstraction Layer für Multi-Chain-Operations</li>
+        <li>Atomic Execution für Cross-Rail-Transaktionen</li>
+        <li>Merchant Dashboard mit API-Key-Management, Transaktions-Monitoring und Webhook-Konfiguration</li>
+        <li>Stablecoin Checkout SDK</li>
+      </ul>
+      <p>(2) ChainMore ist eine <strong>non-custodiale</strong> Orchestration-Schicht. ChainMore hält, speichert oder verwaltet zu keinem Zeitpunkt Gelder von Merchants oder deren Endkunden. Settlement findet ausschließlich über die jeweils integrierten Drittanbieter (PSP, Blockchain, On-/Off-Ramp) statt.</p>
+      <p>(3) Spezifische Verfügbarkeits-, Performance- und Support-Service-Level werden je nach gewähltem Pricing-Plan im jeweiligen Service Level Agreement (SLA) festgelegt, das integraler Bestandteil dieser AGB ist.</p>
+
+      <h2>3. Vertragsschluss</h2>
+      <p>(1) Die Darstellung der Leistungen auf der Website www.chainmore.io stellt kein verbindliches Angebot dar. Der Kunde gibt durch Registrierung im Merchant Dashboard ein verbindliches Angebot zum Vertragsschluss ab. ChainMore nimmt das Angebot durch Aktivierung des Accounts oder durch ausdrückliche Bestätigung an.</p>
+      <p>(2) ChainMore behält sich vor, Anfragen ohne Angabe von Gründen abzulehnen, insbesondere wenn der Kunde in einer Branche tätig ist, die mit den Compliance-Anforderungen der von ChainMore integrierten Drittanbieter nicht vereinbar ist.</p>
+
+      <h2>4. Pflichten des Kunden</h2>
+      <p>(1) Der Kunde verpflichtet sich, bei der Registrierung wahrheitsgemäße und vollständige Angaben zu machen und diese aktuell zu halten.</p>
+      <p>(2) Der Kunde verpflichtet sich, alle einschlägigen rechtlichen Vorschriften einzuhalten, insbesondere im Hinblick auf:</p>
+      <ul>
+        <li>Geldwäscheprävention (AML / KYC)</li>
+        <li>Datenschutz (DSGVO und vergleichbare Regelungen)</li>
+        <li>Sanktionsrecht (insbesondere EU- und US-Sanktionslisten)</li>
+        <li>Branchenspezifische Regulierung (z. B. iGaming-Lizenzen, FinTech-Regulierung in der jeweiligen Jurisdiktion)</li>
+      </ul>
+      <p>(3) Der Kunde haftet für die Sicherheit seiner API-Keys und sonstigen Zugangsdaten. Der Verlust oder Missbrauch von Zugangsdaten ist ChainMore unverzüglich anzuzeigen.</p>
+      <p>(4) Der Kunde stellt ChainMore von sämtlichen Ansprüchen Dritter frei, die aus einer Verletzung dieser Pflichten oder einer rechtswidrigen Nutzung der Plattform resultieren.</p>
+
+      <h2>5. Vergütung und Zahlungsbedingungen</h2>
+      <p>(1) Die Vergütung richtet sich nach dem zum Zeitpunkt des Vertragsschlusses geltenden Pricing-Modell, das auf der Website www.chainmore.io/pricing einsehbar ist oder im individuellen Master Service Agreement vereinbart wurde.</p>
+      <p>(2) ChainMore erhebt zwei Arten von Gebühren:</p>
+      <ul>
+        <li><strong>Merchant Orchestration Fee:</strong> wird je nach Plan monatlich oder pro Transaktion erhoben.</li>
+        <li><strong>Endkunden Checkout Fee:</strong> wird beim Stablecoin-Checkout dem Endkunden berechnet und ist nicht Teil der Merchant-Vergütung.</li>
+      </ul>
+      <p>(3) Rechnungen sind binnen 14 Tagen nach Rechnungsstellung ohne Abzug zur Zahlung fällig, sofern nicht abweichend vereinbart.</p>
+      <p>(4) Bei Zahlungsverzug ist ChainMore berechtigt, den Account des Kunden zu sperren, bis der ausstehende Betrag beglichen ist.</p>
+
+      <h2>6. Verfügbarkeit und Wartung</h2>
+      <p>(1) ChainMore strebt eine möglichst hohe Verfügbarkeit der Plattform an, übernimmt aber keine Garantie für eine bestimmte Verfügbarkeit, soweit nicht im SLA des jeweiligen Plans abweichend geregelt.</p>
+      <p>(2) Geplante Wartungsarbeiten werden, soweit möglich, mit angemessenem Vorlauf angekündigt. Notwendige Sicherheits-Updates können ohne Vorankündigung durchgeführt werden.</p>
+      <p>(3) ChainMore haftet nicht für Ausfälle oder Beeinträchtigungen, die auf Drittanbietern (PSP, Blockchain, On-/Off-Ramp) beruhen.</p>
+
+      <h2>7. Datenschutz</h2>
+      <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß der separat veröffentlichten <a href="/legal/datenschutz.html">Datenschutzerklärung</a>. Soweit im Rahmen der Vertragsdurchführung personenbezogene Daten im Auftrag des Kunden verarbeitet werden, schließen die Parteien eine separate Vereinbarung zur Auftragsverarbeitung gemäß Art. 28 DSGVO.</p>
+
+      <h2>8. Vertraulichkeit</h2>
+      <p>Beide Vertragsparteien verpflichten sich, alle im Rahmen der Vertragsdurchführung erlangten vertraulichen Informationen der jeweils anderen Partei nur zur Erfüllung des Vertrags zu verwenden und vertraulich zu behandeln. Diese Pflicht besteht auch nach Vertragsende fort.</p>
+
+      <h2>9. Haftung</h2>
+      <p>(1) ChainMore haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei Personenschäden sowie nach den Bestimmungen des Produkthaftungsgesetzes.</p>
+      <p>(2) Bei leichter Fahrlässigkeit haftet ChainMore nur bei Verletzung wesentlicher Vertragspflichten (Kardinalpflichten) und beschränkt auf den vertragstypischen, vorhersehbaren Schaden.</p>
+      <p>(3) ChainMore haftet nicht für mittelbare Schäden, entgangenen Gewinn, Datenverluste oder Folgeschäden, soweit gesetzlich zulässig.</p>
+      <p>(4) ChainMore haftet nicht für Handlungen oder Unterlassungen integrierter Drittanbieter (PSP, Blockchain, On-/Off-Ramp). Etwaige Ansprüche sind direkt gegen den jeweiligen Drittanbieter zu richten.</p>
+      <p>(5) Die Haftung von ChainMore pro Vertragsjahr ist auf den vom Kunden in den vorausgegangenen 12 Monaten gezahlten Vergütungsbetrag begrenzt.</p>
+
+      <h2>10. Kündigung</h2>
+      <p>(1) Der Vertrag läuft auf unbestimmte Zeit, sofern nicht abweichend vereinbart, und kann von beiden Seiten mit einer Frist von 30 Tagen zum Monatsende gekündigt werden.</p>
+      <p>(2) Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt. Ein wichtiger Grund liegt insbesondere vor bei:</p>
+      <ul>
+        <li>erheblicher Verletzung wesentlicher Vertragspflichten durch eine Partei,</li>
+        <li>Insolvenz oder Liquidation einer Partei,</li>
+        <li>behördlicher oder gerichtlicher Untersagung wesentlicher Vertragsleistungen.</li>
+      </ul>
+      <p>(3) Kündigungen bedürfen der Textform.</p>
+
+      <h2>11. Schlussbestimmungen</h2>
+      <p>(1) Es gilt das Recht der Republik Estland unter Ausschluss des UN-Kaufrechts. Soweit gesetzlich zulässig, ist Gerichtsstand Tallinn, Estland.</p>
+      <p>(2) Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt. An die Stelle der unwirksamen Bestimmung tritt eine wirksame Regelung, die dem mit der unwirksamen Bestimmung verfolgten wirtschaftlichen Zweck am nächsten kommt.</p>
+      <p>(3) Änderungen dieser AGB werden dem Kunden in Textform mit einer Frist von 30 Tagen angekündigt. Widerspricht der Kunde nicht innerhalb dieser Frist, gelten die geänderten AGB als angenommen. ChainMore wird den Kunden in der Änderungsmitteilung auf diese Wirkung hinweisen.</p>
+      <p>(4) Die ausschließliche Vertragssprache ist Englisch oder Deutsch nach Wahl des Kunden.</p>
+
+      <hr>
+      <p class="text-slate-600"><strong>Bei Rückfragen:</strong> <a href="mailto:support@chainmore.io">support@chainmore.io</a></p>
+    </article>
+  </main>
+
+  <footer class="bg-slate-950 text-slate-400 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2">
+          <a href="/" class="hover:text-white transition text-sm">← Startseite</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Impressum</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Datenschutz</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">AGB</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
