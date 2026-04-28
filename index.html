@@ -4,38 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChainMore – Cross-Rail Payment Orchestration</title>
+  <meta name="description" content="ChainMore is a non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails — with automatic failover. Operated by Chainmore OÜ, Tallinn, Estonia.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.chainmore.io/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.chainmore.io/">
+  <meta property="og:title" content="ChainMore – Cross-Rail Payment Orchestration">
+  <meta property="og:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails — with automatic failover.">
+  <meta property="og:site_name" content="ChainMore">
+  <meta property="og:locale" content="en_US">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ChainMore – Cross-Rail Payment Orchestration">
+  <meta name="twitter:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails — with automatic failover.">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: {
-              50: '#e6fbff',
-              100: '#ccf7ff',
-              200: '#99efff',
-              300: '#66e7ff',
-              400: '#00D4FF',
-              500: '#00bfe6',
-              600: '#00a3c4',
-              700: '#0087a3',
-              800: '#006b82',
-              900: '#004f61',
-            },
-            navy: {
-              800: '#1e293b',
-              900: '#0f172a',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
-    * { font-family: 'Inter', sans-serif; }
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     
     /* Smooth Scrolling */
     html { scroll-behavior: smooth; }
@@ -1111,7 +1097,7 @@
                   </div>
                   <div>
                     <div class="font-semibold text-slate-700 text-sm">Stablecoin</div>
-                    <div class="text-slate-500 text-xs">USDC, USDT, EURC, PYUSD</div>
+                    <div class="text-slate-500 text-xs">USDC, USDT, EURC</div>
                   </div>
                 </div>
                 <span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
@@ -1136,8 +1122,8 @@
                     <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                   </div>
                   <div>
-                    <div class="font-semibold text-slate-700 text-sm">Wallets</div>
-                    <div class="text-slate-500 text-xs">Apple, Google, PayPal, Klarna</div>
+                    <div class="font-semibold text-slate-700 text-sm">APMs</div>
+                    <div class="text-slate-500 text-xs">Apple Pay, Google Pay, PayPal, Klarna</div>
                   </div>
                 </div>
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
@@ -1197,7 +1183,7 @@
                   </div>
                   <div>
                     <div class="font-semibold text-slate-900 text-sm">Stablecoin</div>
-                    <div class="text-slate-500 text-xs">USDC, USDT on any chain</div>
+                    <div class="text-slate-500 text-xs">USDC, USDT, EURC · multi-chain</div>
                   </div>
                 </div>
                 <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
@@ -1644,7 +1630,7 @@
                         </div>
                         <div class="flex-1">
                           <div class="font-bold text-slate-900 text-lg">Stablecoin</div>
-                          <div class="text-xs text-slate-500">USDC, EURC, USDT, PYUSD</div>
+                          <div class="text-xs text-slate-500">USDC, EURC, USDT</div>
                         </div>
                         <div class="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
                           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>

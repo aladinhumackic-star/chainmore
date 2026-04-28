@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /DEPLOY.sh
+Disallow: /MARKETING_SITE_FIXES.md
+Disallow: /README.md
+
+Sitemap: https://www.chainmore.io/sitemap.xml
