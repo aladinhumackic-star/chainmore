@@ -797,14 +797,14 @@
         </svg>
       </button>
     </div>
-    <!-- Mobile Menu -->
-    <div class="hidden lg:hidden bg-slate-800 border-t border-slate-700 px-4 py-4" id="mobile-menu">
-      <div class="flex flex-col gap-2">
-        <a href="#how-it-works" class="text-slate-300 py-2 hover:text-white">Platform</a>
-        <a href="#solutions" class="text-slate-300 py-2 hover:text-white">Solutions</a>
-        <a href="#pricing" class="text-slate-300 py-2 hover:text-white">Pricing</a>
-        <a href="#developers" class="text-slate-300 py-2 hover:text-white">Developers</a>
-        <a href="#contact" class="bg-[#00D4FF] text-slate-900 px-5 py-3 rounded-full font-semibold text-center mt-2 flex items-center justify-center gap-2">
+    <!-- Mobile Menu (full-screen overlay, fixed) -->
+    <div class="hidden lg:hidden fixed inset-0 top-[64px] z-40 bg-slate-900 overflow-y-auto" id="mobile-menu">
+      <div class="flex flex-col gap-2 px-4 py-6">
+        <a href="#how-it-works" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Platform</a>
+        <a href="#solutions" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Solutions</a>
+        <a href="#pricing" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Pricing</a>
+        <a href="#developers" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Developers</a>
+        <a href="#contact" class="bg-[#00D4FF] text-slate-900 px-5 py-3 rounded-full font-semibold text-center mt-4 flex items-center justify-center gap-2">
           Get started
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </a>
@@ -819,14 +819,14 @@
       <div class="text-center mb-6">
         <div class="inline-flex items-center gap-2 bg-cyan-50 text-cyan-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
           <span class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-          Now in Private Beta
+          Limited Early Access
         </div>
         <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
           Cross-Rail Payment<br>
           <span class="gradient-text">Orchestration</span>
         </h1>
         <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-6">
-          One platform. 25+ providers. Dynamic routing across fiat and stablecoin rails – with automatic failover.
+          One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails – with automatic failover.
         </p>
         
         <!-- Stats Bar - Integrated into Hero -->
@@ -836,7 +836,7 @@
               <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
             </div>
             <div class="text-left">
-              <div class="text-base font-bold text-slate-900">25+</div>
+              <div class="text-base font-bold text-slate-900">8+</div>
               <div class="text-[10px] text-slate-500">Payment Providers</div>
             </div>
           </div>
@@ -1059,8 +1059,8 @@
             <div class="text-slate-400 text-xs sm:text-sm md:text-base">uptime</div>
           </div>
           <div>
-            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">100%</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">simplified UX</div>
+            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">1 API</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">one integration</div>
           </div>
         </div>
       </div>
@@ -2540,12 +2540,6 @@ console.<span class="text-yellow-300">log</span>(payment.route);
             </span>
           </div>
           <p class="text-sm mb-4 max-w-xs">Cross-Rail Payment Orchestration. The infrastructure layer for the next generation of payments.</p>
-          <!-- LinkedIn only -->
-          <div class="flex gap-4">
-            <a href="https://linkedin.com/company/chainmore" target="_blank" rel="noopener" class="hover:text-white transition">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-            </a>
-          </div>
         </div>
         
         <!-- Platform Links -->
@@ -2580,9 +2574,10 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         </div>
       </div>
 
-      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-center items-center gap-4">
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-center items-center gap-2 md:gap-3 text-center">
         <div class="text-sm">© 2026 Chainmore OÜ. All rights reserved.</div>
-        <div class="text-xs text-slate-500">Patent pending: EP 26 161 477.0</div>
+        <span class="hidden md:inline text-slate-700">·</span>
+        <div class="text-xs text-slate-500">Patent pending: EP 26 161 477.0 (filed 27.02.2026)</div>
       </div>
     </div>
   </footer>
@@ -2594,25 +2589,45 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     const mobileMenu = document.getElementById('mobile-menu');
     
     if (mobileMenuBtn) {
-      mobileMenuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('hidden');
-        // Toggle hamburger icon to X
+      const setMenuClosed = () => {
+        mobileMenu.classList.add('hidden');
+        document.body.style.overflow = '';
         const icon = mobileMenuBtn.querySelector('svg');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+      };
+      const setMenuOpen = () => {
+        mobileMenu.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        const icon = mobileMenuBtn.querySelector('svg');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+      };
+
+      mobileMenuBtn.addEventListener('click', () => {
         if (mobileMenu.classList.contains('hidden')) {
-          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+          setMenuOpen();
         } else {
-          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+          setMenuClosed();
         }
       });
-      
+
       // Close menu when clicking a link
       const mobileLinks = mobileMenu.querySelectorAll('a');
       mobileLinks.forEach(function(link) {
-        link.addEventListener('click', function() {
-          mobileMenu.classList.add('hidden');
-          const icon = mobileMenuBtn.querySelector('svg');
-          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
-        });
+        link.addEventListener('click', setMenuClosed);
+      });
+
+      // Close menu on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          setMenuClosed();
+        }
+      });
+
+      // Reset on resize to desktop
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024 && !mobileMenu.classList.contains('hidden')) {
+          setMenuClosed();
+        }
       });
     }
 
