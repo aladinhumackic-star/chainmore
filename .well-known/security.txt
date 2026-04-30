@@ -1,0 +1,17 @@
+# RFC 9116 security.txt — ChainMore (Chainmore OÜ)
+#
+# Researchers: please report security issues via the channels below.
+# Full Responsible Disclosure Policy + Safe Harbor language at:
+# https://chainmore.io/security
+#
+# This file is the canonical security-contact source. If you find this
+# file out of date or unreachable, fall back to support@chainmore.io
+# with subject prefix "[security]".
+
+Contact: mailto:security@chainmore.io
+Contact: https://chainmore.io/security
+Expires: 2027-04-29T00:00:00.000Z
+Preferred-Languages: en, de
+Canonical: https://chainmore.io/.well-known/security.txt
+Policy: https://chainmore.io/security
+Acknowledgments: https://chainmore.io/security#hall-of-thanks

@@ -1,0 +1,16 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="ChainMore">
+  <defs>
+    <linearGradient id="cm-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="32" height="32" rx="8" fill="url(#cm-grad)"/>
+  <path d="M14 9.5 H10.5 a4.5 4.5 0 0 0 0 9 H14"
+        stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"
+        transform="translate(0, 4)"/>
+  <path d="M18 14 H21.5 a4.5 4.5 0 0 1 0 9 H18"
+        stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"
+        transform="translate(0, 4)"/>
+  <circle cx="16" cy="22.5" r="1.1" fill="white" transform="translate(0, -2)"/>
+</svg>

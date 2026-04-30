@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security & Responsible Disclosure – ChainMore</title>
+  <meta name="description" content="ChainMore security contact, responsible-disclosure policy, safe-harbor language for security researchers, scope and reporting guidance.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://chainmore.io/security">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    html { scroll-behavior: smooth; }
+    .legal-prose h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin-bottom: 1.5rem; }
+    .legal-prose h2 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .legal-prose h3 { font-size: 1.05rem; font-weight: 600; color: #0f172a; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .legal-prose p { color: #334155; line-height: 1.7; margin-bottom: 1rem; }
+    .legal-prose strong { color: #0f172a; font-weight: 600; }
+    .legal-prose a { color: #00bfe6; text-decoration: none; }
+    .legal-prose a:hover { color: #00a3c4; text-decoration: underline; }
+    .legal-prose ul { list-style: disc; padding-left: 1.5rem; color: #334155; margin-bottom: 1rem; }
+    .legal-prose li { margin-bottom: 0.4rem; line-height: 1.6; }
+    .legal-prose code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 0.25rem; }
+    .legal-prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+    .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
+    .callout strong { color: #155e75; }
+  </style>
+</head>
+<body class="bg-white text-slate-700">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
+          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
+        </svg>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        </span>
+      </a>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <article class="legal-prose">
+      <h1>Security & Responsible Disclosure</h1>
+      <p class="text-slate-500">ChainMore takes security findings seriously. If you've found a vulnerability, this page tells you how to report it, what's in scope, and the protections we extend to good-faith researchers.</p>
+
+      <div class="callout">
+        <strong>Quick contact:</strong> <a href="mailto:security@chainmore.io">security@chainmore.io</a>. PGP optional; if you need our key, request it via the same address. Machine-readable details in <a href="/.well-known/security.txt"><code>/.well-known/security.txt</code></a> per RFC 9116.
+      </div>
+
+      <h2>Reporting a vulnerability</h2>
+      <p>Email <a href="mailto:security@chainmore.io">security@chainmore.io</a> with:</p>
+      <ul>
+        <li>A clear description of the issue and the affected ChainMore surface (marketing site, merchant dashboard, treasury dashboard, gateway API, Keycloak realm).</li>
+        <li>Steps to reproduce, including sample requests / screenshots / videos.</li>
+        <li>Your assessment of impact (data exposure, privilege escalation, downtime, etc.).</li>
+        <li>Whether you've shared this finding with anyone else.</li>
+      </ul>
+      <p>Please do <strong>not</strong> file vulnerabilities as public GitHub issues, social-media posts, or anywhere else they would be seen by an attacker before we can fix them.</p>
+
+      <h2>Our response commitments</h2>
+      <ul>
+        <li><strong>Acknowledgement</strong> within 3 business days of your report being received.</li>
+        <li><strong>Triage outcome</strong> within 10 business days: confirmed, duplicate, out-of-scope, or false-positive.</li>
+        <li><strong>Remediation timeline</strong> shared once severity is confirmed. We commit to fixing critical issues within 30 days; lower-severity issues on a best-effort schedule.</li>
+        <li><strong>Recognition</strong> in our Hall of Thanks (below) at your option, with the credit-line of your choice. We never publish researcher names without consent.</li>
+      </ul>
+
+      <h2>Safe Harbor</h2>
+      <p>If you make a good-faith effort to comply with this policy during your security research, ChainMore will:</p>
+      <ul>
+        <li>Consider your research authorised under our terms of service.</li>
+        <li>Not pursue or support legal action against you for accidental, good-faith violations of this policy.</li>
+        <li>Not bring a claim against you under the Computer Fraud and Abuse Act (US), the Estonian Penal Code §206–§208 (Computer Crimes), or analogous laws in other jurisdictions, for activities consistent with this policy.</li>
+        <li>Work with you to understand and resolve the issue quickly.</li>
+      </ul>
+      <p>You are expected to comply with all applicable laws and to make every reasonable effort to avoid privacy violations, destruction of data, and interruption or degradation of our services. If a third party initiates legal action against you because of activities that complied with this policy, we will make this authorisation known.</p>
+
+      <h2>Scope</h2>
+      <h3>In scope</h3>
+      <ul>
+        <li><code>chainmore.io</code> and <code>www.chainmore.io</code> (marketing site)</li>
+        <li><code>app.chainmore.io</code> (Merchant Dashboard)</li>
+        <li><code>treasury.chainmore.io</code> (Treasury Engine Dashboard — operator-internal; in scope for security findings only)</li>
+        <li><code>api.chainmore.io</code> (Payment Orchestration Gateway API)</li>
+        <li><code>auth.chainmore.io</code> (OIDC identity provider)</li>
+        <li>Any sub-domain of <code>chainmore.io</code> not explicitly listed as out-of-scope</li>
+      </ul>
+
+      <h3>Out of scope</h3>
+      <ul>
+        <li>Third-party services we use (Netlify, Keycloak upstream issues — please report to those vendors directly).</li>
+        <li>Clickjacking, missing security-headers, or content-spoofing on pages without sensitive actions or authentication state.</li>
+        <li>Self-XSS that requires a victim to paste payload into their own console.</li>
+        <li>Social-engineering attacks against ChainMore staff or merchants.</li>
+        <li>Physical attacks against ChainMore facilities or staff.</li>
+        <li>Denial-of-service via volumetric flooding (please don't try this against production).</li>
+        <li>Findings derived from publicly disclosed vulnerabilities of our dependencies that we are still inside the vendor's recommended patch window for.</li>
+        <li>Theoretical issues without a demonstrated exploitation path against a ChainMore surface.</li>
+      </ul>
+
+      <h2>Out-of-band activity we ask you to avoid</h2>
+      <ul>
+        <li>Do not attempt to access, modify, or destroy data that is not your own.</li>
+        <li>Do not run automated scans that generate substantial traffic against production endpoints. If you need to test rate-limits, contact us first.</li>
+        <li>Do not pivot from a ChainMore vulnerability into related systems (banking partners, payment-rail providers, etc.).</li>
+        <li>Do not exfiltrate data beyond the minimum needed to demonstrate impact. Keep proof-of-concept artefacts local and share them only with us.</li>
+      </ul>
+
+      <h2>Bug bounty</h2>
+      <p>ChainMore is pre-launch and currently does not offer a paid bug bounty. We will recognise contributions in the Hall of Thanks below and will, at our discretion, send swag, a written thank-you, or a reference letter you can use professionally. A formal bounty programme will be evaluated post-launch.</p>
+
+      <h2 id="hall-of-thanks">Hall of Thanks</h2>
+      <p>Researchers who have responsibly disclosed valid findings are listed here, with their consent. Listing is empty during the pre-launch period.</p>
+      <ul>
+        <li><em>(none yet — be the first)</em></li>
+      </ul>
+
+      <h2>This policy</h2>
+      <p>This policy is published in good faith and applies from the date last-updated. ChainMore may update it; the canonical version always lives at <a href="https://chainmore.io/security">https://chainmore.io/security</a>. Material changes (narrowed scope, removed safe-harbor provisions) are flagged in the change-log below for at least 90 days.</p>
+
+      <h3>Change log</h3>
+      <ul>
+        <li><strong>April 2026:</strong> Initial publication.</li>
+      </ul>
+
+      <hr>
+      <p class="text-sm text-slate-500"><em>Last updated: April 2026 · RFC 9116 contact details: <a href="/.well-known/security.txt"><code>/.well-known/security.txt</code></a></em></p>
+    </article>
+  </main>
+
+  <!-- Footer (mirrors index.html footer) -->
+  <footer class="bg-slate-950 text-slate-400 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2">
+          <a href="/" class="hover:text-white transition text-sm">← Home</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
+          <span class="text-slate-700">·</span>
+          <a href="/security" class="hover:text-white transition text-sm">Security</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -18,6 +18,54 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ChainMore – Cross-Rail Payment Orchestration">
   <meta name="twitter:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails — with automatic failover.">
+  <!--
+    JSON-LD Organization schema. Helps search engines display the
+    knowledge-panel correctly (legal name + jurisdiction + founder)
+    and gives diligence teams a machine-readable handle on who we
+    are. Values mirror /legal/impressum.html (Estonian Commercial
+    Register entry) — keep them in sync if the registered details
+    ever change.
+  -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "ChainMore",
+    "legalName": "Chainmore OÜ",
+    "url": "https://www.chainmore.io/",
+    "logo": "https://www.chainmore.io/favicon.svg",
+    "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with automatic failover.",
+    "foundingDate": "2026",
+    "founder": { "@type": "Person", "name": "Narcis Gecevic" },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Kotkapoja tn 2a-10",
+      "postalCode": "10615",
+      "addressLocality": "Tallinn",
+      "addressCountry": "EE"
+    },
+    "identifier": {
+      "@type": "PropertyValue",
+      "propertyID": "Estonian Commercial Register (Registrikood)",
+      "value": "17448638"
+    },
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "support@chainmore.io",
+        "availableLanguage": ["English", "German"]
+      },
+      {
+        "@type": "ContactPoint",
+        "contactType": "security",
+        "email": "security@chainmore.io",
+        "url": "https://chainmore.io/security"
+      }
+    ],
+    "areaServed": "EU"
+  }
+  </script>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
   <link rel="stylesheet" href="/tailwind.css">
   <style>
@@ -340,7 +388,7 @@
   <nav class="fixed top-0 w-full bg-slate-900 z-50">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
       <!-- ChainMore Logo -->
-      <a href="#" class="flex items-center gap-2.5">
+      <a href="/" class="flex items-center gap-2.5" aria-label="ChainMore — back to homepage">
         <!-- Logo Icon SVG - Dual flow converging -->
         <svg width="36" height="36" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <!-- Upper path (Fiat) - smooth curve -->
@@ -2219,7 +2267,7 @@
               <span class="text-slate-600">Email support</span>
             </div>
           </div>
-          <a href="#" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
+          <a href="#contact" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
             Start Free
           </a>
         </div>
@@ -2262,7 +2310,7 @@
               <span class="text-slate-300">Webhooks & analytics</span>
             </div>
           </div>
-          <a href="#" class="block w-full text-center bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500 transition shadow-lg shadow-cyan-500/30">
+          <a href="#contact" class="block w-full text-center bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500 transition shadow-lg shadow-cyan-500/30">
             Start Growing
           </a>
         </div>
@@ -2302,7 +2350,7 @@
               <span class="text-slate-600">Custom integrations</span>
             </div>
           </div>
-          <a href="#" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
+          <a href="mailto:support@chainmore.io?subject=Enterprise%20pricing%20inquiry&body=Hi%20ChainMore%2C%0A%0AI%27d%20like%20to%20discuss%20Enterprise%20pricing.%0A%0A-%20Company%3A%20%0A-%20Approximate%20transaction%20volume%2Fmonth%3A%20%0A-%20Target%20rails%20(fiat%20%2F%20stablecoin%20%2F%20both)%3A%20%0A-%20Timeline%3A%20%0A%0AThanks%21" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
             Contact Sales
           </a>
         </div>
@@ -2374,18 +2422,28 @@
             </div>
           </div>
           
+          <!--
+            Both buttons currently route to the waitlist because the
+            developer surfaces (public docs site, public GitHub repo)
+            are not live yet — the repo is private during pre-launch
+            and the docs page hasn't been generated from the OpenAPI
+            spec. Pointing them at /thank-you or /404 would be worse
+            than pointing at #contact, which is at least an honest
+            "join the waitlist for access" signal. Switch to real
+            URLs the moment those surfaces go live.
+          -->
           <div class="mt-8 flex flex-wrap gap-4">
-            <a href="#" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-800 transition inline-flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="#contact" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-800 transition inline-flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
-              Read the Docs
+              Get docs access
             </a>
-            <a href="#" class="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition inline-flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <a href="#contact" class="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition inline-flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
               </svg>
-              GitHub
+              Request repo access
             </a>
           </div>
         </div>
@@ -2441,26 +2499,67 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         Get early access and shape the future of payments.
       </p>
       
-      <!-- Waitlist Form -->
-      <form class="max-w-md mx-auto mb-8">
+      <!--
+        Waitlist form — wired to Netlify Forms.
+        https://docs.netlify.com/forms/setup/
+
+        Netlify auto-detects forms at build time when they carry:
+          - name="waitlist"   (the form's identifier in the Netlify
+                               admin / submissions inbox)
+          - data-netlify="true"  (opts the form into Netlify's
+                                  built-in handler)
+          - netlify-honeypot="bot-field"  (hidden field that bots fill
+                                           in but humans don't —
+                                           submissions with bot-field
+                                           filled are silently dropped)
+
+        action="/thank-you.html" sends the user to a branded
+        thank-you page after a successful submit. Same-origin so no
+        CSP form-action issues; same brand shell so the user never
+        sees a "you've been redirected" handover.
+
+        Email recipient is configured in the Netlify dashboard under
+        Forms → Notifications → Outgoing email. Default recipient
+        should be support@chainmore.io. NOT in source — Netlify keeps
+        the recipient out of the public file so it can't be scraped.
+      -->
+      <form
+        class="max-w-md mx-auto mb-8"
+        name="waitlist"
+        method="POST"
+        action="/thank-you.html"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+      >
+        <input type="hidden" name="form-name" value="waitlist">
+        <p class="hidden" aria-hidden="true">
+          <label>Don't fill this out if you're human: <input name="bot-field"></label>
+        </p>
         <div class="flex flex-col sm:flex-row gap-3">
-          <input 
-            type="email" 
-            placeholder="Enter your work email" 
+          <label class="sr-only" for="waitlist-email">Work email</label>
+          <input
+            id="waitlist-email"
+            type="email"
+            name="email"
+            placeholder="Enter your work email"
             class="flex-1 px-5 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition"
             required
+            autocomplete="email"
           >
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="bg-cyan-500 text-white px-8 py-4 rounded-xl font-semibold hover:bg-cyan-500 transition shadow-lg shadow-cyan-500/20 whitespace-nowrap inline-flex items-center justify-center gap-2"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
             Join Waitlist
           </button>
         </div>
-        <p class="text-slate-500 text-xs mt-3">No spam. Unsubscribe anytime. We respect your privacy.</p>
+        <p class="text-slate-500 text-xs mt-3">
+          No spam. Unsubscribe anytime. See our
+          <a href="/legal/datenschutz.html" class="underline hover:text-slate-300">Privacy Policy</a>.
+        </p>
       </form>
       
       <div class="flex flex-col sm:flex-row justify-center items-center gap-6 text-slate-400">
@@ -2486,12 +2585,22 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       
       <div class="mt-10 pt-10 border-t border-slate-800">
         <p class="text-slate-500 text-sm mb-4">Prefer to talk to a human?</p>
-        <a href="#" class="inline-flex items-center gap-2 text-white hover:text-cyan-400 transition font-medium">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!--
+          mailto: link with a pre-filled subject + body so the
+          inbound email lands at support@chainmore.io with enough
+          context that we can route it to the right person.
+          Replace with a real calendar-booking URL once we set one
+          up — track in delivery/marketing-followups.
+        -->
+        <a
+          href="mailto:support@chainmore.io?subject=Demo%20call%20request&body=Hi%20ChainMore%2C%0A%0AI%27d%20like%20to%20schedule%20a%20demo%20call.%0A%0AA%20bit%20of%20context%3A%0A-%20Company%3A%20%0A-%20Role%3A%20%0A-%20Approximate%20transaction%20volume%2Fmonth%3A%20%0A-%20Rails%20I%27m%20interested%20in%20(fiat%20%2F%20stablecoin%20%2F%20both)%3A%20%0A%0AThanks%21"
+          class="inline-flex items-center gap-2 text-white hover:text-cyan-400 transition font-medium"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
           </svg>
           Schedule a demo call
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
           </svg>
         </a>
@@ -2551,11 +2660,13 @@ console.<span class="text-yellow-300">log</span>(payment.route);
 
         <!-- Legal Links -->
         <div>
-          <div class="font-semibold text-white mb-4">Legal</div>
+          <div class="font-semibold text-white mb-4">Legal & security</div>
           <div class="space-y-3 text-sm">
             <div><a href="/legal/impressum.html" class="hover:text-white transition">Legal Notice</a></div>
             <div><a href="/legal/datenschutz.html" class="hover:text-white transition">Privacy Policy</a></div>
             <div><a href="/legal/agb.html" class="hover:text-white transition">Terms</a></div>
+            <div><a href="/legal/sub-processors.html" class="hover:text-white transition">Sub-Processors</a></div>
+            <div><a href="/security" class="hover:text-white transition">Security & Disclosure</a></div>
           </div>
         </div>
       </div>

@@ -1,0 +1,139 @@
+# Netlify HTTP response headers.
+# https://docs.netlify.com/routing/headers/
+#
+# Security baseline for chainmore.io. Targets `securityheaders.com` A+
+# and Mozilla Observatory ≥100/100. Each header is justified inline so
+# an auditor (DORA / GDPR Art. 32 / PSD2) can read the rationale next
+# to the value.
+#
+# Scope: marketing site only. Dashboards (merchant, treasury) ship
+# their own CSP via next.config.js because their connect-src and
+# frame-src must include the Keycloak + gateway hosts at build time.
+#
+# ─────────────────────────────────────────────────────────────────────
+# STAGED-ROLLOUT POSTURE (per GPT review 2026-04-29)
+#
+# This file ships in CONSERVATIVE FIRST-DEPLOY mode:
+#
+#   - HSTS max-age=300  (5 min commit, NOT 2 years)
+#   - HSTS without `preload` directive
+#   - CSP enforced (marketing site has no auth/cookies → safe to enforce)
+#
+# Ramp procedure once production is verified stable:
+#
+#   day 0   (this commit):     max-age=300                — verify HTTPS
+#                                                          doesn't break
+#   day 1   after smoke pass:  max-age=86400              — 1-day commit
+#   day 7   after smoke pass:  max-age=2592000            — 30-day commit
+#   day 14  + investor sign-off:
+#                              max-age=63072000; preload  — submit to
+#                                                          hstspreload.org
+#
+# When ramping, edit this file in-place and re-deploy. preload is a
+# one-way door — removal from the preload list takes 12+ months.
+# ─────────────────────────────────────────────────────────────────────
+
+/*
+  # ── Transport security ────────────────────────────────────────────
+  # HSTS conservative-first. See ramp procedure above. includeSubDomains
+  # is on from day 0 because if any subdomain (api., auth., app.) is
+  # currently served over http, we want to know IMMEDIATELY (not 30 days
+  # in). 5-minute max-age means the worst case is a 5-minute outage
+  # before browsers stop forcing HTTPS — survivable.
+  Strict-Transport-Security: max-age=300; includeSubDomains
+
+  # ── Content Security Policy ───────────────────────────────────────
+  # default-src 'self' — start by allowing only same-origin assets,
+  # then explicit per-directive carve-outs.
+  #
+  # script-src includes 'unsafe-inline' because index.html ships
+  # ~790 lines of inline animation/carousel JS (hero flow, demo
+  # stepper). Externalising those into /assets/main.js is a planned
+  # follow-up; until then we accept the trade-off because (a) the
+  # site has zero user-data / cookies / auth, (b) all other
+  # mitigations (frame-ancestors, X-Frame-Options, COOP, etc.) are
+  # at maximum, (c) script-src remains scoped to 'self' for any
+  # external script — only inline is unsafe. NB: we did NOT add
+  # 'unsafe-eval'; new(Function), eval(), setTimeout(string) are all
+  # still blocked.
+  #
+  # style-src includes 'unsafe-inline' for the same pragmatic
+  # reason (Tailwind-compiled utilities inline classes via the HTML
+  # itself, which CSP treats as an inline style attribute when
+  # browsers reflect dynamic state). Same compensating controls.
+  #
+  # connect-src 'self' — the marketing site makes zero fetch() /
+  # XHR / WebSocket calls. Tightest possible.
+  #
+  # frame-ancestors 'none' — chainmore.io cannot be put in any iframe
+  # (clickjacking defense; redundant with X-Frame-Options below but
+  # frame-ancestors is the modern equivalent + survives in HTTP 3).
+  #
+  # form-action 'self' — forms can only submit back to chainmore.io;
+  # blocks injected forms that exfiltrate to an attacker domain.
+  #
+  # upgrade-insecure-requests — auto-rewrite any accidentally http://
+  # subresource to https://. Belt + braces with HSTS.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
+
+  # ── Frame / clickjacking ──────────────────────────────────────────
+  # X-Frame-Options DENY — legacy header; modern browsers prefer
+  # frame-ancestors above, but X-Frame-Options is still honoured by
+  # older browsers and required by some compliance frameworks
+  # (DORA Annex II, BSI IT-Grundschutz).
+  X-Frame-Options: DENY
+
+  # ── MIME-sniffing ─────────────────────────────────────────────────
+  # nosniff — browser must trust our Content-Type header. Without
+  # this, IE and older Chrome would try to "guess" types and could
+  # execute a JSON file as JS if it happened to look like JS.
+  X-Content-Type-Options: nosniff
+
+  # ── Referrer ──────────────────────────────────────────────────────
+  # strict-origin-when-cross-origin — keeps the full referrer for
+  # same-origin navigations (useful for analytics); on cross-origin
+  # only sends scheme + host + port (no path, no query). Prevents
+  # leaking the user's current path to a clicked outbound link.
+  # Falls back to no-referrer on protocol downgrade (https → http).
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # ── Permissions Policy ────────────────────────────────────────────
+  # Deny EVERY browser capability we don't actively use. If an
+  # attacker injects script (despite all mitigations above), they
+  # can't pop a getUserMedia prompt or read geolocation. We are a
+  # payments service but the Web Payment API is browser-side
+  # ApplePay/GooglePay/PaymentRequest — we don't use it; fully blocked.
+  # interest-cohort=() opts out of FLoC / Topics API tracking.
+  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), interest-cohort=()
+
+  # ── Cross-origin isolation ────────────────────────────────────────
+  # COOP same-origin — when a user opens our page in a new top-level
+  # window, that window is its OWN isolated process group. Prevents
+  # cross-origin window.opener attacks (tabnabbing) and Spectre-style
+  # leaks across processes.
+  Cross-Origin-Opener-Policy: same-origin
+
+  # CORP same-origin — our resources can only be loaded by
+  # chainmore.io itself, never embedded by another site as <img>,
+  # <script>, etc. Makes CDN-style hotlinking impossible.
+  Cross-Origin-Resource-Policy: same-origin
+
+# Long-cache the static assets. Headers above still apply because
+# /* matches everything; this block only ADDS Cache-Control.
+/tailwind.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# robots.txt + sitemap.xml — short cache so updates propagate.
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+# RFC 9116 security.txt — must be served as text/plain. Netlify
+# auto-detects most extensions but not .txt-with-no-charset, so we
+# pin it explicitly. Short cache so a Contact / Expires update
+# propagates within an hour.
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600

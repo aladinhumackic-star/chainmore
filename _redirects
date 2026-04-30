@@ -1,0 +1,10 @@
+# Netlify _redirects — pretty URLs.
+# https://docs.netlify.com/routing/redirects/
+#
+# Netlify's "Pretty URLs" feature is on by default for deploys, but we
+# add explicit 200-rewrites for the canonical short paths the
+# security.txt + Responsible Disclosure documents reference. Explicit
+# rules guard against a future Netlify config change that flips Pretty
+# URLs off.
+
+/security  /security.html  200

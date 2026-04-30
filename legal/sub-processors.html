@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sub-Processors – ChainMore</title>
+  <meta name="description" content="ChainMore's list of sub-processors that may process customer data, per GDPR Article 28(2). Updated when sub-processors are added or replaced.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://chainmore.io/legal/sub-processors.html">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    html { scroll-behavior: smooth; }
+    .legal-prose h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin-bottom: 1.5rem; }
+    .legal-prose h2 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .legal-prose p { color: #334155; line-height: 1.7; margin-bottom: 1rem; }
+    .legal-prose strong { color: #0f172a; font-weight: 600; }
+    .legal-prose a { color: #00bfe6; text-decoration: none; }
+    .legal-prose a:hover { color: #00a3c4; text-decoration: underline; }
+    .legal-prose ul { list-style: disc; padding-left: 1.5rem; color: #334155; margin-bottom: 1rem; }
+    .legal-prose li { margin-bottom: 0.4rem; line-height: 1.6; }
+    .legal-prose code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 0.25rem; }
+    .legal-prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+    .sub-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+    .sub-table th { background: #f8fafc; text-align: left; padding: 0.75rem 0.85rem; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 600; }
+    .sub-table td { padding: 0.75rem 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; line-height: 1.55; }
+    .sub-table tr:last-child td { border-bottom: none; }
+    .sub-table td.role { font-weight: 500; color: #0f172a; white-space: nowrap; }
+    .sub-table td.region { white-space: nowrap; font-size: 0.9em; color: #64748b; }
+    .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
+    .callout strong { color: #155e75; }
+  </style>
+</head>
+<body class="bg-white text-slate-700">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
+          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
+        </svg>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        </span>
+      </a>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <article class="legal-prose">
+      <h1>Sub-Processors</h1>
+      <p class="text-slate-500">List of third parties that may process customer or merchant data on behalf of Chainmore OÜ. Maintained pursuant to GDPR Article 28(2). Updated when a sub-processor is added or replaced; merchants may subscribe to change notifications via <a href="mailto:support@chainmore.io">support@chainmore.io</a>.</p>
+
+      <div class="callout">
+        <strong>Pre-launch posture:</strong> ChainMore is currently in product-readiness mode and does not yet onboard production merchants. The list below reflects the sub-processors used for our public-facing infrastructure today. The list will expand as we add merchant-data-processing services for production. Merchants will be notified before any new sub-processor begins processing their data, with a 14-day window to object before the change takes effect.
+      </div>
+
+      <h2>Active sub-processors</h2>
+
+      <table class="sub-table">
+        <thead>
+          <tr>
+            <th>Sub-processor</th>
+            <th>Purpose</th>
+            <th>Data category</th>
+            <th>Region</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="role">Netlify, Inc.</td>
+            <td>Hosting + CDN for the public marketing site (<code>chainmore.io</code>).</td>
+            <td>Anonymous visitor logs (IP address, user-agent, requested URL). No merchant data is processed by this surface.</td>
+            <td class="region">United States · GDPR-compliant SCCs</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Planned for production launch</h2>
+
+      <p>The following sub-processors are evaluated or onboarded for the production phase. They are listed here with their planned role so a merchant has visibility before signing a Data Processing Agreement; they will move to the "Active sub-processors" table above on the date they begin processing merchant data, and merchants will receive notification.</p>
+
+      <table class="sub-table">
+        <thead>
+          <tr>
+            <th>Sub-processor</th>
+            <th>Planned purpose</th>
+            <th>Region</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="role">Production hosting provider <em>(TBD)</em></td>
+            <td>Compute + database for the merchant dashboard, treasury dashboard, and gateway API. Vendor decision pending.</td>
+            <td class="region">EU preferred (Estonia / Frankfurt / Dublin)</td>
+          </tr>
+          <tr>
+            <td class="role">Transactional email provider <em>(TBD)</em></td>
+            <td>Outbound merchant emails: account verification, password reset, webhook-delivery alerts.</td>
+            <td class="region">EU preferred</td>
+          </tr>
+          <tr>
+            <td class="role">Error-tracking provider <em>(TBD)</em></td>
+            <td>Frontend + backend exception tracking for incident response. Configured to scrub PII before transmission.</td>
+            <td class="region">EU preferred</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>What we don't use</h2>
+      <p>For transparency, ChainMore explicitly does <strong>not</strong> use the following classes of services on customer-facing surfaces:</p>
+      <ul>
+        <li>Behavioural advertising or retargeting trackers (Google Ads, Meta Pixel, etc.).</li>
+        <li>Third-party web-analytics tools that use tracking cookies (Google Analytics, Adobe Analytics, etc.). If we add analytics later, it will be a privacy-preserving option (Plausible, Fathom, or similar) and will appear on this list.</li>
+        <li>Customer-data brokers, data-enrichment services, or lead-scoring vendors.</li>
+        <li>Chat widgets that load third-party scripts on the marketing site.</li>
+      </ul>
+
+      <h2>Sub-processor change notification</h2>
+      <p>Per GDPR Article 28(2), ChainMore will give merchants prior written notice of any intended changes to this list. Notice mechanism, once production merchants are onboarded:</p>
+      <ul>
+        <li>Email to the merchant's primary contact at least 14 days before the new sub-processor begins processing.</li>
+        <li>Update to this page on the same day the email is sent.</li>
+        <li>An announcement in the merchant dashboard's status banner for at least 7 days after the change takes effect.</li>
+      </ul>
+      <p>Merchants may object to a new sub-processor in writing within the 14-day window. If we cannot accommodate the objection (for example, the sub-processor is on a critical infrastructure path), the merchant may terminate the agreement without penalty.</p>
+
+      <h2>How to verify this page is current</h2>
+      <p>The page footer carries a "Last updated" date. The canonical URL is <code>https://chainmore.io/legal/sub-processors.html</code>. For machine-readable change tracking, the file is also tracked in our public site repository — every change carries a git commit with the date + reason.</p>
+
+      <hr>
+      <p class="text-sm text-slate-500"><em>Last updated: April 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>
+    </article>
+  </main>
+
+  <!-- Footer (mirrors index.html footer) -->
+  <footer class="bg-slate-950 text-slate-400 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2">
+          <a href="/" class="hover:text-white transition text-sm">← Home</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
+          <span class="text-slate-700">·</span>
+          <a href="/security" class="hover:text-white transition text-sm">Security</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
