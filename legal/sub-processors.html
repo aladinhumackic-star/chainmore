@@ -66,6 +66,8 @@
 
       <h2>Active sub-processors</h2>
 
+      <p>These are the sub-processors that may currently process customer or merchant data on behalf of Chainmore OÜ. As of the date below, exactly one sub-processor is active.</p>
+
       <table class="sub-table">
         <thead>
           <tr>
@@ -73,45 +75,59 @@
             <th>Purpose</th>
             <th>Data category</th>
             <th>Region</th>
+            <th>Transfer mechanism</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="role">Netlify, Inc.</td>
-            <td>Hosting + CDN for the public marketing site (<code>chainmore.io</code>).</td>
-            <td>Anonymous visitor logs (IP address, user-agent, requested URL). No merchant data is processed by this surface.</td>
-            <td class="region">United States · GDPR-compliant SCCs</td>
+            <td>Static hosting and CDN for the public marketing site (<code>chainmore.io</code>) and its public legal pages. No merchant or end-customer personal data is sent to Netlify.</td>
+            <td>Anonymous visitor logs (IP address, user-agent, requested URL).</td>
+            <td class="region">United States</td>
+            <td>EU-US Data Privacy Framework where active for the relevant entity, EU SCCs Module 2 as fallback. DPF status verified at each annual review.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2>Planned for production launch</h2>
+      <h2>Categories of sub-processors not yet engaged</h2>
 
-      <p>The following sub-processors are evaluated or onboarded for the production phase. They are listed here with their planned role so a merchant has visibility before signing a Data Processing Agreement; they will move to the "Active sub-processors" table above on the date they begin processing merchant data, and merchants will receive notification.</p>
+      <p>ChainMore has not yet activated production hosting for the merchant dashboard, treasury dashboard, gateway, or identity provider. As soon as a sub-processor is selected for any of the categories below, the Processor will give merchants 14 calendar days' written notice (with the full vendor row added to the active list) before that sub-processor begins processing personal data.</p>
+
+      <p>The categories below are forward-looking statements about the operating model the Processor intends to build. They are not commitments to any specific vendor.</p>
 
       <table class="sub-table">
         <thead>
           <tr>
-            <th>Sub-processor</th>
-            <th>Planned purpose</th>
-            <th>Region</th>
+            <th>Category</th>
+            <th>Function the Processor expects to outsource</th>
+            <th>Region preference</th>
+            <th>Mitigations before activation</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="role">Production hosting provider <em>(TBD)</em></td>
-            <td>Compute + database for the merchant dashboard, treasury dashboard, and gateway API. Vendor decision pending.</td>
-            <td class="region">EU preferred (Estonia / Frankfurt / Dublin)</td>
+            <td class="role">Production hosting</td>
+            <td>Compute and managed-service hosting for the merchant dashboard, treasury dashboard, gateway API, and identity provider.</td>
+            <td class="region">EU preferred (Frankfurt or equivalent)</td>
+            <td>At-rest encryption confirmed in the chosen provider's terms, GDPR-compliant DPA executed, SCCs Module 2 attached for any non-EEA fallback.</td>
           </tr>
           <tr>
-            <td class="role">Transactional email provider <em>(TBD)</em></td>
+            <td class="role">Transactional email</td>
             <td>Outbound merchant emails: account verification, password reset, webhook-delivery alerts.</td>
             <td class="region">EU preferred</td>
+            <td>DKIM, SPF, DMARC alignment under <code>chainmore.io</code>, bounce-and-suppression handling enabled, audit trail of dispatched messages retained.</td>
           </tr>
           <tr>
-            <td class="role">Error-tracking provider <em>(TBD)</em></td>
-            <td>Frontend + backend exception tracking for incident response. Configured to scrub PII before transmission.</td>
+            <td class="role">Error tracking</td>
+            <td>Frontend and backend exception tracking for incident response.</td>
             <td class="region">EU preferred</td>
+            <td>Server-side PII scrubbing configured before any event leaves Processor infrastructure, scrubbing rule-set reviewed annually.</td>
+          </tr>
+          <tr>
+            <td class="role">Operational database</td>
+            <td>Primary OLTP database for merchant data, gateway state, and audit-log storage.</td>
+            <td class="region">EU preferred</td>
+            <td>At-rest encryption, TLS in transit, point-in-time recovery enabled.</td>
           </tr>
         </tbody>
       </table>
@@ -135,7 +151,7 @@
       <p>Merchants may object to a new sub-processor in writing within the 14-day window. If we cannot accommodate the objection (for example, the sub-processor is on a critical infrastructure path), the merchant may terminate the agreement without penalty.</p>
 
       <h2>How to verify this page is current</h2>
-      <p>The page footer carries a "Last updated" date. The canonical URL is <code>https://chainmore.io/legal/sub-processors.html</code>. For machine-readable change tracking, the file is also tracked in our public site repository, every change carries a git commit with the date + reason.</p>
+      <p>The page footer carries a "Last updated" date. The canonical URL is <code>https://chainmore.io/legal/sub-processors.html</code>. The Processor maintains an internal change-log alongside the source-of-truth annex; controllers receive a copy as part of their DPA pack and are notified of any change before it takes effect.</p>
 
       <hr>
       <p class="text-sm text-slate-500"><em>Last updated: April 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>

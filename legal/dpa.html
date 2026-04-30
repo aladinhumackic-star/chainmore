@@ -56,7 +56,7 @@
       <p class="text-slate-500">A Data Processing Agreement (DPA) under GDPR Article 28 governs the relationship between you (the Controller, processing your customers' personal data) and ChainMore (the Processor, processing that data on your behalf). Every paying merchant signs one before production data starts flowing.</p>
 
       <div class="callout">
-        <strong>Get the DPA:</strong> request your copy by emailing <a href="mailto:support@chainmore.io?subject=DPA%20request">support@chainmore.io</a> with subject "DPA request". We send the populated template within one business day. The same template is also available in our public repository at <code>docs/legal/DPA_TEMPLATE.md</code>.
+        <strong>Get the DPA:</strong> request your copy by emailing <a href="mailto:support@chainmore.io?subject=DPA%20request">support@chainmore.io</a> with subject "DPA request". We send the populated template (DPA, TOMs as Annex 2, sub-processor list as Annex 3) within one business day. Both Markdown and PDF versions are available.
       </div>
 
       <h2>What's in the DPA</h2>
@@ -73,7 +73,7 @@
       </ul>
 
       <h2>What we commit to in the TOMs</h2>
-      <p>The Technical and Organisational Measures annex is grounded in the actual security work shipped in our codebase, every claim is traceable to a specific file, ADR, or test. Highlights:</p>
+      <p>The Technical and Organisational Measures annex is grounded in the actual security work shipped in our codebase. Every measure is traceable to a specific file, ADR, or test, and the underlying evidence pack is shared with controllers and partner-bank diligence teams on request. Highlights:</p>
       <ul>
         <li>HTTPS / TLS 1.2+ on every customer-facing surface, with HSTS, CSP, X-Frame-Options, Permissions-Policy, COOP, CORP, and Cross-Origin-Resource-Policy all enforced</li>
         <li>Cookie hardening with explicit per-cookie HttpOnly / SameSite / Secure / __Host- prefixes</li>
@@ -82,9 +82,9 @@
         <li>72-hour personal-data-breach notification commitment to controllers, with regulatory notification windows aligned to DORA Article 19 and GDPR Article 33</li>
         <li>Disaster Recovery plan with documented RTO/RPO per component</li>
         <li>Incident-response runbook covering severity classification, communication, and blameless postmortems within 5 business days</li>
-        <li>151 frontend tests + full Go backend test matrix, including 26 security-headers regression assertions and 19 cookie-hardening assertions, run on every CI build</li>
+        <li>Automated regression test matrix covering frontend security headers, cookie hardening, accessibility (axe-core), and backend security middleware, run on every CI build</li>
       </ul>
-      <p>The full TOMs document is provided as Annex 2 of every signed DPA. A reviewer-friendly version lives in the repository at <code>docs/legal/TOMS.md</code>.</p>
+      <p>The full TOMs document is provided as Annex 2 of every signed DPA. A reviewer-friendly summary is available on request to controllers, prospects, and partner-bank diligence teams at <a href="mailto:support@chainmore.io?subject=TOMs%20request">support@chainmore.io</a> with subject "TOMs request".</p>
 
       <h2>Sub-processors</h2>
       <p>The current list of sub-processors that may process personal data on your behalf is published at <a href="/legal/sub-processors.html">/legal/sub-processors.html</a>. We give 14 calendar days' written notice before any new sub-processor begins processing your data, with a right to object on reasonable data-protection grounds.</p>
@@ -97,7 +97,7 @@
       <p>For DPA-specific questions: <a href="mailto:support@chainmore.io?subject=DPA%20question">support@chainmore.io</a> with subject "DPA question". For data-protection-officer escalations: same address with subject "DPO escalation".</p>
 
       <hr>
-      <p class="text-sm text-slate-500"><em>Last updated: April 2026 · Canonical version: <code>docs/legal/DPA_TEMPLATE.md</code> in the ChainMore repository.</em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: April 2026. Canonical version is held by Chainmore OÜ and provided on request.</em></p>
     </article>
   </main>
 
