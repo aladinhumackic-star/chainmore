@@ -40,7 +40,7 @@
   # currently served over http, we want to know IMMEDIATELY (not 30 days
   # in). 5-minute max-age means the worst case is a 5-minute outage
   # before browsers stop forcing HTTPS — survivable.
-  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Strict-Transport-Security: max-age=15768000; includeSubDomains
 
   # ── Content Security Policy ───────────────────────────────────────
   # default-src 'self' — start by allowing only same-origin assets,
