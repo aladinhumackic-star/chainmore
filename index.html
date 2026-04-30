@@ -3,67 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChainMore – Cross-Rail Payment Orchestration</title>
-  <meta name="description" content="ChainMore is a non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails — with automatic failover. Operated by Chainmore OÜ, Tallinn, Estonia.">
+  <title>ChainMore | Cross-Rail Payment Orchestration</title>
+  <meta name="description" content="ChainMore is a non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails, with automatic failover. Operated by Chainmore OÜ, Tallinn, Estonia.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.chainmore.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.chainmore.io/">
-  <meta property="og:title" content="ChainMore – Cross-Rail Payment Orchestration">
-  <meta property="og:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails — with automatic failover.">
+  <meta property="og:title" content="ChainMore | Cross-Rail Payment Orchestration">
+  <meta property="og:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails | with automatic failover.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ChainMore – Cross-Rail Payment Orchestration">
-  <meta name="twitter:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails — with automatic failover.">
+  <meta name="twitter:title" content="ChainMore | Cross-Rail Payment Orchestration">
+  <meta name="twitter:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails, with automatic failover.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
     knowledge-panel correctly (legal name + jurisdiction + founder)
     and gives diligence teams a machine-readable handle on who we
     are. Values mirror /legal/impressum.html (Estonian Commercial
-    Register entry) — keep them in sync if the registered details
+    Register entry), keep them in sync if the registered details
     ever change.
   -->
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "ChainMore",
-    "legalName": "Chainmore OÜ",
-    "url": "https://www.chainmore.io/",
-    "logo": "https://www.chainmore.io/favicon.svg",
-    "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with automatic failover.",
-    "foundingDate": "2026",
-    "founder": { "@type": "Person", "name": "Narcis Gecevic" },
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Kotkapoja tn 2a-10",
-      "postalCode": "10615",
-      "addressLocality": "Tallinn",
-      "addressCountry": "EE"
-    },
-    "identifier": {
-      "@type": "PropertyValue",
-      "propertyID": "Estonian Commercial Register (Registrikood)",
-      "value": "17448638"
-    },
-    "contactPoint": [
+    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with automatic failover.", "foundingDate": "2026", "founder": { "@type": "Person", "name": "Narcis Gecevic" }, "address": {
+      "@type": "PostalAddress", "streetAddress": "Kotkapoja tn 2a-10", "postalCode": "10615", "addressLocality": "Tallinn", "addressCountry": "EE"
+    }, "identifier": {
+      "@type": "PropertyValue", "propertyID": "Estonian Commercial Register (Registrikood)", "value": "17448638"
+    }, "contactPoint": [
       {
-        "@type": "ContactPoint",
-        "contactType": "customer support",
-        "email": "support@chainmore.io",
-        "availableLanguage": ["English", "German"]
-      },
-      {
-        "@type": "ContactPoint",
-        "contactType": "security",
-        "email": "security@chainmore.io",
-        "url": "https://chainmore.io/security"
+        "@type": "ContactPoint", "contactType": "customer support", "email": "support@chainmore.io", "availableLanguage": ["English", "German"]
+      }, {
+        "@type": "ContactPoint", "contactType": "security", "email": "security@chainmore.io", "url": "https://chainmore.io/security"
       }
-    ],
-    "areaServed": "EU"
+    ], "areaServed": "EU"
   }
   </script>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
@@ -388,7 +363,7 @@
   <nav class="fixed top-0 w-full bg-slate-900 z-50">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
       <!-- ChainMore Logo -->
-      <a href="/" class="flex items-center gap-2.5" aria-label="ChainMore — back to homepage">
+      <a href="/" class="flex items-center gap-2.5" aria-label="ChainMore, back to homepage">
         <!-- Logo Icon SVG - Dual flow converging -->
         <svg width="36" height="36" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <!-- Upper path (Fiat) - smooth curve -->
@@ -664,7 +639,7 @@
               <div class="bg-slate-900 rounded-xl p-5 mb-5 flex gap-5">
                 <div class="flex-1">
                   <h3 class="text-white font-bold text-lg mb-2">Cross-Rail Payments</h3>
-                  <p class="text-slate-400 text-sm mb-3">Enable seamless fiat and stablecoin payments for your business with automatic routing optimization.</p>
+                  <p class="text-slate-400 text-sm mb-3">Accept fiat and stablecoin payments through one API. Routing picks the cheapest path and fails over when a rail goes down.</p>
                   <a href="#solutions" class="inline-flex items-center gap-1 text-cyan-400 text-sm font-medium hover:text-cyan-300">
                     Learn more <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                   </a>
@@ -766,7 +741,7 @@
                   <h3 class="text-white font-bold text-lg">Developer Portal</h3>
                   <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-xs font-semibold rounded-full">Coming Q1 2026</span>
                 </div>
-                <p class="text-slate-400 text-sm">Full documentation, sandbox environment, and API reference for seamless integration.</p>
+                <p class="text-slate-400 text-sm">Full API reference, sandbox environment, and copy-paste code samples. Built for engineers who want to ship in an afternoon.</p>
               </div>
               <!-- Dev Resources Grid -->
               <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Resources</div>
@@ -860,7 +835,7 @@
           <span class="gradient-text">Orchestration</span>
         </h1>
         <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-6">
-          One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails – with automatic failover.
+          One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails, with automatic failover.
         </p>
         
         <!-- Stats Bar - Integrated into Hero -->
@@ -1110,7 +1085,7 @@
       <div class="text-center mb-8">
         <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2 block">How It Works</span>
         <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Build Your Payment Flow</h2>
-        <p class="text-slate-600 text-base max-w-2xl mx-auto">Define your business logic – ChainMore finds the optimal route across all rails.</p>
+        <p class="text-slate-600 text-base max-w-2xl mx-auto">Define your business logic, ChainMore finds the optimal route across all rails.</p>
       </div>
       
       <!-- Interactive Flow Builder -->
@@ -1316,7 +1291,7 @@
           </h2>
           
           <p class="text-lg text-slate-600 leading-relaxed mb-8">
-            Our rail-agnostic routing engine adapts to your specific business needs, ensuring that each transaction is processed via the most efficient route – whether fiat or stablecoin.
+            Our rail-agnostic routing engine adapts to your specific business needs, ensuring that each transaction is processed via the most efficient route, whether fiat or stablecoin.
           </p>
           
           <!-- Checkmarks -->
@@ -1336,7 +1311,7 @@
               </div>
               <div>
                 <div class="font-semibold text-slate-900">Rail-agnostic optimization</div>
-                <div class="text-slate-500 text-sm">We find the best route – fiat or stablecoin</div>
+                <div class="text-slate-500 text-sm">We find the best route, fiat or stablecoin</div>
               </div>
             </div>
             <div class="flex items-start gap-3">
@@ -1488,7 +1463,7 @@
               <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Cross-rail routing doubles your available payment paths. If fiat rails are congested or unavailable, stablecoin rails step in – and vice versa.
+              Cross-rail routing doubles your available payment paths. If fiat rails are congested or unavailable, stablecoin rails step in, and vice versa.
             </p>
             <p class="font-bold text-slate-900 text-lg mt-auto">Increase payment success by up to 25%</p>
           </div>
@@ -1510,7 +1485,7 @@
               <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Automatic failover between rails guarantees business continuity – if one route fails, we switch instantly to the next best option.
+              Automatic failover between rails guarantees business continuity, if one route fails, we switch instantly to the next best option.
             </p>
             <p class="font-bold text-slate-900 text-lg mt-auto">Keep transactions going, no matter what</p>
           </div>
@@ -1613,7 +1588,7 @@
                     <div class="bg-white rounded-2xl p-4 mb-4">
                       <div class="flex justify-between mb-4">
                         <div>
-                          <div class="font-semibold text-slate-900">Pro Plan – Annual</div>
+                          <div class="font-semibold text-slate-900">Pro Plan, Annual</div>
                           <div class="text-xs text-slate-500">12 months subscription</div>
                         </div>
                         <div class="font-bold text-slate-900">€468.00</div>
@@ -2128,7 +2103,7 @@
       <div class="text-center mb-8 md:mb-10">
         <div class="text-cyan-500 font-semibold text-sm uppercase tracking-wider mb-2">Solutions</div>
         <h2 class="text-2xl md:text-4xl font-bold mb-3">Built for Every Payment Scenario</h2>
-        <p class="text-slate-600 max-w-2xl mx-auto">From payment checkouts to payroll – ChainMore automatically selects the optimal route.</p>
+        <p class="text-slate-600 max-w-2xl mx-auto">From payment checkouts to payroll, ChainMore automatically selects the optimal route.</p>
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2425,7 +2400,7 @@
           <!--
             Both buttons currently route to the waitlist because the
             developer surfaces (public docs site, public GitHub repo)
-            are not live yet — the repo is private during pre-launch
+            are not live yet, the repo is private during pre-launch
             and the docs page hasn't been generated from the OpenAPI
             spec. Pointing them at /thank-you or /404 would be worse
             than pointing at #contact, which is at least an honest
@@ -2465,15 +2440,9 @@
 
 <span class="text-slate-500">// Create a cross-rail payment</span>
 <span class="text-purple-400">const</span> payment = <span class="text-purple-400">await</span> chainmore.payments.<span class="text-yellow-300">create</span>({
-  <span class="text-blue-300">amount</span>: <span class="text-orange-400">10000</span>,
-  <span class="text-blue-300">currency</span>: <span class="text-cyan-400">'EUR'</span>,
-  <span class="text-blue-300">destination</span>: {
-    <span class="text-blue-300">type</span>: <span class="text-cyan-400">'stablecoin'</span>,
-    <span class="text-blue-300">asset</span>: <span class="text-cyan-400">'USDC'</span>,
-    <span class="text-blue-300">chain</span>: <span class="text-cyan-400">'polygon'</span>,
-    <span class="text-blue-300">address</span>: <span class="text-cyan-400">'0x...'</span>
-  },
-  <span class="text-blue-300">routing</span>: <span class="text-cyan-400">'optimal'</span> <span class="text-slate-500">// or 'fastest', 'cheapest'</span>
+  <span class="text-blue-300">amount</span>: <span class="text-orange-400">10000</span>, <span class="text-blue-300">currency</span>: <span class="text-cyan-400">'EUR'</span>, <span class="text-blue-300">destination</span>: {
+    <span class="text-blue-300">type</span>: <span class="text-cyan-400">'stablecoin'</span>, <span class="text-blue-300">asset</span>: <span class="text-cyan-400">'USDC'</span>, <span class="text-blue-300">chain</span>: <span class="text-cyan-400">'polygon'</span>, <span class="text-blue-300">address</span>: <span class="text-cyan-400">'0x...'</span>
+  }, <span class="text-blue-300">routing</span>: <span class="text-cyan-400">'optimal'</span> <span class="text-slate-500">// or 'fastest', 'cheapest'</span>
 });
 
 <span class="text-slate-500">// Response includes optimal route</span>
@@ -2500,7 +2469,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       </p>
       
       <!--
-        Waitlist form — wired to Netlify Forms.
+        Waitlist form, wired to Netlify Forms.
         https://docs.netlify.com/forms/setup/
 
         Netlify auto-detects forms at build time when they carry:
@@ -2509,8 +2478,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
           - data-netlify="true"  (opts the form into Netlify's
                                   built-in handler)
           - netlify-honeypot="bot-field"  (hidden field that bots fill
-                                           in but humans don't —
-                                           submissions with bot-field
+                                           in but humans don't, submissions with bot-field
                                            filled are silently dropped)
 
         action="/thank-you.html" sends the user to a branded
@@ -2520,7 +2488,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
 
         Email recipient is configured in the Netlify dashboard under
         Forms → Notifications → Outgoing email. Default recipient
-        should be support@chainmore.io. NOT in source — Netlify keeps
+        should be support@chainmore.io. NOT in source, Netlify keeps
         the recipient out of the public file so it can't be scraped.
       -->
       <form
@@ -2590,7 +2558,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
           inbound email lands at support@chainmore.io with enough
           context that we can route it to the right person.
           Replace with a real calendar-booking URL once we set one
-          up — track in delivery/marketing-followups.
+          up, track in delivery/marketing-followups.
         -->
         <a
           href="mailto:support@chainmore.io?subject=Demo%20call%20request&body=Hi%20ChainMore%2C%0A%0AI%27d%20like%20to%20schedule%20a%20demo%20call.%0A%0AA%20bit%20of%20context%3A%0A-%20Company%3A%20%0A-%20Role%3A%20%0A-%20Approximate%20transaction%20volume%2Fmonth%3A%20%0A-%20Rails%20I%27m%20interested%20in%20(fiat%20%2F%20stablecoin%20%2F%20both)%3A%20%0A%0AThanks%21"
@@ -2809,10 +2777,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     let selectedOutput = { type: 'stablecoin', value: 'usdc-polygon', label: 'USDC', sublabel: 'Polygon' };
     
     const routeData = {
-      'fiat-fiat': { cost: '0.8%', time: '~1 day', savings: '75%', usecase: 'E-Commerce, B2B Payments, Subscription Billing' },
-      'fiat-stablecoin': { cost: '0.12%', time: '< 1 min', savings: '96%', usecase: 'Web3 Payroll, Freelancer Payments, Creator Payouts' },
-      'stablecoin-fiat': { cost: '0.5%', time: '~4 hours', savings: '85%', usecase: 'Crypto Treasury Settlement, Gaming Withdrawals, Off-Ramps' },
-      'stablecoin-stablecoin': { cost: '0.01%', time: '~2 min', savings: '99%', usecase: 'Cross-Chain Treasury, Gas Optimization, Liquidity Rebalancing' }
+      'fiat-fiat': { cost: '0.8%', time: '~1 day', savings: '75%', usecase: 'E-Commerce, B2B Payments, Subscription Billing' }, 'fiat-stablecoin': { cost: '0.12%', time: '< 1 min', savings: '96%', usecase: 'Web3 Payroll, Freelancer Payments, Creator Payouts' }, 'stablecoin-fiat': { cost: '0.5%', time: '~4 hours', savings: '85%', usecase: 'Crypto Treasury Settlement, Gaming Withdrawals, Off-Ramps' }, 'stablecoin-stablecoin': { cost: '0.01%', time: '~2 min', savings: '99%', usecase: 'Cross-Chain Treasury, Gas Optimization, Liquidity Rebalancing' }
     };
     
     function updateResult() {
@@ -2850,10 +2815,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         inputOptions.forEach(o => o.classList.remove('selected'));
         option.classList.add('selected');
         selectedInput = {
-          type: option.dataset.type,
-          value: option.dataset.value,
-          label: option.dataset.label,
-          sublabel: option.dataset.sublabel
+          type: option.dataset.type, value: option.dataset.value, label: option.dataset.label, sublabel: option.dataset.sublabel
         };
         updateResult();
       });
@@ -2864,10 +2826,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         outputOptions.forEach(o => o.classList.remove('selected'));
         option.classList.add('selected');
         selectedOutput = {
-          type: option.dataset.type,
-          value: option.dataset.value,
-          label: option.dataset.label,
-          sublabel: option.dataset.sublabel
+          type: option.dataset.type, value: option.dataset.value, label: option.dataset.label, sublabel: option.dataset.sublabel
         };
         updateResult();
       });
@@ -3203,10 +3162,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     }
     
     console.log('Payment Demo final state:', {
-      steps: paymentDemoSteps.length,
-      screens: phoneScreens.length,
-      autoplayToggle: !!autoplayToggle,
-      isPlaying: isPaymentAutoPlaying
+      steps: paymentDemoSteps.length, screens: phoneScreens.length, autoplayToggle: !!autoplayToggle, isPlaying: isPaymentAutoPlaying
     });
     
     console.log('All demos initialized');
@@ -3229,10 +3185,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     });
     
     var heroCases = [
-      { input: 'card', output: 'bank' },
-      { input: 'card', output: 'usdc' },
-      { input: 'usdc', output: 'bank' },
-      { input: 'usdc', output: 'onchain' }
+      { input: 'card', output: 'bank' }, { input: 'card', output: 'usdc' }, { input: 'usdc', output: 'bank' }, { input: 'usdc', output: 'onchain' }
     ];
     
     var heroCurrentCase = 0;
@@ -3325,10 +3278,7 @@ window.onload = function() {
   console.log('Hero cards:', inputCards.length, outputCards.length, indicators.length);
   
   var cases = [
-    { inp: 'card', out: 'bank' },
-    { inp: 'card', out: 'usdc' },
-    { inp: 'usdc', out: 'bank' },
-    { inp: 'usdc', out: 'onchain' }
+    { inp: 'card', out: 'bank' }, { inp: 'card', out: 'usdc' }, { inp: 'usdc', out: 'bank' }, { inp: 'usdc', out: 'onchain' }
   ];
   
   var currentIdx = 0;

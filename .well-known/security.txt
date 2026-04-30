@@ -1,4 +1,4 @@
-# RFC 9116 security.txt — ChainMore (Chainmore OÜ)
+# RFC 9116 security.txt, ChainMore (Chainmore OÜ)
 #
 # Researchers: please report security issues via the channels below.
 # Full Responsible Disclosure Policy + Safe Harbor language at:
