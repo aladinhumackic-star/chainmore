@@ -2798,72 +2798,24 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       label.addEventListener('click', () => handleScenarioClick(parseInt(label.dataset.goto)));
     });
 
-    // Interactive Flow Builder
-    const inputOptions = document.querySelectorAll('#input-options .select-card');
-    const outputOptions = document.querySelectorAll('#output-options .select-card');
-    
-    let selectedInput = { type: 'fiat', value: 'card', label: 'Card Payment', sublabel: 'Visa, Mastercard, Amex' };
-    let selectedOutput = { type: 'stablecoin', value: 'usdc-polygon', label: 'USDC', sublabel: 'Polygon' };
-    
-    const routeData = {
-      'fiat-fiat': { cost: '0.8%', time: '~1 day', savings: '75%', usecase: 'E-Commerce, B2B Payments, Subscription Billing' }, 'fiat-stablecoin': { cost: '0.12%', time: '< 1 min', savings: '96%', usecase: 'Web3 Payroll, Freelancer Payments, Creator Payouts' }, 'stablecoin-fiat': { cost: '0.5%', time: '~4 hours', savings: '85%', usecase: 'Crypto Treasury Settlement, Gaming Withdrawals, Off-Ramps' }, 'stablecoin-stablecoin': { cost: '0.01%', time: '~2 min', savings: '99%', usecase: 'Cross-Chain Treasury, Gas Optimization, Liquidity Rebalancing' }
-    };
-    
-    function updateResult() {
-      const resultInput = document.getElementById('result-input');
-      const resultOutput = document.getElementById('result-output');
-      const resultType = document.getElementById('result-type');
-      const resultCost = document.getElementById('result-cost');
-      const resultTime = document.getElementById('result-time');
-      const resultSavings = document.getElementById('result-savings');
-      const resultUsecase = document.getElementById('result-usecase');
-      
-      resultInput.textContent = selectedInput.label;
-      resultOutput.textContent = `${selectedOutput.label}/${selectedOutput.sublabel}`;
-      
-      const flowType = `${selectedInput.type === 'fiat' ? 'Fiat' : 'Stablecoin'} to ${selectedOutput.type === 'fiat' ? 'Fiat' : 'Stablecoin'}`;
-      resultType.textContent = flowType;
-      
-      const routeKey = `${selectedInput.type}-${selectedOutput.type}`;
-      const data = routeData[routeKey];
-      
-      resultCost.textContent = data.cost;
-      resultTime.textContent = data.time;
-      resultSavings.textContent = data.savings;
-      resultUsecase.textContent = data.usecase;
-      
-      // Trigger animation
-      const panel = document.querySelector('.result-panel');
-      panel.style.animation = 'none';
-      panel.offsetHeight; // Trigger reflow
-      panel.style.animation = 'resultSlide 0.4s ease-out';
-    }
-    
-    inputOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        inputOptions.forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
-        selectedInput = {
-          type: option.dataset.type, value: option.dataset.value, label: option.dataset.label, sublabel: option.dataset.sublabel
-        };
-        updateResult();
-      });
-    });
-    
-    outputOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        outputOptions.forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
-        selectedOutput = {
-          type: option.dataset.type, value: option.dataset.value, label: option.dataset.label, sublabel: option.dataset.sublabel
-        };
-        updateResult();
-      });
-    });
-    
-    // Initialize
-    updateResult();
-    
+    // The previous payment-flow builder block lived here. It targeted
+    // DOM ids (#input-options, #output-options, #result-input, #result-output,
+    // #result-type, #result-cost, #result-time, #result-savings, #result-usecase,
+    // .select-card, .result-panel) that no longer exist on the page; the
+    // updateResult() call at the bottom of that block threw
+    // `TypeError: Cannot set properties of null (setting 'textContent')`,
+    // which silently aborted everything after it inside this same
+    // DOMContentLoaded handler. Symptoms reported by Aldin: smooth-scroll,
+    // demo-tab buttons, switch-btn, scenario rotation manual control,
+    // and other handlers further down would not register.
+    //
+    // The actual interactive Payment Flow Builder is now wired in a
+    // separate <script> block at end-of-body (see "Interactive Payment
+    // Flow Builder" comment near </body>). That block targets the new
+    // DOM (.flow-input / .flow-output / #route-* labels). This stub
+    // remains as a tombstone so a future reader does not reintroduce
+    // the broken block by accident.
+
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
