@@ -1124,9 +1124,9 @@
               <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded">1</span>
               <span class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Merchant Accepts</span>
             </div>
-            <div class="space-y-2">
-              <!-- Card Payment - Selected -->
-              <div class="flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer">
+            <div class="space-y-2" id="flow-inputs">
+              <!-- Card Payment - default selected -->
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer transition" data-flow-input="card" data-selected="true">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -1139,7 +1139,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- Stablecoin -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="stablecoin">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
                     <span class="text-cyan-600 font-bold">$</span>
@@ -1152,7 +1152,7 @@
                 <span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
               </div>
               <!-- Bank Wire -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="bank-wire">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -1164,8 +1164,8 @@
                 </div>
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
-              <!-- Wallets -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+              <!-- APMs -->
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="apm">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -1210,9 +1210,9 @@
               <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded">2</span>
               <span class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Merchant Receives</span>
             </div>
-            <div class="space-y-2">
-              <!-- Bank Fiat -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+            <div class="space-y-2" id="flow-outputs">
+              <!-- Bank Account -->
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="bank">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -1224,8 +1224,8 @@
                 </div>
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
-              <!-- Stablecoin - Selected -->
-              <div class="flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer">
+              <!-- Stablecoin - default selected -->
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer transition" data-flow-output="stablecoin" data-selected="true">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold">$</span>
@@ -1238,7 +1238,7 @@
                 <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
               </div>
               <!-- Exchange -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="exchange">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
@@ -1251,7 +1251,7 @@
                 <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded">CEX</span>
               </div>
               <!-- On-chain -->
-              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="onchain">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
@@ -1273,26 +1273,26 @@
           <div class="bg-slate-900 rounded-xl px-8 py-4 text-white max-w-3xl w-full">
             <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
               <!-- Route Info -->
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 flex-wrap">
                 <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span class="text-green-400 font-semibold text-sm uppercase tracking-wider">Optimal Route:</span>
-                <span class="text-xl font-bold">Card <span class="text-green-400">→</span> USDC/Polygon</span>
-                <span class="text-slate-400 text-sm">(Fiat to Stablecoin)</span>
+                <span class="text-xl font-bold"><span id="route-input-label">Card</span> <span class="text-green-400">→</span> <span id="route-output-label">USDC/Polygon</span></span>
+                <span class="text-slate-400 text-sm">(<span id="route-types-label">Fiat to Stablecoin</span>)</span>
               </div>
-              
+
               <!-- Metrics - Inline -->
               <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1.5">
-                  <span class="text-green-400 font-bold">85%</span>
+                  <span id="route-metric-cost" class="text-green-400 font-bold">85%</span>
                   <span class="text-green-300/70 text-xs">Cost Saved</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <span class="text-green-400 font-bold">95%</span>
+                  <span id="route-metric-speed" class="text-green-400 font-bold">95%</span>
                   <span class="text-green-300/70 text-xs">Faster</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span class="text-green-400 font-bold">0%</span>
+                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">0%</span>
                   <span class="text-green-300/70 text-xs">Chargebacks</span>
                 </div>
               </div>
@@ -3506,6 +3506,158 @@ window.onload = function() {
     // clear it.
     if (!nav.contains(e.relatedTarget)) deactivate();
   });
+})();
+</script>
+
+<!-- Interactive Payment Flow Builder.
+     The "Build Your Payment Flow" widget on #how-it-works has two
+     columns of cards (Merchant Accepts / Merchant Receives). Each
+     card carries a data-flow-input or data-flow-output value. This
+     script handles click-to-select on both columns and drives the
+     "OPTIMAL ROUTE" display below from a 4 by 4 lookup table covering
+     every input/output combination.
+
+     The defaults (Card -> USDC/Polygon) are hardcoded in the markup
+     to render correctly with JS disabled too. With JS enabled, the
+     same defaults are applied programmatically on first paint via
+     setSelected, so click handlers can rely on a single state path.
+-->
+<script>
+(function () {
+  var inputs = document.querySelectorAll('.flow-input');
+  var outputs = document.querySelectorAll('.flow-output');
+  if (!inputs.length || !outputs.length) return;
+
+  var routeInputLabel    = document.getElementById('route-input-label');
+  var routeOutputLabel   = document.getElementById('route-output-label');
+  var routeTypesLabel    = document.getElementById('route-types-label');
+  var metricCost         = document.getElementById('route-metric-cost');
+  var metricSpeed        = document.getElementById('route-metric-speed');
+  var metricChargebacks  = document.getElementById('route-metric-chargebacks');
+  if (!routeInputLabel || !routeOutputLabel) return;
+
+  // Pretty labels for the input column.
+  var inputLabels = {
+    'card':       { name: 'Card',       type: 'Fiat'      },
+    'stablecoin': { name: 'USDC',       type: 'Stable'    },
+    'bank-wire':  { name: 'Bank Wire',  type: 'Fiat'      },
+    'apm':        { name: 'Apple Pay',  type: 'Fiat'      },
+  };
+
+  // Output side describes both the destination AND the rail. The
+  // "primary" string is what shows after the arrow; the "type" is
+  // what appears in parentheses on the right side of the route line.
+  var outputLabels = {
+    'bank':       { name: 'Bank Account',  type: 'Fiat'   },
+    'stablecoin': { name: 'USDC/Polygon',  type: 'Stable' },
+    'exchange':   { name: 'Coinbase USDC', type: 'CEX'    },
+    'onchain':    { name: 'Direct Wallet', type: 'DeFi'   },
+  };
+
+  // Per-pair metrics. Numbers are illustrative for the marketing
+  // surface; they do not pretend to be the result of a live cost
+  // calculation. Keep them realistic so the widget reads like a
+  // value-prop calculator, not a slot machine.
+  //
+  // Schema: routeMetrics[input][output] = { cost, speed, chargebacks }
+  // where cost and speed are "% saved" / "% faster" claims and
+  // chargebacks is the residual chargeback rate for the route.
+  var routeMetrics = {
+    'card': {
+      'bank':       { cost: '40%', speed: '60%', chargebacks: '0.5%' },
+      'stablecoin': { cost: '85%', speed: '95%', chargebacks: '0%'   },
+      'exchange':   { cost: '70%', speed: '85%', chargebacks: '0%'   },
+      'onchain':    { cost: '90%', speed: '95%', chargebacks: '0%'   },
+    },
+    'stablecoin': {
+      'bank':       { cost: '60%', speed: '70%', chargebacks: '0%'   },
+      'stablecoin': { cost: '95%', speed: '99%', chargebacks: '0%'   },
+      'exchange':   { cost: '80%', speed: '90%', chargebacks: '0%'   },
+      'onchain':    { cost: '95%', speed: '99%', chargebacks: '0%'   },
+    },
+    'bank-wire': {
+      'bank':       { cost: '20%', speed: '30%', chargebacks: '0%'   },
+      'stablecoin': { cost: '70%', speed: '85%', chargebacks: '0%'   },
+      'exchange':   { cost: '55%', speed: '70%', chargebacks: '0%'   },
+      'onchain':    { cost: '75%', speed: '90%', chargebacks: '0%'   },
+    },
+    'apm': {
+      'bank':       { cost: '35%', speed: '55%', chargebacks: '0.3%' },
+      'stablecoin': { cost: '80%', speed: '92%', chargebacks: '0%'   },
+      'exchange':   { cost: '65%', speed: '82%', chargebacks: '0%'   },
+      'onchain':    { cost: '85%', speed: '93%', chargebacks: '0%'   },
+    },
+  };
+
+  var state = { input: 'card', output: 'stablecoin' };
+
+  function paintInputCard(card) {
+    var sel = card.dataset.selected === 'true';
+    if (sel) {
+      card.classList.add('border-2', 'border-cyan-500', 'bg-cyan-50');
+      card.classList.remove('border', 'border-slate-200', 'hover:border-slate-300');
+    } else {
+      card.classList.add('border', 'border-slate-200', 'hover:border-slate-300');
+      card.classList.remove('border-2', 'border-cyan-500', 'bg-cyan-50');
+    }
+  }
+  function paintOutputCard(card) {
+    var sel = card.dataset.selected === 'true';
+    if (sel) {
+      card.classList.add('border-2', 'border-green-500', 'bg-green-50');
+      card.classList.remove('border', 'border-slate-200', 'hover:border-slate-300');
+    } else {
+      card.classList.add('border', 'border-slate-200', 'hover:border-slate-300');
+      card.classList.remove('border-2', 'border-green-500', 'bg-green-50');
+    }
+  }
+
+  function selectInput(value) {
+    state.input = value;
+    inputs.forEach(function (c) {
+      if (c.dataset.flowInput === value) c.dataset.selected = 'true';
+      else delete c.dataset.selected;
+      paintInputCard(c);
+    });
+    refresh();
+  }
+  function selectOutput(value) {
+    state.output = value;
+    outputs.forEach(function (c) {
+      if (c.dataset.flowOutput === value) c.dataset.selected = 'true';
+      else delete c.dataset.selected;
+      paintOutputCard(c);
+    });
+    refresh();
+  }
+
+  function refresh() {
+    var inLab  = inputLabels[state.input];
+    var outLab = outputLabels[state.output];
+    if (!inLab || !outLab) return;
+    routeInputLabel.textContent  = inLab.name;
+    routeOutputLabel.textContent = outLab.name;
+    routeTypesLabel.textContent  = inLab.type + ' to ' + outLab.type;
+    var m = (routeMetrics[state.input] || {})[state.output];
+    if (m) {
+      if (metricCost)        metricCost.textContent        = m.cost;
+      if (metricSpeed)       metricSpeed.textContent       = m.speed;
+      if (metricChargebacks) metricChargebacks.textContent = m.chargebacks;
+    }
+  }
+
+  inputs.forEach(function (c) {
+    c.addEventListener('click', function () { selectInput(c.dataset.flowInput); });
+  });
+  outputs.forEach(function (c) {
+    c.addEventListener('click', function () { selectOutput(c.dataset.flowOutput); });
+  });
+
+  // Apply the documented defaults explicitly so the JS path matches
+  // the markup state on first paint, even if a future edit forgets
+  // to mark default cards with data-selected.
+  selectInput('card');
+  selectOutput('stablecoin');
 })();
 </script>
 </body>
