@@ -1,0 +1,846 @@
+# Treasury Engine — Deliverable API (D1)
+#
+# Version: 1.0.0-rc1
+# Frozen: 2026-04-19
+# Scope: all 47 routes mounted by internal/treasury/api + cmd/treasury-api
+# Non-goals: SDK generation, rate-limiting policy, on-the-wire pagination
+#            cursor format (documented in TREASURY_DELIVERABLE_API.md).
+#
+# Semver contract:
+#   MAJOR — breaking change to path, method, or required field.
+#   MINOR — additive field, new optional query param, new endpoint.
+#   PATCH — bugfix, docs clarification, non-behavioral schema tightening.
+#
+openapi: 3.1.0
+info:
+  title: ChainMore Treasury Engine API
+  version: 1.0.0-rc1
+  description: |
+    HTTP API for the ChainMore Treasury Engine (Self-Relay primary, Gelato circuit-breaker).
+
+    **Audience:** operator dashboard, standalone treasury dashboard, internal admin tooling.
+    This API is **not** intended for end-user consumption.
+
+    **Status vocabulary (see `docs/TREASURY_TEST_MATRIX.md` for the normative definitions):**
+    per-chain `level` ∈ {green, yellow, orange, red} is an operational signal and
+    is independent of the cluster-level INTEGRATION status (which is a release
+    artefact, not an API contract surface).
+  contact:
+    name: ChainMore Treasury
+    url: https://github.com/chainmore/chainmore
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.chainmore.example/v1
+    description: Production (placeholder URL — set at deploy time)
+  - url: http://localhost:8080
+    description: Local development
+
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+security:
+  - apiKeyAuth: []
+  - oidcAuth: []
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API-key auth for machine-to-machine integration.
+    oidcAuth:
+      type: openIdConnect
+      openIdConnectUrl: /realms/chainmore/.well-known/openid-configuration
+      description: Keycloak OIDC for dashboard users.
+
+  # -------------------------------------------------------------------------
+  # Schemas — mirrors of internal/treasury/api/types.go
+  # -------------------------------------------------------------------------
+  schemas:
+    # Errors
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code, e.g. "unauthorized", "rate_limited".
+        message:
+          type: string
+          description: Human-readable message. Never contains secrets.
+        trace_id:
+          type: string
+          description: Correlation ID for log joining.
+
+    # Overview
+    OverviewResponse:
+      type: object
+      required: [chains, total_fee_pool_usd, total_gas_24h_usd, total_margin_24h_usd, gelato_fallbacks_24h, updated_at]
+      properties:
+        chains:
+          type: array
+          items: { $ref: "#/components/schemas/ChainSummary" }
+        total_fee_pool_usd: { type: number, format: double }
+        total_gas_24h_usd: { type: number, format: double }
+        total_margin_24h_usd: { type: number, format: double }
+        gelato_fallbacks_24h: { type: integer }
+        updated_at: { type: string, format: date-time }
+
+    ChainSummary:
+      type: object
+      required: [chain_id, chain_name, level, buffer_hours, fee_pool_balance, fee_pool_token, wallet_count, active_wallets, gas_24h_usd, margin_24h_usd, fallback_active]
+      properties:
+        chain_id: { type: string }
+        chain_name: { type: string }
+        level:
+          type: string
+          enum: [green, yellow, orange, red]
+          description: Operational color (buffer-hours-based). Not a cluster-status field.
+        buffer_hours: { type: number, format: double }
+        fee_pool_balance:
+          type: string
+          description: Atomic units (wei/lamports/sun/etc.), stringified big-int. Never a float.
+        fee_pool_token: { type: string, description: "USDC | USDT" }
+        wallet_count: { type: integer }
+        active_wallets: { type: integer }
+        gas_24h_usd: { type: number, format: double }
+        margin_24h_usd: { type: number, format: double }
+        fallback_active: { type: boolean }
+
+    # Chain detail
+    ChainDetailResponse:
+      type: object
+      required: [chain_id, chain_name, chain_family, level, buffer_hours, fee_pool_balance, fee_pool_token, avg_gas_cost_usd, avg_txs_per_hour, gas_24h_usd, margin_24h_usd, fallback_active, nonce_queue_depth, fallback_count_24h, wallets]
+      properties:
+        chain_id: { type: string }
+        chain_name: { type: string }
+        chain_family:
+          type: string
+          enum: [evm, tron, solana]
+        level: { type: string, enum: [green, yellow, orange, red] }
+        buffer_hours: { type: number, format: double }
+        fee_pool_balance: { type: string }
+        fee_pool_token: { type: string }
+        avg_gas_cost_usd: { type: number, format: double }
+        avg_txs_per_hour: { type: number, format: double }
+        gas_24h_usd: { type: number, format: double }
+        margin_24h_usd: { type: number, format: double }
+        last_rebalance_at:
+          type: string
+          format: date-time
+          nullable: true
+        fallback_active: { type: boolean }
+        nonce_queue_depth: { type: integer }
+        fallback_count_24h: { type: integer }
+        wallets:
+          type: array
+          items: { $ref: "#/components/schemas/WalletDetail" }
+
+    WalletDetail:
+      type: object
+      required: [wallet_id, address, status, native_balance, native_balance_usd, inflight_count]
+      properties:
+        wallet_id: { type: string }
+        address: { type: string }
+        status:
+          type: string
+          enum: [active, draining, disabled, funding]
+        native_balance: { type: string, description: "Atomic units, stringified." }
+        native_balance_usd: { type: number, format: double }
+        inflight_count: { type: integer }
+        last_tx_at: { type: string, format: date-time, nullable: true }
+        nonce_last_confirmed: { type: integer, format: int64, nullable: true }
+        nonce_next_pending: { type: integer, format: int64, nullable: true }
+        nonce_gap: { type: integer, format: int64, nullable: true }
+
+    # Rebalance
+    RebalanceEntry:
+      type: object
+      required: [id, chain_id, trigger_level, source_token, dest_token, source_amount, dest_amount, slippage_bps, swap_venue]
+      properties:
+        id: { type: string }
+        chain_id: { type: string }
+        trigger_level: { type: string }
+        source_token: { type: string }
+        dest_token: { type: string }
+        source_amount: { type: string }
+        dest_amount: { type: string }
+        slippage_bps: { type: integer }
+        swap_venue: { type: string }
+
+    RebalanceListResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/RebalanceEntry" }
+        next_cursor: { type: string, nullable: true }
+
+    RebalanceTriggerRequest:
+      type: object
+      required: [chain_id, reason]
+      properties:
+        chain_id: { type: string }
+        reason: { type: string, description: "Human-readable justification; appears in audit trail." }
+        dry_run: { type: boolean, default: false }
+
+    # Alerts
+    AlertEntry:
+      type: object
+      required: [id, severity, chain_id, title, opened_at]
+      properties:
+        id: { type: string }
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        chain_id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        opened_at: { type: string, format: date-time }
+        acknowledged_at: { type: string, format: date-time, nullable: true }
+
+    AlertListResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/AlertEntry" }
+
+    AlertAcknowledgeRequest:
+      type: object
+      required: [note]
+      properties:
+        note: { type: string }
+
+    # Health
+    HealthResponse:
+      type: object
+      required: [status, chains]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        chains:
+          type: array
+          items: { $ref: "#/components/schemas/ChainHealth" }
+
+    ChainHealth:
+      type: object
+      required: [chain_id, rpc_ok, signer_ok, last_block_age_s]
+      properties:
+        chain_id: { type: string }
+        rpc_ok: { type: boolean }
+        signer_ok: { type: boolean }
+        last_block_age_s: { type: integer }
+
+    # Analytics
+    TimeSeriesPoint:
+      type: object
+      required: [t, v]
+      properties:
+        t: { type: string, format: date-time }
+        v: { type: number, format: double }
+
+    GasCostTrendResponse:
+      type: object
+      required: [points]
+      properties:
+        points:
+          type: array
+          items: { $ref: "#/components/schemas/TimeSeriesPoint" }
+
+    MarginTrendResponse:
+      type: object
+      required: [points]
+      properties:
+        points:
+          type: array
+          items: { $ref: "#/components/schemas/TimeSeriesPoint" }
+
+    SavingsResponse:
+      type: object
+      required: [total_savings_usd, self_relay_pct]
+      properties:
+        total_savings_usd: { type: number, format: double }
+        self_relay_pct: { type: number, format: double }
+
+    PnLResponse:
+      type: object
+      required: [gross_margin_usd, gas_cost_usd, net_pnl_usd]
+      properties:
+        gross_margin_usd: { type: number, format: double }
+        gas_cost_usd: { type: number, format: double }
+        net_pnl_usd: { type: number, format: double }
+
+    # Audit
+    AuditEntry:
+      type: object
+      required: [id, occurred_at, actor, action, subject]
+      properties:
+        id: { type: string }
+        occurred_at: { type: string, format: date-time }
+        actor: { type: string }
+        action: { type: string }
+        subject: { type: string }
+        meta:
+          type: object
+          additionalProperties: true
+
+    AuditTrailResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/AuditEntry" }
+
+    ReconciliationEntry:
+      type: object
+      required: [id, chain_id, status, discrepancy_usd]
+      properties:
+        id: { type: string }
+        chain_id: { type: string }
+        status:
+          type: string
+          enum: [matched, missing, orphan, mismatched]
+        discrepancy_usd: { type: number, format: double }
+
+    ReconciliationResultResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/ReconciliationEntry" }
+
+    # SLA
+    SLATargets:
+      type: object
+      required: [broadcast_p95_s, confirm_p95_s]
+      properties:
+        broadcast_p95_s: { type: integer }
+        confirm_p95_s: { type: integer }
+
+  parameters:
+    chainIDPath:
+      name: chainID
+      in: path
+      required: true
+      schema: { type: string }
+    cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 500, default: 50 }
+
+# ---------------------------------------------------------------------------
+# Paths — exhaustive list (47 routes, grouped by handler file)
+# ---------------------------------------------------------------------------
+paths:
+  # Overview + chains (handler.go) --------------------------------------------
+  /treasury/overview:
+    get:
+      operationId: getOverview
+      summary: Top-level treasury snapshot (all chains).
+      tags: [Overview]
+      x-rbac-permission: overview:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OverviewResponse" }
+
+  /treasury/chains/{chainID}:
+    get:
+      operationId: getChainDetail
+      tags: [Chains]
+      x-rbac-permission: chain_detail:read
+      parameters:
+        - $ref: "#/components/parameters/chainIDPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChainDetailResponse" }
+
+  /treasury/chains/{chainID}/wallets:
+    get:
+      operationId: getChainWallets
+      tags: [Chains]
+      x-rbac-permission: wallets:read
+      parameters:
+        - $ref: "#/components/parameters/chainIDPath"
+      responses:
+        "200":
+          description: OK
+
+  # Rebalance (handler.go) ----------------------------------------------------
+  /treasury/rebalances:
+    get:
+      operationId: listRebalances
+      tags: [Rebalance]
+      x-rbac-permission: rebalance_log:read
+      parameters:
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RebalanceListResponse" }
+
+  /treasury/rebalances/trigger:
+    post:
+      operationId: triggerRebalance
+      tags: [Rebalance]
+      x-rbac-permission: rebalance:trigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RebalanceTriggerRequest" }
+      responses:
+        "202":
+          description: Accepted (async job)
+
+  /treasury/tx/{chainID}/{hash}:
+    get:
+      operationId: inspectTxOnChain
+      tags: [Rebalance]
+      x-rbac-permission: rebalance_log:read
+      parameters:
+        - $ref: "#/components/parameters/chainIDPath"
+        - name: hash
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /treasury/tx/{hash}:
+    get:
+      operationId: lookupTx
+      tags: [Rebalance]
+      x-rbac-permission: rebalance_log:read
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  # Health (handler.go) -------------------------------------------------------
+  /treasury/health:
+    get:
+      operationId: getHealth
+      tags: [Health]
+      x-rbac-permission: health:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+
+  /treasury/health/workers:
+    get:
+      operationId: getWorkerHealth
+      tags: [Health]
+      x-rbac-permission: health:read
+      responses:
+        "200": { description: OK }
+
+  # Alerts (handler.go) -------------------------------------------------------
+  /treasury/alerts/active:
+    get:
+      operationId: listActiveAlerts
+      tags: [Alerts]
+      x-rbac-permission: alerts:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertListResponse" }
+
+  /treasury/alerts/{alertID}/acknowledge:
+    post:
+      operationId: acknowledgeAlert
+      tags: [Alerts]
+      x-rbac-permission: alert:acknowledge
+      parameters:
+        - name: alertID
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlertAcknowledgeRequest" }
+      responses:
+        "200": { description: OK }
+
+  # Analytics (handler.go, sla_handlers.go) -----------------------------------
+  /treasury/analytics/gas-cost:
+    get:
+      operationId: getGasCostTrend
+      tags: [Analytics]
+      x-rbac-permission: analytics:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GasCostTrendResponse" }
+
+  /treasury/analytics/margin:
+    get:
+      operationId: getMarginTrend
+      tags: [Analytics]
+      x-rbac-permission: analytics:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MarginTrendResponse" }
+
+  /treasury/analytics/savings:
+    get:
+      operationId: getSavings
+      tags: [Analytics]
+      x-rbac-permission: analytics:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavingsResponse" }
+
+  /treasury/analytics/pnl:
+    get:
+      operationId: getPnL
+      tags: [Analytics]
+      x-rbac-permission: pnl:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PnLResponse" }
+
+  /treasury/analytics/sla:
+    get:
+      operationId: getSLAAnalytics
+      tags: [Analytics]
+      x-rbac-permission: analytics:read
+      responses:
+        "200": { description: OK }
+
+  /treasury/sla/targets:
+    get:
+      operationId: listSLATargets
+      tags: [Analytics]
+      x-rbac-permission: analytics:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SLATargets" }
+    put:
+      operationId: updateSLATargets
+      tags: [Analytics]
+      x-rbac-permission: rebalance:trigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SLATargets" }
+      responses:
+        "200": { description: OK }
+
+  # Audit (handler.go) --------------------------------------------------------
+  /treasury/audit/trail:
+    get:
+      operationId: getAuditTrail
+      tags: [Audit]
+      x-rbac-permission: audit_trail:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditTrailResponse" }
+
+  /treasury/audit/reconciliation:
+    get:
+      operationId: getReconciliation
+      tags: [Audit]
+      x-rbac-permission: reconciliation:read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReconciliationResultResponse" }
+
+  # Admin (admin_handlers.go) -------------------------------------------------
+  /treasury/admin/chains/{chainID}/pause:
+    post:
+      operationId: pauseChain
+      tags: [Admin]
+      x-rbac-permission: chain:pause
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/chains/{chainID}/resume:
+    post:
+      operationId: resumeChain
+      tags: [Admin]
+      x-rbac-permission: chain:resume
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/chains/{chainID}/circuit-breaker:
+    post:
+      operationId: overrideCircuitBreaker
+      tags: [Admin]
+      x-rbac-permission: circuit_breaker:override
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/chains/{chainID}/thresholds:
+    patch:
+      operationId: patchChainThresholds
+      tags: [Admin]
+      x-rbac-permission: threshold:manage
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/chains/{chainID}/thresholds/history:
+    get:
+      operationId: getChainThresholdsHistory
+      tags: [Admin]
+      x-rbac-permission: threshold:manage
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/wallets/{walletID}/rotate:
+    post:
+      operationId: rotateWallet
+      tags: [Admin]
+      x-rbac-permission: wallet:rotate
+      parameters:
+        - name: walletID
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { "202": { description: Accepted } }
+
+  /treasury/admin/emergency-stop:
+    post:
+      operationId: emergencyStopAll
+      tags: [Admin]
+      x-rbac-permission: chain:pause
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/resume-all:
+    post:
+      operationId: resumeAll
+      tags: [Admin]
+      x-rbac-permission: chain:resume
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/webhooks:
+    get:
+      operationId: listWebhooks
+      tags: [Admin]
+      x-rbac-permission: webhook:manage
+      responses: { "200": { description: OK } }
+    post:
+      operationId: createWebhook
+      tags: [Admin]
+      x-rbac-permission: webhook:manage
+      responses: { "201": { description: Created } }
+
+  /treasury/admin/webhooks/{id}:
+    patch:
+      operationId: updateWebhook
+      tags: [Admin]
+      x-rbac-permission: webhook:manage
+      parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+    delete:
+      operationId: deleteWebhook
+      tags: [Admin]
+      x-rbac-permission: webhook:manage
+      parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+      responses: { "204": { description: No content } }
+
+  /treasury/admin/webhooks/{id}/test:
+    post:
+      operationId: testWebhook
+      tags: [Admin]
+      x-rbac-permission: webhook:manage
+      parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  # Pool admin (pool_admin_handlers.go) ---------------------------------------
+  /treasury/admin/chains/{chainID}/pool:
+    get:
+      operationId: getChainPool
+      tags: [Admin]
+      x-rbac-permission: wallet:manage
+      parameters: [ { $ref: "#/components/parameters/chainIDPath" } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/wallets/{walletID}/pin:
+    post:
+      operationId: pinWallet
+      tags: [Admin]
+      x-rbac-permission: wallet:manage
+      parameters: [ { name: walletID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/admin/wallets/{walletID}/unpin:
+    post:
+      operationId: unpinWallet
+      tags: [Admin]
+      x-rbac-permission: wallet:manage
+      parameters: [ { name: walletID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  # Repair / remediation (repair_handlers.go) ---------------------------------
+  /treasury/errors:
+    get:
+      operationId: listErrors
+      tags: [Repair]
+      x-rbac-permission: error:read
+      responses: { "200": { description: OK } }
+
+  /treasury/errors/{errorID}/resolve:
+    post:
+      operationId: resolveError
+      tags: [Repair]
+      x-rbac-permission: error:resolve
+      parameters: [ { name: errorID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/remediation/jobs:
+    get:
+      operationId: listRemediationJobs
+      tags: [Repair]
+      x-rbac-permission: remediation:read
+      responses: { "200": { description: OK } }
+
+  /treasury/remediation/jobs/{jobID}/approve:
+    post:
+      operationId: approveRemediationJob
+      tags: [Repair]
+      x-rbac-permission: remediation:approve
+      parameters: [ { name: jobID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/remediation/jobs/{jobID}/cancel:
+    post:
+      operationId: cancelRemediationJob
+      tags: [Repair]
+      x-rbac-permission: job:cancel
+      parameters: [ { name: jobID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  /treasury/jobs/{jobID}:
+    get:
+      operationId: getJob
+      tags: [Repair]
+      x-rbac-permission: job:read
+      parameters: [ { name: jobID, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK } }
+
+  # Export (export_handlers.go) -----------------------------------------------
+  /treasury/rebalances/export.csv:
+    get:
+      operationId: exportRebalancesCSV
+      tags: [Export]
+      x-rbac-permission: rebalance_log:read
+      responses:
+        "200":
+          description: CSV stream
+          content:
+            text/csv:
+              schema: { type: string }
+
+  /treasury/audit/export.csv:
+    get:
+      operationId: exportAuditCSV
+      tags: [Export]
+      x-rbac-permission: audit_trail:read
+      responses:
+        "200":
+          description: CSV stream
+          content:
+            text/csv: { schema: { type: string } }
+
+  /treasury/analytics/pnl/export.csv:
+    get:
+      operationId: exportPnLCSV
+      tags: [Export]
+      x-rbac-permission: pnl:read
+      responses:
+        "200":
+          description: CSV stream
+          content:
+            text/csv: { schema: { type: string } }
+
+  /treasury/analytics/savings/export.csv:
+    get:
+      operationId: exportSavingsCSV
+      tags: [Export]
+      x-rbac-permission: analytics:read
+      responses:
+        "200":
+          description: CSV stream
+          content:
+            text/csv: { schema: { type: string } }
+
+  # Events (cmd/treasury-api/main.go — SSE handler) ---------------------------
+  /treasury/events/stream:
+    get:
+      operationId: subscribeEvents
+      tags: [Events]
+      x-rbac-permission: event_stream:subscribe
+      description: |
+        Server-Sent Events stream of treasury events (alerts, rebalance state
+        transitions, wallet lifecycle). One event per `\n\n`-separated frame.
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+tags:
+  - { name: Overview, description: Top-level snapshot endpoints }
+  - { name: Chains, description: Per-chain detail endpoints }
+  - { name: Rebalance, description: Rebalance log + trigger }
+  - { name: Alerts, description: Active alert list + acknowledge }
+  - { name: Health, description: Liveness + per-chain health }
+  - { name: Analytics, description: Gas, margin, savings, P&L, SLA }
+  - { name: Audit, description: Audit trail + reconciliation }
+  - { name: Admin, description: Chain/wallet/webhook admin operations }
+  - { name: Repair, description: Error + remediation-job management }
+  - { name: Export, description: CSV exports }
+  - { name: Events, description: SSE event stream }

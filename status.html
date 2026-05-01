@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Status | ChainMore</title>
+  <meta name="description" content="ChainMore real-time operational status, active incidents, and 90-day incident history. Hosted independently of the primary production stack.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.chainmore.io/status.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.chainmore.io/status.html">
+  <meta property="og:title" content="System Status | ChainMore">
+  <meta property="og:description" content="ChainMore real-time operational status, active incidents, and 90-day incident history.">
+  <meta property="og:site_name" content="ChainMore">
+  <meta property="og:locale" content="en_US">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    html { scroll-behavior: smooth; }
+    .status-prose h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; color: #0f172a; margin-bottom: 0.5rem; }
+    .status-prose h2 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1rem; }
+    .status-prose p { color: #334155; line-height: 1.7; margin-bottom: 1rem; }
+    .status-prose strong { color: #0f172a; font-weight: 600; }
+    .status-prose a { color: #00bfe6; text-decoration: none; }
+    .status-prose a:hover { color: #00a3c4; text-decoration: underline; }
+    .status-prose code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 0.25rem; }
+    .status-banner-ok { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #6ee7b7; }
+    .status-banner-warn { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fcd34d; }
+    .status-banner-bad { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5; }
+    .pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em; }
+    .pill-ok { background: #d1fae5; color: #047857; }
+    .pill-warn { background: #fef3c7; color: #92400e; }
+    .pill-bad { background: #fee2e2; color: #b91c1c; }
+    .pill-pre { background: #e2e8f0; color: #475569; }
+    .pill-dot { width: 0.45rem; height: 0.45rem; border-radius: 999px; }
+    .pill-dot-ok { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+    .pill-dot-warn { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+    .pill-dot-bad { background: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18); }
+    .pill-dot-pre { background: #94a3b8; box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18); }
+    .svc-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .svc-table th { background: #f8fafc; text-align: left; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; color: #0f172a; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .svc-table td { padding: 0.95rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+    .svc-table tr:last-child td { border-bottom: none; }
+    .svc-table td.svc-name { font-weight: 600; color: #0f172a; }
+    .svc-table td.svc-uri { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85em; color: #64748b; }
+    .timeline { border-left: 2px solid #e2e8f0; padding-left: 1.25rem; margin-left: 0.25rem; }
+    .timeline-empty { color: #64748b; font-style: italic; padding: 1.25rem; background: #f8fafc; border-radius: 0.5rem; border: 1px dashed #cbd5e1; }
+  </style>
+</head>
+<body class="bg-white text-slate-700">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="32" height="32" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
+          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
+        </svg>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        </span>
+      </a>
+      <nav class="hidden md:flex items-center gap-8 text-sm">
+        <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
+        <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
+        <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
+        <a href="/status.html" class="text-white font-medium">Status</a>
+      </nav>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+    <article class="status-prose">
+      <div class="text-cyan-500 font-semibold text-sm uppercase tracking-wider mb-2">System status</div>
+      <h1>Operational state, in plain sight.</h1>
+      <p class="text-slate-500 mb-8">Real-time service status, active incidents, and 90-day history. Hosted on infrastructure independent of the primary production stack so an outage of the stack does not take this page down with it.</p>
+
+      <!-- Overall banner -->
+      <!--
+        Authoring rule for ops:
+
+          - Open this file in your editor.
+          - Flip the banner-ok / banner-warn / banner-bad class on the
+            outer <div> to reflect the current overall state.
+          - Update the headline text and the timestamp inline below.
+          - Per-service rows in the table further down also need to be
+            updated when their state changes.
+          - Commit + DEPLOY.sh. Netlify ships the change in ~30s.
+
+        For the typical case (everything operational), leave as is and
+        only refresh the timestamp at the bottom of the page on a
+        weekly cadence so the stale-page check passes.
+      -->
+      <div class="status-banner-ok rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-start gap-4">
+          <span class="pill-dot pill-dot-ok flex-shrink-0 mt-1.5"></span>
+          <div class="flex-1">
+            <div class="text-2xl md:text-3xl font-bold text-emerald-700 mb-1">All public surfaces operational.</div>
+            <div class="text-sm text-emerald-800/80">
+              No active incidents. Production dashboards and gateway are pre-launch and not yet in scope of this status page; their rows below switch from <strong>Pre-launch</strong> to a real status the day they go live.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service status -->
+      <h2>Services</h2>
+      <p>The five customer-touching surfaces and their current state. Pre-launch surfaces are listed so you can see the rollout map at a glance.</p>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-4">
+        <div class="overflow-x-auto">
+          <table class="svc-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>URL</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="svc-name">Marketing site</td>
+                <td class="svc-uri">chainmore.io</td>
+                <td><span class="pill pill-ok"><span class="pill-dot pill-dot-ok"></span>Operational</span></td>
+                <td>Static HTML, hosted on Netlify, security headers enforced.</td>
+              </tr>
+              <tr>
+                <td class="svc-name">Merchant dashboard</td>
+                <td class="svc-uri">app.chainmore.io</td>
+                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
+                <td>Production deploy not yet scheduled. Local stack via <code>make dashboard-up</code>.</td>
+              </tr>
+              <tr>
+                <td class="svc-name">Treasury dashboard</td>
+                <td class="svc-uri">treasury.chainmore.io</td>
+                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
+                <td>Operator-internal surface, deployed alongside merchant dashboard.</td>
+              </tr>
+              <tr>
+                <td class="svc-name">Gateway API</td>
+                <td class="svc-uri">api.chainmore.io</td>
+                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
+                <td>Payment-orchestration HTTP API. Goes live with the first paying merchant.</td>
+              </tr>
+              <tr>
+                <td class="svc-name">Identity provider</td>
+                <td class="svc-uri">auth.chainmore.io</td>
+                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
+                <td>OIDC issuer (Keycloak). Goes live with the dashboards.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Active incidents -->
+      <h2>Active incidents</h2>
+      <div class="timeline-empty">
+        No active incidents.
+      </div>
+
+      <!-- Scheduled maintenance -->
+      <h2>Scheduled maintenance</h2>
+      <div class="timeline-empty">
+        None scheduled.
+      </div>
+
+      <!-- 90-day history -->
+      <h2>Last 90 days</h2>
+      <p>The Processor maintains a rolling 90-day history of resolved incidents. Tracking starts on the day the first paying merchant is onboarded; the gateway and dashboards are not yet in scope, so this section will populate from go-live.</p>
+      <div class="timeline-empty mt-4">
+        No incidents to report. The marketing site (the only currently-operational public surface) has had no recorded outages.
+      </div>
+
+      <!-- Severity reference -->
+      <h2>Severity reference</h2>
+      <p>For incidents that do occur, ChainMore uses the severity classification documented in the incident-response runbook:</p>
+      <ul class="list-disc pl-6 space-y-2 text-slate-700">
+        <li><strong>SEV-1 (critical)</strong>, customer-impacting, full-service outage or data integrity at risk. Acknowledgement within the response time stated in the SLA, customer-facing status banner up within 30 minutes of classification, post-incident blameless postmortem within 5 business days.</li>
+        <li><strong>SEV-2 (high)</strong>, customer-impacting, degraded service or partial outage. Customer-facing status update within 1 hour of classification.</li>
+        <li><strong>SEV-3 (medium)</strong>, internal or low-impact. Update on the next business-hour cycle.</li>
+        <li><strong>SEV-4 (informational)</strong>, internal-only, no customer impact. Logged for the postmortem record, no public banner.</li>
+      </ul>
+
+      <!-- Subscribe -->
+      <h2>Get notified</h2>
+      <p>Two paths, depending on what you want:</p>
+      <ul class="list-disc pl-6 space-y-2 text-slate-700">
+        <li><strong>Per-incident email</strong>, send a request to <a href="mailto:support@chainmore.io?subject=Status%20updates%20subscription">support@chainmore.io</a> with subject "Status updates subscription". Active merchants are subscribed automatically as part of onboarding.</li>
+        <li><strong>RSS / Atom feed</strong>, planned. Will publish at <code>/status.atom</code> when the first incident lands. Until then there is nothing to subscribe to.</li>
+      </ul>
+
+      <!-- Why this page is intentionally simple -->
+      <h2>Why this page is intentionally simple</h2>
+      <p>No JavaScript, no external dependencies, no auto-polling. The status page is the document of last resort during an outage; the more moving parts it carries, the more likely it is to fail in the exact moment it matters. Updates are pushed by Operations as part of incident response (see <a href="/security">/security</a> for the responsible-disclosure path and the incident-response runbook the ops team works from).</p>
+
+      <hr class="border-t border-slate-200 my-10">
+      <p class="text-sm text-slate-500"><em>Last updated: 2026-04-30, 19:50 UTC. Independent of primary stack: hosted on Netlify (marketing infrastructure), not on the production hosting target for the dashboards or gateway.</em></p>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950 text-slate-400 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+          <a href="/" class="hover:text-white transition text-sm">← Home</a>
+          <span class="text-slate-700">·</span>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
+          <span class="text-slate-700">·</span>
+          <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
+          <span class="text-slate-700">·</span>
+          <a href="/docs.html" class="hover:text-white transition text-sm">Docs</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/dpa.html" class="hover:text-white transition text-sm">DPA</a>
+          <span class="text-slate-700">·</span>
+          <a href="/security" class="hover:text-white transition text-sm">Security</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

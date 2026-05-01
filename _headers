@@ -74,7 +74,16 @@
   #
   # upgrade-insecure-requests — auto-rewrite any accidentally http://
   # subresource to https://. Belt + braces with HSTS.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
+  # worker-src 'self' blob: — Redoc on /docs.html spawns Web Workers
+  # for the in-page search index. The workers are created from blob:
+  # URLs derived from the self-hosted Redoc bundle (already covered
+  # by script-src 'self'). No third-party JS ever spawns a worker on
+  # this site, so the blob: scope is bounded to our own bundle.
+  # Other pages (index, pricing, status, legal/*) do not spawn workers
+  # at all; the directive is permissive only where there is nothing
+  # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
+  # changes.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
   # X-Frame-Options DENY — legacy header; modern browsers prefer
@@ -137,3 +146,19 @@
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: public, max-age=3600
+
+# OpenAPI specs served from /api/*.yaml. Pin Content-Type so Redoc
+# (and any other fetcher) parses them as YAML, not as text/plain or
+# application/octet-stream. Short cache so a spec re-freeze
+# propagates within an hour without a forced reload.
+/api/*.yaml
+  Content-Type: application/yaml; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+# Redoc bundle. Self-hosted at /assets/redoc.standalone.js so the
+# strict CSP (script-src 'self') can render the public docs at /docs
+# without permitting any third-party CDN. Long-cache because the
+# version is pinned at build time and a re-checkin invalidates by
+# path-bust.
+/assets/redoc.standalone.js
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,0 +1,1980 @@
+# ChainMore Gateway — Public HTTP Surface
+#
+# Version:  1.0.0-rc1
+# Frozen:     2026-04-21  (CKO Checkout Session Closure delivery)
+# Re-frozen:  2026-04-26  (post-MerchantAuth-JWT + Merchant-UI cluster
+#                          OpenAPI-Drift-Audit sweep — IdempotencyKey
+#                          on all 19 mutation endpoints, BadRequest
+#                          response on every Idempotency-required path,
+#                          N3 cross-merchant asymmetry documented in
+#                          info.description, MerchantAuth-JWT codes
+#                          jwt_invalid / jwt_expired / membership_missing
+#                          merged, IDX webhook codes
+#                          replay_of_test_event_forbidden,
+#                          delivery_endpoint_mismatch,
+#                          endpoint_secret_missing_envelope merged.
+#                          F-UI-6 follow-up (same day): wrong_auth_kind
+#                          split out of jwt_invalid for credential-kind
+#                          mismatches caught at the dispatcher boundary.)
+# Scope:    all routes mounted by internal/gateway/server.go.
+#           Authoritative manifest lives in internal/gateway/routes.go;
+#           cmd/openapi-drift-check --service gateway enforces spec↔code agreement.
+# Non-goals: SDK generation, wallet-signing payload formats (owned by the
+#            checkout-web frontend contract), long-polling streams.
+#
+# Semver contract:
+#   MAJOR — breaking change to path, method, or required field.
+#   MINOR — additive field, new optional query param, new endpoint.
+#   PATCH — bugfix, docs clarification, non-behavioral schema tightening.
+#
+# Invariants enforced by this surface (cross-referenced in per-route descriptions):
+#   REC-I1   — Route Engine must be a productive consumer on /v1/routing/plan
+#   PFV-I1   — Pre-Flight Validation must be productive on /v1/validation/validate
+#   DISP-I1  — Dispatcher gate must be productive on /v1/dispatch/decide
+#   EXE-GATE-I1 — /v1/payments/{id}/attempts refuses without a wired gate
+#   CKO-I1   — Session-Is-Truth: hosted checkout routes read/write through
+#              internal/checkout, never directly against treasury rows.
+#   CKO-I2   — Transitions-Are-Guarded: every mutation passes through the
+#              state machine in internal/domain/checkout.go.
+#   CKO-I3   — Call-Matches-State: handlers reject calls whose required
+#              current state is not met (409 invalid_state).
+#   CKO-I4   — Token-Hash-Indexed: /v1/checkout/sessions/by-token hashes
+#              the raw token server-side; no raw token ever hits storage.
+#   N3       — Cross-merchant asymmetry by bearer kind (deliberately
+#              accepted): API-key path returns 404, JWT path returns 403
+#              cross_merchant_forbidden. See info.description for the
+#              full statement and ADR_MERCHANT_AUTH_JWT.md §Deliberately
+#              Accepted Asymmetry.
+#   N6       — Access tokens only on the JWT path: ID tokens are
+#              rejected via the audience check. See
+#              ADR_MERCHANT_AUTH_JWT.md.
+#
+openapi: 3.1.0
+info:
+  title: ChainMore Gateway API
+  version: 1.0.0-rc1
+  description: |
+    Public HTTP surface for the ChainMore payment platform.
+
+    **Audience:** merchant backends (payment creation, webhook correlation) and
+    the hosted-checkout frontend (wallet binding, route selection, submit).
+    The gateway is the ONLY ingress for the core orchestration pipeline
+    (routing → validation → dispatch → execution); treasury operations live
+    under a separate, dashboard-only surface (`api/openapi/treasury.yaml`).
+
+    **Error envelope:** every non-2xx response uses RFC 7807 `application/problem+json`
+    with the shape defined by `#/components/schemas/Problem`. The `code` field
+    carries a stable machine-readable identifier; new codes are additive.
+
+    **Cross-merchant access (N3 asymmetry):** this surface accepts two
+    bearer kinds — server API keys (`cm_test_…` / `cm_live_…`) and OIDC
+    JWTs (Keycloak access tokens carrying `aud=chainmore-gateway`).
+    A request that authenticates successfully but targets a resource
+    owned by a *different* merchant is treated differently per bearer
+    kind, by deliberate design:
+
+      - **API-key path:** returns `404 not_found`. The server-to-server
+        contract treats "resource does not exist in your scope" as a
+        valid machine-facing semantic; surfacing the cross-merchant
+        distinction would leak the existence of resources owned by
+        other tenants.
+      - **JWT path:** returns `403 cross_merchant_forbidden`. The
+        merchant-user-in-UI flow benefits from an explicit message —
+        a confused user who clicked into the wrong tenant's bookmarked
+        URL gets an actionable response rather than a misleading 404.
+
+    Merchant integrations using the API-key path should therefore
+    handle 404 as the canonical "wrong merchant or genuinely missing"
+    signal. The same logical condition surfaces as 403 only on the
+    OIDC JWT path used by the merchant dashboard frontend.
+
+    **Credential-kind mismatch (`wrong_auth_kind`):** the gateway's
+    auth dispatcher rejects requests where the bearer SHAPE doesn't
+    match the route's auth class — an API key (`cm_test_…` /
+    `cm_live_…`) on a control-plane (JWT-only) route, or a JWT on a
+    machine (API-key-only) route. This refusal lands on
+    `401 wrong_auth_kind` and is distinct from `jwt_invalid`: the
+    latter means "the bearer was presented as a JWT but failed
+    signature / issuer / audience validation"; `wrong_auth_kind`
+    means "you sent the wrong credential kind for this surface".
+    The webhook test endpoint
+    (`POST /v1/webhook_endpoints/{id}/test`) is the single
+    dual-auth route that accepts either kind.
+
+    **Idempotency:** every POST, PUT, PATCH, and DELETE request MUST
+    include an `Idempotency-Key` header. The key scopes server-side
+    deduplication: a retry of the same request with the same key
+    returns the cached response without producing a second side
+    effect. Generate one key per logical operation (e.g. per
+    user-clicked Submit), not per network attempt. Missing keys
+    return `400 idempotency_required`.
+  contact:
+    name: ChainMore
+    url: https://github.com/chainmore/chainmore
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.chainmore.example
+    description: Production (placeholder URL — set at deploy time)
+  - url: http://localhost:8080
+    description: Local development
+
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: cm_{mode}_{hex}
+      description: |
+        Merchant API key presented as `Authorization: Bearer
+        cm_test_<hex>` (test mode) or `Authorization: Bearer
+        cm_live_<hex>` (live mode). Required for every route except
+        `GET /health`, the public `/checkout*` HTML shell, and the
+        widget JSON route `GET /v1/checkout/widget/session` which
+        uses a short-lived checkout token minted by `POST
+        /v1/checkout/sessions` instead of the merchant key.
+
+        IDX-I2: mode (test/live) is derived server-side from the
+        authenticated key and is NEVER accepted as a body, header,
+        or query field. Attempts to assert mode on the request are
+        silently ignored in favour of the key's mode.
+
+  parameters:
+    CorrelationID:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      description: |
+        Client-supplied correlation ID for request tracing. If absent,
+        the gateway generates one and echoes it on the response. Always
+        present in error envelopes for log joining.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        Idempotency key for mutation endpoints. Required on
+        `/v1/routing/plan`, `/v1/validation/validate`,
+        `/v1/dispatch/decide`, and `POST /v1/payments/{id}/attempts`
+        in strict modes; optional on checkout endpoints where the
+        session ID already provides idempotency.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    PaymentID:
+      name: id
+      in: path
+      required: true
+      description: Payment aggregate identifier (ULID-shaped `pay_…`).
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    AttemptID:
+      name: aid
+      in: path
+      required: true
+      description: Payment-attempt identifier (ULID-shaped `att_…`).
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    CheckoutPaymentID:
+      name: payment_id
+      in: path
+      required: true
+      description: Payment ID the checkout session is bound to.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    CheckoutToken:
+      name: token
+      in: path
+      required: true
+      description: |
+        Raw checkout token issued by `InitSession`. The gateway hashes
+        it server-side and looks up the session by the hash (CKO-I4);
+        the raw token is never persisted.
+      schema: { type: string, minLength: 1, maxLength: 256 }
+
+    DecisionID:
+      name: id
+      in: path
+      required: true
+      description: Opaque decision identifier (ULID-shaped).
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    APIKeyID:
+      name: id
+      in: path
+      required: true
+      description: Merchant API-key identifier (UUID-shaped `ak_…`).
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    WebhookEndpointID:
+      name: id
+      in: path
+      required: true
+      description: Webhook endpoint identifier (UUID-shaped `wh_…`).
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    DashboardPaymentID:
+      name: id
+      in: path
+      required: true
+      description: Payment aggregate identifier used by the dashboard read plane.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    DashboardSessionID:
+      name: id
+      in: path
+      required: true
+      description: Checkout session identifier used by the dashboard read plane.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    DashboardCursor:
+      name: cursor
+      in: query
+      required: false
+      description: |
+        Opaque pagination cursor as returned by the previous page's
+        `next_cursor` field. Omit on the first page.
+      schema: { type: string, maxLength: 256 }
+
+    DashboardLimit:
+      name: limit
+      in: query
+      required: false
+      description: |
+        Maximum rows to return. Server-clamped to the dashboard-tier
+        default if absent or out of range.
+      schema: { type: integer, minimum: 1, maximum: 200 }
+
+  # -------------------------------------------------------------------------
+  # Schemas
+  # -------------------------------------------------------------------------
+  schemas:
+    Problem:
+      type: object
+      description: |
+        RFC 7807 error envelope. Every failure response from this API
+        carries this shape; match on `code` for stable integration
+        behaviour. See the per-code merchant-facing remedy pages at
+        `https://docs.chainmore.dev/errors/<slug>` (the full URL is
+        also returned inline as `docs_url`).
+      required: [title, code]
+      properties:
+        title:
+          type: string
+          description: Short human-readable summary.
+        status:
+          type: integer
+          description: HTTP status code (mirrors the response status).
+        detail:
+          type: string
+          description: Longer human-readable detail; may include sanitized error text.
+        code:
+          type: string
+          description: |
+            Stable machine-readable error code. See the merchant error
+            reference at `docs/merchant/error-reference.md` for the
+            canonical remedy for each code. New codes may be added at
+            any time; clients MUST NOT treat an unknown code as a parse
+            error.
+          enum:
+            - attempt_binding_mismatch
+            - checkout_operation_failed
+            - create_endpoint_failed
+            - create_key_failed
+            - create_payment_failed
+            - cross_merchant_forbidden
+            - dashboard_operation_failed
+            - delivery_endpoint_mismatch
+            - disable_endpoint_failed
+            - dispatch_failed
+            - dispatch_lookup_failed
+            - dispatch_precondition_failed
+            - endpoint_disabled
+            - endpoint_secret_missing_envelope
+            - exec_dispatch_binding_mismatch
+            - exec_dispatch_decision_not_found
+            - exec_dispatch_not_allowed
+            - exec_no_dispatch_decision
+            - idempotency_required
+            - invalid_authorization_mode
+            - invalid_json
+            - invalid_request
+            - invalid_state
+            - invalid_transition
+            - jwt_expired
+            - jwt_invalid
+            - list_endpoints_failed
+            - list_keys_failed
+            - membership_missing
+            - method_not_allowed
+            - not_found
+            - not_implemented
+            - payment_lookup_failed
+            - rate_limited
+            - register_direct_tx_failed
+            - replay_delivery_failed
+            - replay_of_test_event_forbidden
+            - revoke_key_failed
+            - rotate_endpoint_secret_failed
+            - rotate_key_failed
+            - routing_lookup_failed
+            - routing_plan_failed
+            - routing_precondition_failed
+            - server_misconfigured
+            - session_expired
+            - start_attempt_failed
+            - start_attempt_precondition_failed
+            - test_event_failed
+            - unauthorized
+            - update_endpoint_failed
+            - validation_failed
+            - validation_lookup_failed
+            - validation_precondition_failed
+            - wrong_auth_kind
+        retryable:
+          type: boolean
+          description: |
+            `true` when the client can safely retry the same request;
+            `false` (the default) when the failure requires a shape
+            change. Rate-limit and some server-side failures are
+            retryable.
+        docs_url:
+          type: string
+          format: uri
+          description: |
+            Merchant-facing docs URL for this specific refusal code.
+            Stable per `code` value — safe to link to from dashboards
+            or verifiers. Empty when the code is unregistered (which
+            the refusalcodes drift-check guards against in CI).
+          example: https://docs.chainmore.dev/errors/endpoint-disabled
+        correlation_id:
+          type: string
+          description: Server-generated correlation ID; echoed in `X-Correlation-ID`.
+
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+
+    # ── Payments (Execution) ────────────────────────────────────────────────
+    CreatePaymentRequest:
+      type: object
+      required: [merchant_id, amount_minor, currency]
+      properties:
+        merchant_id:      { type: string }
+        merchant_order_id:{ type: string }
+        amount_minor:     { type: integer, minimum: 1 }
+        currency:         { type: string, description: "ISO-4217 fiat code, e.g. USD." }
+        payment_case:
+          type: string
+          description: "Payment case, e.g. stable_to_stable."
+        canonical_asset:
+          type: string
+          description: "Stablecoin symbol settled to the merchant (e.g. USDC, USDT)."
+        checkout_required:
+          type: boolean
+          description: "Whether a hosted-checkout session must be issued before the attempt path is usable."
+
+    CreatePaymentResponse:
+      type: object
+      required: [payment_id]
+      properties:
+        payment_id: { type: string }
+
+    PaymentView:
+      type: object
+      description: Read-model view of a Payment aggregate.
+      required: [id, merchant_id, public_status, orchestration_state]
+      properties:
+        id:                     { type: string }
+        merchant_id:            { type: string }
+        merchant_order_id:      { type: string }
+        requested_amount_minor: { type: integer }
+        requested_currency:     { type: string }
+        canonical_asset:        { type: string }
+        payment_case:           { type: string }
+        public_status:          { type: string, description: "Merchant-visible status." }
+        orchestration_state:    { type: string, description: "Internal orchestration state." }
+        checkout_required:      { type: boolean }
+        created_at:             { type: string, format: date-time }
+        updated_at:             { type: string, format: date-time }
+
+    StartAttemptRequest:
+      type: object
+      properties:
+        route_candidate_id:  { type: string }
+        route_validation_id: { type: string }
+
+    StartAttemptResponse:
+      type: object
+      required: [attempt_id]
+      properties:
+        attempt_id: { type: string }
+        leg_ids:
+          type: array
+          items: { type: string }
+
+    RegisterDirectTxRequest:
+      type: object
+      required: [leg_id, tx_hash]
+      properties:
+        leg_id:  { type: string }
+        tx_hash: { type: string, description: "0x-prefixed hex." }
+
+    RegisterDirectTxResponse:
+      type: object
+      required: [leg_id, tx_hash]
+      properties:
+        leg_id:  { type: string }
+        tx_hash: { type: string }
+
+    # ── Checkout (CKO) ──────────────────────────────────────────────────────
+    InitSessionRequest:
+      type: object
+      required: [payment_id]
+      properties:
+        payment_id: { type: string }
+
+    InitSessionResponse:
+      type: object
+      required: [session_id, checkout_token, expires_at]
+      properties:
+        session_id:
+          type: string
+          description: "CKO session ID (bound 1:1 to payment_id)."
+        checkout_token:
+          type: string
+          description: |
+            Raw checkout token. Present only in this response; the server
+            persists `sha256(token)` (CKO-I4) and never the raw value.
+        expires_at:
+          type: string
+          format: date-time
+
+    BindWalletRequest:
+      type: object
+      required: [wallet_address, chain_id]
+      properties:
+        wallet_address: { type: string }
+        chain_id:       { type: string, description: "CAIP-2 chain identifier, e.g. eip155:137." }
+
+    BindWalletResponse:
+      type: object
+      required: [state]
+      properties:
+        state:                      { type: string, description: "New CKO state after binding." }
+        route_candidate_id:         { type: string }
+        route_validation_id:        { type: string }
+        selected_route_fingerprint: { type: string }
+        quote_expires_at:           { type: string, format: date-time }
+
+    SubmitExecutionRequest:
+      type: object
+      required: [authorization_mode]
+      properties:
+        tx_hash:
+          type: string
+          description: |
+            0x-prefixed hex. Required for `direct_wallet_tx`; ignored for
+            sponsored flows where the relay reports back asynchronously.
+        authorization_mode:
+          type: string
+          description: |
+            One of: `direct_wallet_tx`, `permit_2612`, `transfer_with_authorization`,
+            `gasless_userop`. Must be supported by the selected route.
+
+    SubmitExecutionResponse:
+      type: object
+      required: [state]
+      properties:
+        state:                  { type: string, description: "New CKO state after submit." }
+        dispatch_decision_id:   { type: string }
+        payment_attempt_id:     { type: string }
+        submitted_tx_hash:      { type: string }
+
+    CheckoutState:
+      type: object
+      description: Read-model view the hosted-checkout frontend polls.
+      required: [state]
+      properties:
+        state:                      { type: string }
+        payment_id:                 { type: string }
+        wallet_address:             { type: string }
+        chain_id:                   { type: string }
+        selected_route_fingerprint: { type: string }
+        route_candidate_id:         { type: string }
+        route_validation_id:        { type: string }
+        dispatch_decision_id:       { type: string }
+        payment_attempt_id:         { type: string }
+        settlement_journal_id:      { type: string }
+        submitted_tx_hash:          { type: string }
+        failure_reason:             { type: string }
+        quote_expires_at:           { type: string, format: date-time }
+        expires_at:                 { type: string, format: date-time }
+        terminal_at:                { type: string, format: date-time }
+        updated_at:                 { type: string, format: date-time }
+
+    CheckoutSession:
+      type: object
+      description: Full CKO session record returned by the by-token lookup.
+      required: [id, payment_id, state]
+      properties:
+        id:                         { type: string }
+        payment_id:                 { type: string }
+        checkout_token_hash:        { type: string }
+        state:                      { type: string }
+        wallet_address:             { type: string }
+        chain_id:                   { type: string }
+        selected_route_fingerprint: { type: string }
+        route_candidate_id:         { type: string }
+        route_validation_id:        { type: string }
+        dispatch_decision_id:       { type: string }
+        payment_attempt_id:         { type: string }
+        settlement_journal_id:      { type: string }
+        submitted_tx_hash:          { type: string }
+        failure_reason:             { type: string }
+        quote_expires_at:           { type: string, format: date-time }
+        expires_at:                 { type: string, format: date-time }
+        terminal_at:                { type: string, format: date-time }
+        created_at:                 { type: string, format: date-time }
+        updated_at:                 { type: string, format: date-time }
+
+    # ── Merchants (placeholder; Phase-1) ────────────────────────────────────
+    MerchantsPlaceholder:
+      type: object
+      description: |
+        Phase-1 placeholder. The merchants surface is frozen as an
+        observable shape so clients can detect when it lights up.
+      properties:
+        status:
+          type: string
+          enum: [placeholder]
+
+    # ── Routing (REC) ───────────────────────────────────────────────────────
+    PlanRouteRequest:
+      type: object
+      required: [payment_id, checkout_session_id]
+      properties:
+        payment_id:          { type: string }
+        checkout_session_id: { type: string }
+
+    RoutingDecision:
+      type: object
+      description: |
+        Authoritative engine output. Per REC-I1 C1 every engine-relevant
+        field is reconstructed server-side from Payment + CheckoutSession;
+        the caller only supplies the two binding IDs.
+      required: [id, candidates]
+      properties:
+        id:                 { type: string }
+        payment_id:         { type: string }
+        checkout_session_id:{ type: string }
+        candidates:
+          type: array
+          items: { $ref: "#/components/schemas/RouteCandidate" }
+        created_at:         { type: string, format: date-time }
+
+    RouteCandidate:
+      type: object
+      required: [id, fingerprint]
+      properties:
+        id:             { type: string }
+        fingerprint:    { type: string }
+        provider_id:    { type: string }
+        source_chain:   { type: string }
+        destination_chain: { type: string }
+        source_asset:   { type: string }
+        destination_asset:{ type: string }
+        score:          { type: number }
+        supports_permit: { type: boolean }
+        supports_auth_tx: { type: boolean }
+        gasless_supported:{ type: boolean }
+        quote_ttl_ms:    { type: integer }
+
+    # ── Validation (PFV) ────────────────────────────────────────────────────
+    ValidateRouteRequest:
+      type: object
+      required: [payment_id, checkout_session_id, route_candidate_id]
+      properties:
+        payment_id:          { type: string }
+        checkout_session_id: { type: string }
+        route_candidate_id:  { type: string }
+
+    RouteValidation:
+      type: object
+      required: [id, passed]
+      properties:
+        id:                { type: string }
+        route_candidate_id:{ type: string }
+        passed:            { type: boolean }
+        checks:
+          type: array
+          items: { $ref: "#/components/schemas/ValidationCheck" }
+        expires_at:        { type: string, format: date-time }
+        created_at:        { type: string, format: date-time }
+
+    ValidationCheck:
+      type: object
+      required: [name, passed]
+      properties:
+        name:   { type: string }
+        passed: { type: boolean }
+        detail: { type: string }
+
+    # ── Dispatch (DISP) ─────────────────────────────────────────────────────
+    DispatchDecideRequest:
+      type: object
+      required: [payment_id, checkout_session_id, route_candidate_id]
+      properties:
+        payment_id:          { type: string }
+        checkout_session_id: { type: string }
+        route_candidate_id:  { type: string }
+        route_validation_id: { type: string }
+
+    DispatchDecision:
+      type: object
+      required: [id, admitted]
+      properties:
+        id:                  { type: string }
+        payment_id:          { type: string }
+        checkout_session_id: { type: string }
+        route_candidate_id:  { type: string }
+        route_validation_id: { type: string }
+        admitted:            { type: boolean }
+        rejection_code:      { type: string }
+        rejection_detail:    { type: string }
+        engine_version:      { type: string }
+        created_at:          { type: string, format: date-time }
+
+    # ── Widget / Hosted Checkout (WGT-I1) ────────────────────────────────────
+    WidgetSessionView:
+      type: object
+      description: |
+        Redacted, server-computed view the Hosted Checkout / Widget
+        renders from. WGT-I1: every pixel is a pure function of this
+        body. The raw checkout token is NEVER echoed in this view.
+      required: [session_id, payment_id, state, next_action, display, expires_at]
+      properties:
+        session_id:        { type: string }
+        payment_id:        { type: string }
+        state:             { type: string, description: "Raw CKO state; UI MUST drive from next_action, not state." }
+        next_action:
+          type: string
+          description: |
+            Server-issued UI directive. One of: `connect_wallet`,
+            `select_route`, `awaiting_user_signature`, `processing`,
+            `settled`, `failed`, `expired`, `cancelled`.
+        display:
+          type: object
+          required: [amount_minor, currency]
+          properties:
+            amount_minor:     { type: integer }
+            currency:         { type: string }
+            asset:            { type: string }
+            merchant_display: { type: string }
+            merchant_order_id:{ type: string }
+        wallet:
+          type: object
+          properties:
+            address:  { type: string }
+            chain_id: { type: string }
+        routes:
+          type: array
+          items:
+            type: object
+            required: [fingerprint, authorization_mode]
+            properties:
+              fingerprint:         { type: string }
+              authorization_mode:  { type: string }
+              estimated_fee_minor: { type: integer }
+              is_primary:          { type: boolean }
+        submitted:
+          type: object
+          properties:
+            tx_hash: { type: string }
+        failure:
+          type: object
+          properties:
+            code:        { type: string }
+            description: { type: string }
+        settlement:
+          type: object
+          properties:
+            settled_at: { type: string, format: date-time }
+        expires_at:       { type: string, format: date-time }
+        quote_expires_at: { type: string, format: date-time }
+
+    # ── Merchant Dashboard read plane (MDA-I2 — read-only) ───────────────────
+    MerchantIntegrationView:
+      type: object
+      description: |
+        Summary of the merchant's integration posture, scoped to the
+        bearer-resolved mode. Mirrors `domain.MerchantDashboardIntegrationView`
+        in `internal/domain/dashboard.go`. All fields are redacted
+        projections — no secrets, no api-key plaintext, no webhook
+        signing material.
+
+        The `mode` field reflects which mode the response was scoped
+        to (the merchant's currently-resolved bearer mode); `active_api_key_count`
+        and the webhook counters are filtered to that mode.
+      required:
+        - merchant_id
+        - legal_name
+        - status
+        - default_currency
+        - mode
+        - active_api_key_count
+        - webhook_endpoint_count
+        - webhook_endpoint_enabled_count
+        - created_at
+        - generated_at
+      properties:
+        merchant_id:                    { type: string }
+        legal_name:                     { type: string }
+        status:                         { type: string, description: "merchant account status (e.g. 'active')." }
+        default_currency:               { type: string, description: "ISO 4217 fiat code." }
+        mode:                           { type: string, enum: [test, live], description: "Bearer-resolved mode this response was scoped to." }
+        active_api_key_count:           { type: integer, minimum: 0 }
+        webhook_endpoint_count:         { type: integer, minimum: 0 }
+        webhook_endpoint_enabled_count: { type: integer, minimum: 0 }
+        created_at:                     { type: string, format: date-time, description: "Merchant joined-on timestamp." }
+        generated_at:                   { type: string, format: date-time, description: "Server snapshot timestamp." }
+
+    DashboardPaymentView:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardPaymentView` — the redacted
+        merchant-facing projection of a Payment row. Pipeline-internal
+        fields (rail, route candidate, dispatcher decision, treasury
+        wallet) are deliberately absent.
+      required:
+        - payment_id
+        - merchant_order_id
+        - environment
+        - requested_amount_minor
+        - requested_currency
+        - public_status
+        - checkout_required
+        - created_at
+        - updated_at
+      properties:
+        payment_id:             { type: string }
+        merchant_order_id:      { type: string }
+        environment:            { type: string, enum: [sandbox, production] }
+        requested_amount_minor: { type: integer, format: int64 }
+        requested_currency:     { type: string, description: "ISO 4217 fiat code." }
+        canonical_asset:        { type: string, description: "Settlement asset symbol; omitted before resolution." }
+        public_status:          { type: string, description: "Merchant-facing payment status (same enum the webhook payload carries)." }
+        checkout_required:      { type: boolean }
+        mode:                   { type: string, enum: [test, live], description: "Per-row mode mirror; redundant with the page-level scope but kept for single-row debug copies." }
+        created_at:             { type: string, format: date-time }
+        updated_at:             { type: string, format: date-time }
+
+    DashboardPaymentsPage:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardPaymentsPage`. Cursor-based
+        pagination via `next_cursor` + `has_more`.
+      required: [items, has_more, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardPaymentView" }
+        has_more:     { type: boolean }
+        next_cursor:  { type: string }
+        generated_at: { type: string, format: date-time }
+
+    DashboardSessionView:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardSessionView` — the merchant-
+        facing redacted projection of a CheckoutSession. Distinct
+        from the customer-browser WidgetSessionView: this surface
+        carries correlation IDs the merchant already owns.
+      required:
+        - session_id
+        - payment_id
+        - state
+        - next_action
+        - expires_at
+      properties:
+        session_id:        { type: string }
+        payment_id:        { type: string }
+        state:             { type: string, description: "Raw CheckoutSessionState." }
+        next_action:       { type: string, description: "Same widget-side terminal-vs-live classification enum." }
+        wallet_address:    { type: string, description: "Set once the user has bound a wallet." }
+        chain_id:          { type: string }
+        submitted_tx_hash: { type: string, description: "User-signed tx hash (on-chain public) — never stored secret material." }
+        failure_code:      { type: string, description: "Bounded failure-reason code; reuses the widget-view mapping." }
+        expires_at:        { type: string, format: date-time }
+        quote_expires_at:  { type: string, format: date-time }
+        terminal_at:       { type: string, format: date-time }
+        mode:              { type: string, enum: [test, live] }
+
+    DashboardSessionsPage:
+      type: object
+      required: [items, has_more, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardSessionView" }
+        has_more:     { type: boolean }
+        next_cursor:  { type: string }
+        generated_at: { type: string, format: date-time }
+
+    DashboardWebhookEndpointView:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardWebhookEndpointView` — the
+        dashboard-side redacted projection. Differs from the IDX
+        WebhookEndpoint shape by surfacing `has_secret` instead of
+        any secret material.
+      required: [endpoint_id, url, enabled, has_secret, created_at, updated_at]
+      properties:
+        endpoint_id: { type: string }
+        url:         { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+          description: "Subscribed event types; empty array = wildcard."
+        enabled:     { type: boolean }
+        has_secret:  { type: boolean, description: "True iff a rotatable signing secret is currently on the row (envelope columns populated)." }
+        created_at:  { type: string, format: date-time }
+        updated_at:  { type: string, format: date-time }
+
+    DashboardWebhookEndpointsPage:
+      type: object
+      required: [items, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardWebhookEndpointView" }
+        generated_at: { type: string, format: date-time }
+
+    DashboardWebhookDeliveryView:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardWebhookDeliveryView`. Hard-
+        redacted: signing material, raw body bytes, sig timestamp,
+        signature hex, and merchant_id are all absent — this surface
+        is for correlation + diagnostics, not for replay (replay
+        uses the IDX `/replay` endpoint).
+      required:
+        - delivery_id
+        - payment_id
+        - endpoint_id
+        - event_type
+        - event_id
+        - state
+        - attempt_count
+        - created_at
+      properties:
+        delivery_id:   { type: string }
+        payment_id:    { type: string }
+        endpoint_id:   { type: string }
+        event_type:    { type: string }
+        event_id:      { type: string, description: "Idempotency key the merchant dedupes on at their receiving side." }
+        state:
+          type: string
+          enum: [pending, delivered, failed]
+          description: "Mirrors the outbox row state. The internal SELECT-FOR-UPDATE-SKIP-LOCKED 'dispatched' / 'in_flight' transitions are deliberately not surfaced."
+        attempt_count: { type: integer, minimum: 0 }
+        http_status:   { type: integer, description: "Last observed HTTP status; zero before any attempt has landed." }
+        last_error:    { type: string, description: "Bounded reason code (WHK-I4); never raw response text." }
+        created_at:    { type: string, format: date-time }
+        delivered_at:  { type: string, format: date-time, description: "Set when the row reaches 'delivered'; absent while pending/failed." }
+
+    DashboardWebhookDeliveriesPage:
+      type: object
+      required: [items, has_more, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardWebhookDeliveryView" }
+        has_more:     { type: boolean }
+        next_cursor:  { type: string }
+        generated_at: { type: string, format: date-time }
+
+    # ── Merchant Integration control plane (IDX-M2 / IDX-M4) ─────────────────
+    APIKey:
+      type: object
+      description: |
+        Projection of an `api_keys` row. Never carries the secret —
+        that is present only in the one-shot response of create /
+        rotate and never re-derivable thereafter.
+      required: [id, merchant_id, name, mode, key_prefix, status, created_at]
+      properties:
+        id:           { type: string }
+        merchant_id:  { type: string }
+        name:         { type: string }
+        mode:         { type: string, enum: [test, live] }
+        key_prefix:   { type: string, description: "First 9 characters of the plaintext key; safe to display." }
+        status:       { type: string, enum: [active, revoked] }
+        rotated_from: { type: string }
+        created_at:   { type: string, format: date-time }
+        revoked_at:   { type: string, format: date-time }
+
+    CreateKeyRequest:
+      type: object
+      description: |
+        Body for `POST /v1/keys`. IDX-I2: `mode` MUST NOT appear in
+        the body — it is derived from the authenticated key. A `mode`
+        field, if sent, is silently ignored.
+      properties:
+        name: { type: string, description: "Human-readable label." }
+
+    CreateKeyResponse:
+      type: object
+      required: [api_key, secret]
+      properties:
+        api_key: { $ref: "#/components/schemas/APIKey" }
+        secret:
+          type: string
+          description: |
+            Plaintext `cm_{mode}_{hex}` secret. Present only in this
+            response; the server persists only `sha256(secret)`.
+
+    ListKeysResponse:
+      type: object
+      required: [api_keys, mode]
+      properties:
+        api_keys:
+          type: array
+          items: { $ref: "#/components/schemas/APIKey" }
+        mode: { type: string, enum: [test, live] }
+
+    RotateKeyResponse:
+      type: object
+      required: [api_key, secret, predecessor]
+      properties:
+        api_key:     { $ref: "#/components/schemas/APIKey" }
+        secret:      { type: string, description: "Plaintext of the new key — returned once." }
+        predecessor: { $ref: "#/components/schemas/APIKey" }
+
+    WebhookEndpoint:
+      type: object
+      required: [id, merchant_id, url, events, enabled, mode, created_at]
+      properties:
+        id:          { type: string }
+        merchant_id: { type: string }
+        url:         { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+        enabled:     { type: boolean }
+        mode:        { type: string, enum: [test, live] }
+        created_at:  { type: string, format: date-time }
+        updated_at:  { type: string, format: date-time }
+
+    CreateEndpointRequest:
+      type: object
+      required: [url, events]
+      description: |
+        Body for `POST /v1/webhook_endpoints`. IDX-I2: `mode` is NOT
+        accepted in the body; it is derived from the authenticated
+        key. Non-https URLs are rejected.
+      properties:
+        url:
+          type: string
+          format: uri
+          description: "Must be an https URL."
+        events:
+          type: array
+          description: "Event types to subscribe to (e.g. payment.settled, payment.failed)."
+          items: { type: string }
+
+    CreateEndpointResponse:
+      type: object
+      required: [webhook_endpoint, secret]
+      properties:
+        webhook_endpoint: { $ref: "#/components/schemas/WebhookEndpoint" }
+        secret:
+          type: string
+          description: |
+            Plaintext `whsec_{hex}` signing secret. Present only in
+            this response; the server persists the envelope-encrypted
+            ciphertext and the caller must store this value in their
+            own secret manager.
+
+    UpdateEndpointRequest:
+      type: object
+      description: |
+        Partial update. Any field omitted is left unchanged. `mode`
+        is NOT updatable — rotate a new endpoint instead.
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items: { type: string }
+        enabled:
+          type: boolean
+
+    ListEndpointsResponse:
+      type: object
+      required: [webhook_endpoints, mode]
+      properties:
+        webhook_endpoints:
+          type: array
+          items: { $ref: "#/components/schemas/WebhookEndpoint" }
+        mode: { type: string, enum: [test, live] }
+
+    # ── Webhook delivery body (merchant consumes) ────────────────────────────
+    WebhookEvent:
+      type: object
+      description: |
+        Shape of the JSON body ChainMore POSTs to a registered
+        webhook endpoint. The body is signed with HMAC-SHA256 over
+        the exact raw bytes using the endpoint's `whsec_*` secret;
+        the signature is carried in the `X-ChainMore-Signature`
+        header as lowercase hex. See docs/quickstart.md §4 for the
+        verification snippet.
+      required: [id, type, created_at, mode, data]
+      properties:
+        id:         { type: string, description: "Unique event id — dedupe by this." }
+        type:
+          type: string
+          description: "Event type, e.g. `payment.settled`, `payment.failed`."
+        created_at: { type: string, format: date-time }
+        mode:       { type: string, enum: [test, live] }
+        data:
+          type: object
+          description: "Event-specific payload. For payment.* events: { payment, checkout_session }."
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Unauthorized:
+      description: Missing or invalid credentials.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Resource not found.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Conflict:
+      description: |
+        State/precondition conflict — e.g. CKO state disallows the
+        requested transition (CKO-I2/I3), validation precondition
+        unmet, or dispatch gate refused.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Gone:
+      description: Resource has expired (e.g. quote or session TTL passed).
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    RateLimited:
+      description: Request refused by the fixed-window limiter.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+# ---------------------------------------------------------------------------
+# Paths
+#
+# NOTE: Each top-level path key is indented with exactly two spaces; each
+# method under it is indented with exactly four. The drift-checker parser
+# relies on this formatting — preserve it on edits.
+# ---------------------------------------------------------------------------
+paths:
+  /health:
+    get:
+      summary: Liveness probe.
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Service is listening.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+
+  /v1/payments:
+    post:
+      summary: Create a payment.
+      operationId: createPayment
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePaymentRequest" }
+      responses:
+        '201':
+          description: Payment created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatePaymentResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/payments/{id}:
+    get:
+      summary: Read a payment.
+      operationId: getPayment
+      parameters:
+        - $ref: "#/components/parameters/PaymentID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Payment view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/payments/{id}/attempts:
+    post:
+      summary: Start a payment attempt (EXE-GATE-I1 — refuses without wired gate).
+      operationId: startAttempt
+      parameters:
+        - $ref: "#/components/parameters/PaymentID"
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StartAttemptRequest" }
+      responses:
+        '201':
+          description: Attempt created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StartAttemptResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/payments/{id}/attempts/{aid}/register-direct-tx:
+    post:
+      summary: Record the user-signed tx for a direct-wallet leg.
+      operationId: registerDirectTx
+      parameters:
+        - $ref: "#/components/parameters/PaymentID"
+        - $ref: "#/components/parameters/AttemptID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterDirectTxRequest" }
+      responses:
+        '200':
+          description: Direct tx recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegisterDirectTxResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/checkout/sessions:
+    post:
+      summary: Initialise a hosted-checkout session (CKO-I1 entry point).
+      operationId: initCheckoutSession
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InitSessionRequest" }
+      responses:
+        '201':
+          description: Session created; raw token returned once.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InitSessionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/checkout/sessions/by-payment/{payment_id}:
+    get:
+      summary: Poll the checkout state for a payment.
+      operationId: getCheckoutState
+      parameters:
+        - $ref: "#/components/parameters/CheckoutPaymentID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Current CKO read-model view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutState" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/checkout/sessions/by-payment/{payment_id}/bind-wallet:
+    post:
+      summary: Bind wallet + source chain; triggers routing + validation.
+      operationId: bindCheckoutWallet
+      parameters:
+        - $ref: "#/components/parameters/CheckoutPaymentID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BindWalletRequest" }
+      responses:
+        '200':
+          description: Session advanced to route_ready.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BindWalletResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+
+  /v1/checkout/sessions/by-payment/{payment_id}/submit:
+    post:
+      summary: User-signed submit; runs dispatch gate then starts execution.
+      operationId: submitCheckoutExecution
+      parameters:
+        - $ref: "#/components/parameters/CheckoutPaymentID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitExecutionRequest" }
+      responses:
+        '200':
+          description: Session advanced to submitted/executing.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmitExecutionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+
+  /v1/checkout/sessions/by-payment/{payment_id}/cancel:
+    post:
+      summary: Cancel a non-terminal session.
+      operationId: cancelCheckoutSession
+      parameters:
+        - $ref: "#/components/parameters/CheckoutPaymentID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '204':
+          description: Session cancelled (terminal).
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/checkout/sessions/by-token/{token}:
+    get:
+      summary: Look up the session bound to a raw checkout token (CKO-I4).
+      operationId: getCheckoutSessionByToken
+      parameters:
+        - $ref: "#/components/parameters/CheckoutToken"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Session record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/merchants:
+    get:
+      summary: Phase-1 merchants placeholder.
+      operationId: merchantsPlaceholder
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Placeholder shape; stable until the merchants surface lights up.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MerchantsPlaceholder" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/routing/plan:
+    post:
+      summary: Plan a route from aggregate bindings (REC-I1 C1).
+      operationId: planRoute
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlanRouteRequest" }
+      responses:
+        '200':
+          description: Authoritative routing decision.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoutingDecision" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/routing/decisions/{id}:
+    get:
+      summary: Fetch a routing decision by ID.
+      operationId: getRoutingDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Decision found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoutingDecision" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/validation/validate:
+    post:
+      summary: Pre-flight-validate a route candidate (PFV-I1 C1).
+      operationId: validateRoute
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ValidateRouteRequest" }
+      responses:
+        '200':
+          description: Validation complete.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RouteValidation" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/validation/validations/{id}:
+    get:
+      summary: Fetch a route validation by ID.
+      operationId: getRouteValidation
+      parameters:
+        - $ref: "#/components/parameters/DecisionID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Validation found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RouteValidation" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dispatch/decide:
+    post:
+      summary: Run the dispatcher gate (DISP-I1 D1/D4).
+      operationId: decideDispatch
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DispatchDecideRequest" }
+      responses:
+        '200':
+          description: Dispatch decision.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DispatchDecision" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/dispatch/decisions/{id}:
+    get:
+      summary: Fetch a dispatch decision by ID.
+      operationId: getDispatchDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Decision found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DispatchDecision" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  # -------------------------------------------------------------------------
+  # Widget / Hosted Checkout JSON surface (WGT-I1)
+  # -------------------------------------------------------------------------
+  /v1/checkout/widget/session:
+    get:
+      summary: Redacted widget view for the hosted checkout browser page.
+      description: |
+        Authenticated with the short-lived checkout token (not the merchant
+        key): `Authorization: Bearer <raw-checkout-token>`, or as a
+        `?token=` query fallback for curl. Returns the redacted view
+        the widget renders from (WGT-I1).
+      operationId: getWidgetSession
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Widget view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetSessionView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  # -------------------------------------------------------------------------
+  # Merchant Dashboard read plane (MDA-I2 — all GET, no writes)
+  # -------------------------------------------------------------------------
+  /v1/dashboard/integration:
+    get:
+      summary: Merchant-scoped integration posture summary.
+      operationId: getDashboardIntegration
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Integration view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MerchantIntegrationView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/payments:
+    get:
+      summary: List payments for the authenticated merchant (mode-scoped).
+      operationId: listDashboardPayments
+      parameters:
+        - $ref: "#/components/parameters/DashboardCursor"
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Page of payments.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardPaymentsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/payments/{id}:
+    get:
+      summary: Read a single payment from the dashboard projection.
+      operationId: getDashboardPayment
+      parameters:
+        - $ref: "#/components/parameters/DashboardPaymentID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Payment view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardPaymentView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/checkout_sessions:
+    get:
+      summary: List checkout sessions for the authenticated merchant (mode-scoped).
+      operationId: listDashboardSessions
+      parameters:
+        - $ref: "#/components/parameters/DashboardCursor"
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Page of sessions.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSessionsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/checkout_sessions/{id}:
+    get:
+      summary: Read a single checkout session from the dashboard projection.
+      operationId: getDashboardSession
+      parameters:
+        - $ref: "#/components/parameters/DashboardSessionID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Session view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSessionView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/webhooks/endpoints:
+    get:
+      summary: List webhook endpoints for the authenticated merchant (mode-scoped).
+      operationId: listDashboardWebhookEndpoints
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Webhook endpoints.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardWebhookEndpointsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/webhooks/deliveries:
+    get:
+      summary: List webhook delivery attempts for the authenticated merchant (mode-scoped).
+      operationId: listDashboardWebhookDeliveries
+      parameters:
+        - $ref: "#/components/parameters/DashboardCursor"
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Page of deliveries.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardWebhookDeliveriesPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  # -------------------------------------------------------------------------
+  # Merchant Integration control plane (IDX-I3 — self-service lifecycle)
+  #
+  # All mutations in this section derive (merchant_id, mode) from the
+  # authenticated API key. IDX-I2 forbids mode assertion from the caller.
+  # -------------------------------------------------------------------------
+  /v1/keys:
+    get:
+      summary: List API keys for the authenticated merchant, scoped to the key's mode.
+      operationId: listKeys
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Keys in the caller's mode.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListKeysResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Mint a new API key for the authenticated merchant, in the caller's mode.
+      operationId: createKey
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateKeyRequest" }
+      responses:
+        '201':
+          description: Key created — plaintext secret returned once.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreateKeyResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/keys/{id}:
+    delete:
+      summary: Revoke an API key. Idempotent — revoking an already-revoked key is a no-op.
+      operationId: revokeKey
+      parameters:
+        - $ref: "#/components/parameters/APIKeyID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Revoked key record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [api_key]
+                properties:
+                  api_key: { $ref: "#/components/schemas/APIKey" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/keys/{id}/rotate:
+    post:
+      summary: Rotate an API key — mint a successor, revoke the predecessor, in one transaction.
+      operationId: rotateKey
+      parameters:
+        - $ref: "#/components/parameters/APIKeyID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '201':
+          description: Successor key minted; plaintext returned once; predecessor revoked.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RotateKeyResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/webhook_endpoints:
+    get:
+      summary: List webhook endpoints for the authenticated merchant, scoped to the key's mode.
+      operationId: listWebhookEndpoints
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Webhook endpoints in the caller's mode.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListEndpointsResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Register a new webhook endpoint, in the caller's mode.
+      operationId: createWebhookEndpoint
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateEndpointRequest" }
+      responses:
+        '201':
+          description: Endpoint created; `whsec_*` signing secret returned once.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreateEndpointResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/webhook_endpoints/{id}:
+    patch:
+      summary: Update a webhook endpoint (url / events / enabled). Mode is not patchable.
+      operationId: updateWebhookEndpoint
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateEndpointRequest" }
+      responses:
+        '200':
+          description: Updated endpoint record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [webhook_endpoint]
+                properties:
+                  webhook_endpoint: { $ref: "#/components/schemas/WebhookEndpoint" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+    delete:
+      summary: Disable a webhook endpoint. Idempotent.
+      operationId: disableWebhookEndpoint
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Disabled endpoint record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [webhook_endpoint]
+                properties:
+                  webhook_endpoint: { $ref: "#/components/schemas/WebhookEndpoint" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/webhook_endpoints/{id}/test:
+    post:
+      summary: Send a synthetic `payment.settled` test event to the endpoint.
+      description: |
+        IDX-R2b: exercises the real webhook delivery code path without
+        real money movement. The resulting outbox row carries
+        `is_test_event = TRUE` and `payment_id IS NULL`; the body
+        carries `test_event: true` and synthetic `payment_id` /
+        `merchant_order_id` / `event_id` on the `pmt_test_*` /
+        `ord_test_*` / `whevt_test_*` shapes. The outbox row's `mode`
+        is stamped from the authenticated bearer; a live-mode key may
+        not test a test-mode endpoint and vice versa.
+      operationId: sendTestWebhookEvent
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '202':
+          description: Test event enqueued for delivery.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [event_id, outbox_id, endpoint_url, mode, created_at, is_test_event]
+                properties:
+                  event_id:
+                    type: string
+                    description: Synthetic event ID on the `whevt_test_*` shape.
+                  outbox_id:
+                    type: string
+                    format: uuid
+                    description: Primary key of the `webhook_outbox` row just written.
+                  endpoint_url:
+                    type: string
+                    format: uri
+                  mode:
+                    type: string
+                    enum: [test, live]
+                  created_at:
+                    type: string
+                    format: date-time
+                  is_test_event:
+                    type: boolean
+                    description: Always `true` for this endpoint's response.
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/webhook_endpoints/{id}/rotate-secret:
+    post:
+      summary: Rotate the HMAC signing secret for a webhook endpoint. Same endpoint id, fresh secret.
+      description: |
+        IDX-R3: self-service secret rotation. Mints a new `whsec_*`
+        signing secret, envelope-encrypts it, and atomically replaces
+        `(secret_hash, secret_ciphertext, secret_kid, updated_at)` on
+        the endpoint row. The endpoint's id, url, events, enabled, and
+        mode are intentionally unchanged — same endpoint, new key.
+
+        The plaintext is returned exactly once in the response body. At
+        rest the row carries only the envelope ciphertext and the
+        one-way hash; a lost plaintext means the merchant must call
+        this endpoint again.
+
+        Cutover semantics — any payload already signed with the OLD
+        secret that arrives after the rotate commits will fail HMAC
+        verification on the merchant side. Operate rotate around a
+        verifier-update window; the suggested sequence is (1) call
+        rotate-secret, (2) deploy the returned plaintext to the
+        verifier, (3) observe that new deliveries verify, (4) accept
+        the old secret is dead.
+
+        Mode-scoped: a live-mode bearer cannot rotate a test-mode
+        endpoint's secret (and vice versa) — the request returns 404.
+      operationId: rotateWebhookEndpointSecret
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Secret rotated; plaintext returned once; endpoint id unchanged.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [webhook_endpoint, secret]
+                properties:
+                  webhook_endpoint: { $ref: "#/components/schemas/WebhookEndpoint" }
+                  secret:
+                    type: string
+                    description: |
+                      New `whsec_*` signing secret. Returned exactly
+                      once; never re-derivable thereafter.
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/webhook_endpoints/{id}/deliveries/{did}/replay:
+    post:
+      summary: Replay a previously-emitted webhook delivery. Fresh event_id, fresh signature.
+      description: |
+        IDX-R2a: self-service replay of a historical webhook delivery.
+        Writes a new `webhook_outbox` row that targets the same endpoint
+        and carries the same semantic event, but is:
+
+          - Signed with the CURRENT endpoint signing secret (not the
+            historical secret stored on the original row).
+          - Signed with a fresh `sig_timestamp` (now, RFC3339 UTC).
+          - Stamped with a fresh `event_id` (the UNIQUE idempotency key).
+
+        This signing contract is deliberate: if the merchant rotated the
+        endpoint's signing secret via the rotate-secret endpoint between
+        the original emit and this replay, the merchant's verifier no
+        longer accepts signatures from the old secret. Re-signing with
+        the current secret is the only shape that can verify at the
+        merchant.
+
+        The merchant correlates a replay back to the original delivery
+        via the `replayed_from_event_id` field on the body. That field
+        names the ORIGINAL `event_id` (the whevt-prefixed id the merchant
+        already saw, or would have seen if the original delivered). The
+        new delivery's own `event_id` is the FRESH replay id — merchants
+        dedupe on event_id on their receiving side; a replay is a
+        distinct delivery that happens to reference an earlier one.
+
+        Refusals:
+          - `replay_of_test_event_forbidden` (400): the delivery id
+            references a test event (is_test_event=TRUE). Test events
+            have their own replay path — call `POST /v1/webhook_endpoints/
+            {id}/test` again.
+          - `delivery_endpoint_mismatch` (400): the delivery id exists
+            (merchant- and mode-scoped) but was emitted against a
+            different endpoint id than the one in the path.
+          - `endpoint_disabled` (400): the endpoint is currently disabled.
+          - `endpoint_secret_missing_envelope` (400): the endpoint
+            predates envelope-encrypted secrets (pre-MDB rollout).
+            Resolve via rotate-secret, which populates envelope columns.
+
+        Mode-scoped: a live-mode bearer cannot replay a test-mode
+        delivery (and vice versa) — the request returns 404 with no
+        leak of which scope the row actually lives in.
+
+        Delivery itself is asynchronous — the response 202 confirms a
+        new outbox row was written; the merchant observes completion at
+        their HTTP endpoint (or via the delivery-history dashboard).
+      operationId: replayWebhookDelivery
+      parameters:
+        - $ref: "#/components/parameters/WebhookEndpointID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - name: did
+          in: path
+          required: true
+          description: |
+            The `delivery_id` (webhook_outbox.id) the merchant observed
+            in the dashboard's delivery history. Server-side scoped by
+            (merchant_id, mode, endpoint_id).
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '202':
+          description: Replay row accepted; delivery is asynchronous via the outbox worker.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - event_id
+                  - replayed_from_event_id
+                  - outbox_id
+                  - original_outbox_id
+                  - endpoint_url
+                  - mode
+                  - created_at
+                properties:
+                  event_id:
+                    type: string
+                    description: The fresh event id for this replay delivery.
+                  replayed_from_event_id:
+                    type: string
+                    description: The original delivery's event id. Merchants correlate on this field.
+                  outbox_id:
+                    type: string
+                    format: uuid
+                    description: The new webhook_outbox row id.
+                  original_outbox_id:
+                    type: string
+                    format: uuid
+                    description: The replayed webhook_outbox row id (same as path `did`).
+                  endpoint_url:
+                    type: string
+                    format: uri
+                  mode:
+                    type: string
+                    enum: [test, live]
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: |
+            Replay refused (test-event, endpoint mismatch, endpoint
+            disabled, or missing envelope secret). Body is a Problem
+            with one of the codes above.
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+# ---------------------------------------------------------------------------
+# Webhooks (informational; body shape for merchant-side verifiers)
+# ---------------------------------------------------------------------------
+webhooks:
+  payment.settled:
+    post:
+      summary: Sent when a payment reaches its settled terminal state.
+      description: |
+        Body is signed with HMAC-SHA256 over the raw bytes using the
+        endpoint's `whsec_*` secret. The hex signature is carried in
+        the `X-ChainMore-Signature` header. Consumers MUST use a
+        timing-safe comparison.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.failed:
+    post:
+      summary: Sent when a payment reaches a failed terminal state.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
