@@ -355,6 +355,28 @@
       0%, 100% { background-position: 0% center; }
       50% { background-position: 100% center; }
     }
+
+    /* ─────────────────────────────────────────────────────────────
+       Nav-dropdown coordination
+       The default `group-hover` pattern makes each dropdown its own
+       island, so when the cursor moves quickly between two dropdown
+       buttons, the previous panel is fading out (200ms) while the
+       next panel is fading in (200ms), which produces a visible
+       cross-fade flicker. This block enforces "exclusive open":
+       when one dropdown is active (data-active attribute set by
+       the JS at the end of <body>), the other panels are forced
+       closed instantly with `!important` overrides.
+
+       The transition itself is also tightened from 200ms transition-all
+       to 150ms transition-opacity (visibility flip is left as a
+       step function, faster perceived motion, no transition jank
+       on the visibility property).
+       ───────────────────────────────────────────────────────────── */
+    #primary-nav[data-active-menu]:not([data-active-menu=""]) .nav-group:not([data-active]) .nav-panel {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transition: opacity 80ms ease-out, visibility 0s linear 80ms !important;
+    }
   </style>
 </head>
 <body class="bg-white text-slate-900 overflow-x-hidden">
@@ -386,16 +408,16 @@
       </a>
       
       <!-- Navigation Links with Dropdowns -->
-      <div class="hidden lg:flex items-center gap-0.5">
-        
+      <div class="hidden lg:flex items-center gap-0.5" id="primary-nav">
+
         <!-- Platform Dropdown -->
-        <div class="relative group" id="platform-dropdown">
+        <div class="relative group nav-group" id="platform-dropdown">
           <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
             Platform
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Platform Mega Menu -->
-          <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-0 w-[780px] grid grid-cols-[220px_1fr] overflow-hidden">
               <!-- Left Column - Tab Navigation -->
               <div class="bg-slate-50 py-4 border-r border-slate-200">
@@ -627,13 +649,13 @@
         </div>
         
         <!-- Solutions Dropdown -->
-        <div class="relative group">
+        <div class="relative group nav-group" id="solutions-dropdown">
           <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
             Solutions
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Solutions Mega Menu -->
-          <div class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[600px]">
               <!-- Featured Use Case -->
               <div class="bg-slate-900 rounded-xl p-5 mb-5 flex gap-5">
@@ -730,13 +752,13 @@
         <a href="/docs.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Docs</a>
 
         <!-- Developers Dropdown -->
-        <div class="relative group">
+        <div class="relative group nav-group" id="developers-dropdown">
           <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
             Developers
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Developers Mega Menu -->
-          <div class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+          <div class="nav-panel absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[480px]">
               <!-- Coming Soon Banner -->
               <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 mb-5">
@@ -3427,6 +3449,64 @@ window.onload = function() {
   
   console.log('=== ALL ANIMATIONS INITIALIZED ===');
 };
+</script>
+
+<!-- Nav-dropdown coordination, exclusive-open behavior.
+     The pure-CSS group-hover pattern flickers when the user moves the
+     cursor quickly between two dropdown buttons because both menus
+     are mid-transition at the same time. This script enforces a
+     single-active-menu invariant: when one .nav-group is hovered, the
+     others are forced shut via the [data-active-menu] state on the
+     parent #primary-nav (the CSS rule in <head> does the actual
+     suppression).
+
+     Pointer-events:
+       - Buttons + their panels register hover via standard mouseenter.
+       - Leaving the entire #primary-nav with the cursor (mouseleave)
+         clears the active-menu state, so the menus close normally
+         when the user moves out of the navigation strip.
+
+     Keyboard:
+       - Focus on a dropdown trigger sets the active state too, so
+         keyboard users get the same exclusive behavior.
+       - Tabbing out of the entire nav clears the state on focusout.
+-->
+<script>
+(function () {
+  var nav = document.getElementById('primary-nav');
+  if (!nav) return;
+  var groups = nav.querySelectorAll('.nav-group');
+  if (!groups.length) return;
+
+  function activate(group) {
+    var key = group.id ? group.id.replace('-dropdown', '') : '';
+    nav.setAttribute('data-active-menu', key);
+    groups.forEach(function (g) {
+      if (g === group) g.setAttribute('data-active', '');
+      else g.removeAttribute('data-active');
+    });
+  }
+
+  function deactivate() {
+    nav.setAttribute('data-active-menu', '');
+    groups.forEach(function (g) { g.removeAttribute('data-active'); });
+  }
+
+  groups.forEach(function (group) {
+    group.addEventListener('mouseenter', function () { activate(group); });
+    // Keyboard parity: focusing the trigger button activates too.
+    var trigger = group.querySelector('button');
+    if (trigger) trigger.addEventListener('focus', function () { activate(group); });
+  });
+
+  nav.addEventListener('mouseleave', deactivate);
+  nav.addEventListener('focusout', function (e) {
+    // focusout fires before focus moves to the new target; if the new
+    // target is still inside the nav we keep the state, otherwise
+    // clear it.
+    if (!nav.contains(e.relatedTarget)) deactivate();
+  });
+})();
 </script>
 </body>
 </html>
