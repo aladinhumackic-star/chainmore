@@ -99,7 +99,7 @@
 
       <ul>
         <li><strong>Sub-minute settlement</strong> — typically 30–60 seconds end-to-end with CCTP V2 Fast Transfer.</li>
-        <li><strong>No bridge risk</strong> — no third-party bridge, no liquidity provider, no slippage. Circle's protocol burns USDC on one chain and mints native USDC on the other; the supply is unchanged.</li>
+        <li><strong>No third-party bridge or LP</strong> — no liquidity-provider slippage, no wrapped-asset bridge layer. Circle's protocol burns USDC on one chain and mints native USDC on the other; the supply is unchanged. Smart-contract risk and protocol risk remain — see Trust model and audits below.</li>
         <li><strong>Native USDC at destination</strong> — not a wrapped or bridged variant. The merchant receives the same Circle-issued USDC they would receive on a same-chain payment.</li>
         <li><strong>Sub-30bps fee</strong> — ChainMore takes 15 bps for the orchestration. CCTP V2 Fast Transfer adds a small variable fee paid through to Circle.</li>
         <li><strong>Idempotency by design</strong> — the protocol's nonce-binding makes the destination mint replay-safe at the contract level. Multiple submissions of the same proof produce one mint.</li>
@@ -114,7 +114,7 @@
         </div>
         <div class="compare-cm">
           <h3>ChainMore (orchestrator)</h3>
-          <p>Customer signs transaction directly. Funds flow through Circle's permissionless protocol; ChainMore never custodies. Light merchant-onboarding (email, wallet address, sanctions screening). Days, not weeks. Same regulatory model as a developer-tools company.</p>
+          <p>Customer signs transaction directly. Funds flow through Circle's permissionless protocol; ChainMore never custodies. Light merchant-onboarding (email, wallet address, sanctions screening). Days, not weeks. We position ourselves as a software / IaaS provider; our regulatory classification is being validated by Estonian counsel and we'll publish the opinion when it's in writing.</p>
         </div>
       </div>
 
