@@ -48,6 +48,7 @@
     
     /* Smooth Scrolling */
     html { scroll-behavior: smooth; }
+    section[id] { scroll-margin-top: 88px; }
     
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 8px; }
@@ -70,6 +71,34 @@
     .phone-screen.active {
       display: block;
       animation: fadeIn 0.3s ease-out;
+    }
+
+    .qr-code {
+      image-rendering: pixelated;
+    }
+
+    .payment-phone-frame {
+      width: 270px;
+      height: 560px;
+      background: #1a1a1a;
+      border-radius: 46px;
+      padding: 10px;
+      box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 0 2px #2a2a2a;
+    }
+
+    .payment-phone-body {
+      min-height: 430px;
+    }
+
+    @media (min-width: 640px) {
+      .payment-phone-frame {
+        width: 292px;
+        height: 600px;
+      }
+
+      .payment-phone-body {
+        min-height: 470px;
+      }
     }
     
     @keyframes fadeIn {
@@ -718,8 +747,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                   </div>
                   <div>
-                    <div class="text-slate-700 font-medium text-sm">iGaming</div>
-                    <div class="text-slate-500 text-xs">Deposits & withdrawals</div>
+                    <div class="text-slate-700 font-medium text-sm">Marketplaces</div>
+                    <div class="text-slate-500 text-xs">Buyer-to-seller flows</div>
                   </div>
                 </a>
                 <a href="#solutions" class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-cyan-50 transition">
@@ -1090,8 +1119,8 @@
             <div class="text-slate-400 text-xs sm:text-sm md:text-base">rail-agnostic</div>
           </div>
           <div>
-            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">99.99%</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">uptime</div>
+            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">Failover</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">route continuity</div>
           </div>
           <div>
             <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">1 API</div>
@@ -1511,7 +1540,7 @@
               <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Automatic failover between rails guarantees business continuity, if one route fails, we switch instantly to the next best option.
+              Automatic failover between rails is designed to keep payments moving when a route is degraded.
             </p>
             <p class="font-bold text-slate-900 text-lg mt-auto">Keep transactions going, no matter what</p>
           </div>
@@ -1560,25 +1589,16 @@
       <div class="flex flex-col items-center">
         
         <!-- Step Navigation -->
-        <div class="flex flex-wrap justify-center gap-2 mb-4" id="demo-steps">
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-cyan-400 text-white" data-step="0">Checkout</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="1">Method</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="2">Wallet</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="3">Verify</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="4">Confirm</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="5">Sign</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="6">Process</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="7">Done</button>
+        <div class="flex flex-wrap justify-center gap-2 mb-5" id="demo-steps">
+          <button class="demo-step-btn px-4 py-2 rounded-full text-xs font-semibold transition-all bg-cyan-400 text-white" data-step="0">Pay</button>
+          <button class="demo-step-btn px-4 py-2 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="1">Wallet</button>
+          <button class="demo-step-btn px-4 py-2 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="2">Confirm</button>
+          <button class="demo-step-btn px-4 py-2 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="3">Settle</button>
+          <button class="demo-step-btn px-4 py-2 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="4">Paid</button>
         </div>
 
-        <!-- Auto-play Toggle -->
-        <button id="autoplay-toggle" class="mb-4 px-3 py-1.5 rounded-lg border border-white/20 bg-cyan-500/20 text-white/70 text-xs flex items-center gap-2 hover:bg-cyan-500/30 transition">
-          <span id="autoplay-icon">⏸</span>
-          <span id="autoplay-text">Pause</span>
-        </button>
-
         <!-- iPhone Frame - Responsive -->
-        <div class="relative w-[260px] h-[540px] sm:w-[280px] sm:h-[580px]" style="background: #1a1a1a; border-radius: 46px; padding: 10px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 0 2px #2a2a2a;">
+        <div class="payment-phone-frame relative">
           <div class="w-full h-full bg-white rounded-[38px] overflow-hidden relative">
             
             <!-- Dynamic Island -->
@@ -1595,347 +1615,214 @@
             </div>
 
             <!-- Screen Content Container -->
-            <div id="phone-content" class="absolute top-[50px] left-0 right-0 bottom-[30px] overflow-y-auto overflow-x-hidden scrollbar-thin">
+            <div id="phone-content" class="absolute top-[50px] left-0 right-0 bottom-[30px] overflow-hidden">
               
-              <!-- Screen 1: Checkout -->
+              <!-- Screen 1: Pay -->
               <div class="phone-screen active" data-screen="0">
                 <div class="bg-slate-50 min-h-full">
-                  <div class="bg-white p-4 border-b border-slate-200">
+                  <div class="bg-white px-4 py-3 border-b border-slate-200">
                     <div class="flex items-center gap-3">
-                      <div class="w-11 h-11 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">N</div>
+                      <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-base">N</div>
                       <div>
-                        <div class="font-bold text-slate-900">Nexora Cloud</div>
-                        <div class="text-xs text-slate-500">nexora.io/checkout</div>
+                        <div class="font-bold text-slate-900 text-sm">Nexora Cloud</div>
+                        <div class="text-xs text-slate-500">Invoice #CM-1048</div>
                       </div>
                     </div>
                   </div>
-                  <div class="p-5">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Order Summary</div>
-                    <div class="bg-white rounded-2xl p-4 mb-4">
-                      <div class="flex justify-between mb-4">
+                  <div class="payment-phone-body p-4 flex flex-col">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl px-4 py-4 text-white mb-3">
+                      <div class="flex items-start justify-between gap-3">
                         <div>
-                          <div class="font-semibold text-slate-900">Pro Plan, Annual</div>
-                          <div class="text-xs text-slate-500">12 months subscription</div>
+                          <div class="text-white/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Amount due</div>
+                          <div class="text-3xl font-bold tracking-tight">$49.00</div>
                         </div>
-                        <div class="font-bold text-slate-900">€468.00</div>
-                      </div>
-                      <div class="flex justify-between mb-4">
-                        <div>
-                          <div class="font-semibold text-slate-900">Cloud Storage 500GB</div>
-                          <div class="text-xs text-slate-500">Monthly add-on</div>
-                        </div>
-                        <div class="font-bold text-slate-900">€9.99</div>
-                      </div>
-                      <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
-                        <span class="text-lg font-bold text-slate-900">Total</span>
-                        <span class="text-2xl font-bold text-slate-900">€477.99</span>
+                        <div class="text-right text-white/60 text-xs pt-1">Team<br>workspace</div>
                       </div>
                     </div>
-                    <div class="bg-white rounded-2xl p-4 mb-5">
-                      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Customer</div>
-                      <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-slate-500">Email</span>
-                        <span class="text-slate-900 font-medium">max.mueller@example.com</span>
+                    <div class="bg-white rounded-3xl p-4 border border-slate-200 mb-3">
+                      <div class="pb-3 border-b border-slate-100">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Email</div>
+                        <div class="text-xs font-semibold text-slate-900">max.mueller@example.com</div>
                       </div>
-                      <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">Country</span>
-                        <span class="text-slate-900 font-medium">Germany 🇩🇪</span>
+                      <div class="flex items-center justify-between gap-3 pt-3">
+                        <span class="text-xs text-slate-500">Country</span>
+                        <span class="text-xs font-semibold text-slate-900">Germany</span>
                       </div>
                     </div>
-                    <button class="w-full py-4 bg-purple-600 text-white font-semibold rounded-2xl">Proceed to Payment</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 2: Payment Method -->
-              <div class="phone-screen" data-screen="1">
-                <div class="min-h-full flex flex-col">
-                  <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                      <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">N</div>
-                      <span class="font-medium text-slate-600 text-sm">Nexora Cloud</span>
-                    </div>
-                    <span class="font-bold text-slate-900 text-lg">€477.99</span>
-                  </div>
-                  <div class="p-5 flex-1 flex flex-col">
-                    <div class="text-xl font-bold text-slate-900 mb-1">Payment Method</div>
-                    <div class="text-slate-500 text-sm mb-5">Choose how you want to pay</div>
-                    <div class="space-y-3 flex-1">
-                      <div class="border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                          <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <div class="bg-white rounded-3xl p-4 border border-slate-200 mb-3">
+                      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pay with</div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-cyan-400 flex items-center justify-center">
+                          <span class="text-white font-bold text-lg">$</span>
                         </div>
                         <div class="flex-1">
-                          <div class="font-bold text-slate-900">Card</div>
-                          <div class="text-xs text-slate-500">Visa, Mastercard, Amex</div>
-                        </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
-                      </div>
-                      <div class="border-2 border-cyan-400 rounded-2xl p-4 flex items-center gap-4 bg-cyan-50/50">
-                        <div class="w-12 h-12 bg-cyan-400 rounded-xl flex items-center justify-center">
-                          <div class="w-7 h-7 bg-white rounded-full flex items-center justify-center">
-                            <span class="text-cyan-400 font-bold">$</span>
-                          </div>
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-bold text-slate-900 text-lg">Stablecoin</div>
-                          <div class="text-xs text-slate-500">USDC, EURC, USDT</div>
+                          <div class="font-bold text-slate-900 text-sm">49.00 USDC</div>
+                          <div class="text-xs text-slate-500">Route selected</div>
                         </div>
                         <div class="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
                           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                         </div>
                       </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <span class="text-blue-600 font-bold text-xs">SEPA</span>
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-bold text-slate-900">SEPA Direct Debit</div>
-                          <div class="text-xs text-slate-500">EU Bank Transfer</div>
-                        </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
-                      </div>
                     </div>
-                    <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl mt-5">Proceed</button>
-                    <div class="text-center text-xs text-slate-400 mt-3">Powered by ChainMore</div>
+                    <div class="flex-1"></div>
+                    <button class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl">Pay $49.00</button>
+                    <div class="text-center text-xs text-slate-400 mt-3">Secured by ChainMore</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Screen 3: Wallet Selection -->
-              <div class="phone-screen" data-screen="2">
-                <div class="min-h-full flex flex-col">
-                  <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                      <div class="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center">
-                        <div class="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                          <span class="text-cyan-400 font-bold text-[10px]">$</span>
-                        </div>
-                      </div>
-                      <span class="font-medium text-slate-600 text-sm">Stablecoin</span>
-                    </div>
-                    <span class="font-bold text-slate-900 text-lg">€477.99</span>
+              <!-- Screen 2: Wallet -->
+              <div class="phone-screen" data-screen="1">
+                <div class="min-h-full bg-slate-50 p-4 flex flex-col">
+                  <div class="mb-3">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Wallet</div>
+                    <div class="text-xl font-bold text-slate-900">Connect to pay</div>
                   </div>
-                  <div class="p-5 flex-1 flex flex-col">
-                    <div class="text-xl font-bold text-slate-900 mb-1">Connect Wallet</div>
-                    <div class="text-slate-500 text-sm mb-5">Select your wallet to continue</div>
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                      <div class="border-2 border-cyan-400 rounded-2xl p-4 text-center bg-cyan-50/50">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">🦊</div>
-                        <div class="font-semibold text-sm text-slate-900">MetaMask</div>
-                        <div class="w-4 h-4 mx-auto mt-2 bg-cyan-400 rounded-full flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        </div>
+                  <div class="space-y-2 mb-3">
+                    <div class="bg-cyan-50 border-2 border-cyan-400 rounded-2xl p-3 flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center overflow-hidden">
+                        <img src="/assets/metamask-icon-fox.svg" alt="MetaMask" class="w-8 h-8">
                       </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">🔵</div>
-                        <div class="font-semibold text-sm text-slate-900">Coinbase</div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🌈</div>
-                        <div class="font-semibold text-sm text-slate-900">Rainbow</div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-slate-100 rounded-xl flex items-center justify-center text-xl text-slate-400">⋯</div>
-                        <div class="font-semibold text-sm text-slate-900">Other</div>
-                      </div>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center justify-center py-3">
-                      <div class="text-xs text-slate-500 mb-3">Or scan with mobile wallet</div>
-                      <div class="p-3 bg-white rounded-2xl border border-slate-200">
-                        <svg width="90" height="90" viewBox="0 0 100 100" class="bg-white rounded-lg">
-                          <rect x="4" y="4" width="22" height="22" fill="#1e293b"/><rect x="7" y="7" width="16" height="16" fill="white"/><rect x="10" y="10" width="10" height="10" fill="#1e293b"/>
-                          <rect x="74" y="4" width="22" height="22" fill="#1e293b"/><rect x="77" y="7" width="16" height="16" fill="white"/><rect x="80" y="10" width="10" height="10" fill="#1e293b"/>
-                          <rect x="4" y="74" width="22" height="22" fill="#1e293b"/><rect x="7" y="77" width="16" height="16" fill="white"/><rect x="10" y="80" width="10" height="10" fill="#1e293b"/>
-                          <rect x="40" y="44" width="20" height="20" rx="4" fill="#1e293b"/><rect x="44" y="48" width="12" height="12" rx="2" fill="white"/><rect x="48" y="52" width="4" height="4" fill="#1e293b"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl">Connect Wallet</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 4: Verify -->
-              <div class="phone-screen" data-screen="3">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="relative w-20 h-20 mb-6">
-                    <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                    </div>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-2">Connecting Securely...</div>
-                  <div class="text-sm text-slate-500 mb-6">Verifying your wallet</div>
-                  <div class="w-full bg-cyan-50 border border-cyan-200 rounded-2xl p-4 mb-6">
-                    <div class="flex gap-3">
-                      <div class="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-                      </div>
-                      <div>
-                        <div class="font-bold text-cyan-700 text-sm mb-1">Secure Connection</div>
-                        <div class="text-xs text-cyan-600">ChainMore <strong>never</strong> has access to your private keys.</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="w-full max-w-[200px] space-y-3">
-                    <div class="flex items-center gap-3">
-                      <div class="verify-step w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center" data-vstep="1">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                      </div>
-                      <span class="text-sm text-slate-900">Wallet connected</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <div class="verify-step w-5 h-5 border-2 border-cyan-400 rounded-full flex items-center justify-center" data-vstep="2">
-                        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                      </div>
-                      <span class="text-sm text-slate-500">Preparing payment...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 5: Confirm Payment -->
-              <div class="phone-screen" data-screen="4">
-                <div class="min-h-full flex flex-col p-5">
-                  <div class="text-xl font-bold text-slate-900 mb-1">Confirm Payment</div>
-                  <div class="text-slate-500 text-sm mb-5">Review your payment details</div>
-                  <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 mb-4 text-center">
-                    <div class="text-slate-400 text-sm mb-1">Amount to Pay</div>
-                    <div class="text-white text-3xl font-bold">€477.99</div>
-                    <div class="text-slate-400 text-sm mt-1">to Nexora Cloud</div>
-                  </div>
-                  <div class="border border-slate-200 rounded-2xl p-4 mb-3">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-3">Wallet</div>
-                    <div class="flex items-center gap-3">
-                      <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">🦊</div>
                       <div class="flex-1">
-                        <div class="font-semibold text-slate-900">MetaMask</div>
-                        <div class="text-xs text-slate-500 font-mono">0x742d35Cc...f0bEb</div>
+                        <div class="font-bold text-slate-900 text-sm">MetaMask</div>
+                        <div class="text-xs text-slate-500">Recommended</div>
                       </div>
-                      <div class="w-2.5 h-2.5 bg-cyan-400 rounded-full"></div>
+                      <div class="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                      </div>
                     </div>
                   </div>
-                  <div class="border border-slate-200 rounded-2xl p-4">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-3">You Pay</div>
-                    <div class="flex items-center gap-3 mb-3">
-                      <!-- EURC Logo -->
-                      <svg width="44" height="44" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="32" fill="#2775CA"/>
-                        <path d="M 36.9 13.6 A 19 19 0 0 1 36.9 50.4" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                        <path d="M 27.1 50.4 A 19 19 0 0 1 27.1 13.6" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                        <text x="32" y="42" text-anchor="middle" fill="white" style="font-size: 30px; font-weight: 500; font-family: Arial, sans-serif;">€</text>
-                      </svg>
-                      <div class="flex-1">
-                        <div id="confirm-amount" class="font-bold text-slate-900 text-lg">477.99 EURC</div>
-                        <div id="confirm-name" class="text-xs text-slate-500">Euro Coin</div>
-                      </div>
+                  <div class="bg-white border border-slate-200 rounded-3xl p-5 text-center">
+                    <div class="text-xs text-slate-500 mb-3">Scan with a mobile wallet</div>
+                    <div class="mx-auto rounded-2xl bg-white border border-slate-200 p-2 flex items-center justify-center" style="width:132px;height:132px;">
+                      <img src="/assets/walletconnect-demo-qr.png" alt="WalletConnect QR code for the demo payment" class="qr-code w-full h-full">
                     </div>
-                    <button id="switch-btn" class="w-full py-2 px-4 bg-cyan-50 border border-cyan-400 text-cyan-500 font-semibold rounded-xl text-sm flex items-center justify-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-                      <span id="switch-text">Switch to USDC</span>
-                    </button>
                   </div>
                   <div class="flex-1"></div>
-                  <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl mt-5">Confirm Payment</button>
+                  <button class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl">Connect wallet</button>
+                  <div class="text-center text-xs text-slate-400 mt-3">Powered by ChainMore</div>
+                </div>
+              </div>
+
+              <!-- Screen 3: Confirm -->
+              <div class="phone-screen" data-screen="2">
+                <div class="min-h-full bg-slate-50 p-4 flex flex-col justify-center">
+                  <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200">
+                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center overflow-hidden">
+                          <img src="/assets/metamask-icon-fox.svg" alt="MetaMask" class="w-8 h-8">
+                        </div>
+                        <div>
+                          <div class="font-bold text-white text-sm">MetaMask</div>
+                          <div class="text-white/80 text-xs">chainmore.io</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-4">
+                      <div class="text-center mb-4">
+                        <div class="text-slate-500 text-xs mb-1">Confirm payment</div>
+                        <div class="text-3xl font-bold text-slate-900">49.00 USDC</div>
+                        <div class="text-slate-500 text-sm mt-1">to Nexora Cloud</div>
+                      </div>
+                      <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-xs">
+                          <span class="text-slate-500">Wallet</span>
+                          <span class="font-mono text-slate-700">0x742d...f0bEb</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                          <span class="text-slate-500">Network</span>
+                          <span class="font-semibold text-slate-700">Base</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                          <span class="text-slate-500">Route</span>
+                          <span class="font-semibold text-slate-700">USDC → merchant</span>
+                        </div>
+                      </div>
+                      <div class="flex gap-3">
+                        <button class="flex-1 py-3 rounded-xl border border-slate-300 font-semibold text-slate-500">Reject</button>
+                        <button class="flex-1 py-3 rounded-xl bg-cyan-400 text-white font-semibold">Confirm</button>
+                      </div>
+                    </div>
+                  </div>
                   <div class="text-center text-xs text-slate-400 mt-3">Secured by ChainMore</div>
                 </div>
               </div>
 
-              <!-- Screen 6: Signature Request -->
-              <div class="phone-screen" data-screen="5">
-                <div class="min-h-full flex items-center justify-center p-5">
-                  <div class="w-full bg-white rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-4">
-                      <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl">🦊</div>
-                        <div>
-                          <div class="font-bold text-white text-lg">Confirm Payment</div>
-                          <div class="text-white/80 text-sm">Signature Request</div>
+              <!-- Screen 4: Settle -->
+              <div class="phone-screen" data-screen="3">
+                <div class="min-h-full bg-white p-4 flex flex-col">
+                  <div class="text-center mt-4 mb-5">
+                    <div class="mx-auto w-14 h-14 rounded-full bg-cyan-50 border border-cyan-200 flex items-center justify-center mb-3">
+                      <div class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="text-xl font-bold text-slate-900 mb-1">Settling payment</div>
+                    <div class="text-sm text-slate-500">ChainMore routes the confirmed payment.</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-3xl p-4 border border-slate-200">
+                    <div class="flex items-center justify-between">
+                      <div class="text-center">
+                        <div class="mx-auto w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center overflow-hidden mb-2">
+                          <img src="/assets/metamask-icon-fox.svg" alt="MetaMask" class="w-9 h-9">
                         </div>
+                        <div class="text-[10px] font-semibold text-slate-500">Wallet</div>
+                      </div>
+                      <div class="flex-1 mx-2 h-px bg-cyan-300 relative">
+                        <div class="absolute left-1/2 -top-2 -translate-x-1/2 w-4 h-4 rounded-full bg-cyan-400 animate-pulse"></div>
+                      </div>
+                      <div class="text-center">
+                        <div class="mx-auto w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold mb-2">CM</div>
+                        <div class="text-[10px] font-semibold text-cyan-600">Route</div>
+                      </div>
+                      <div class="flex-1 mx-2 h-px bg-slate-300"></div>
+                      <div class="text-center">
+                        <div class="mx-auto w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 font-bold mb-2">N</div>
+                        <div class="text-[10px] font-semibold text-slate-500">Merchant</div>
                       </div>
                     </div>
-                    <div class="p-5">
-                      <div class="text-center mb-5">
-                        <div class="text-slate-500 text-sm mb-1">Pay to</div>
-                        <div class="text-slate-900 font-semibold mb-3">Nexora Cloud</div>
-                        <div id="sign-amount" class="text-3xl font-bold text-slate-900">477.99 EURC</div>
+                    <div class="mt-5 space-y-2">
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Payment approved</span>
+                        <span class="font-semibold text-cyan-600">Done</span>
                       </div>
-                      <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 mb-5">
-                        <div class="flex items-start gap-2">
-                          <svg class="w-4 h-4 text-cyan-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                          <div class="text-xs text-cyan-700">This works like 3D Secure. <strong>Please confirm in your wallet</strong> to authorize.</div>
-                        </div>
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Best route</span>
+                        <span class="font-semibold text-slate-900">Base USDC</span>
                       </div>
-                      <div class="flex gap-3">
-                        <button class="flex-1 py-3.5 rounded-xl border border-slate-300 font-semibold text-slate-600">Cancel</button>
-                        <button class="flex-1 py-3.5 rounded-xl bg-cyan-400 text-white font-semibold">Confirm</button>
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Merchant receipt</span>
+                        <span class="font-semibold text-slate-900">In progress</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Screen 7: Processing -->
-              <div class="phone-screen" data-screen="6">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="relative w-20 h-20 mb-6">
-                    <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              <!-- Screen 5: Paid -->
+              <div class="phone-screen" data-screen="4">
+                <div class="min-h-full bg-slate-50 p-5 flex flex-col">
+                  <div class="flex-1 flex flex-col items-center justify-center text-center">
+                    <div class="w-20 h-20 bg-cyan-400 rounded-full flex items-center justify-center mb-5 shadow-xl" style="box-shadow: 0 10px 40px rgba(0, 212, 255, 0.35);">
+                      <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-2">Processing Payment...</div>
-                  <div class="text-sm text-slate-500 mb-8">Please wait</div>
-                  <div class="w-full max-w-[220px] space-y-4">
-                    <div class="flex items-center gap-3">
-                      <div class="process-step w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center" data-pstep="1">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    <div class="text-2xl font-bold text-slate-900 mb-1">Paid</div>
+                    <div class="text-sm text-slate-500 mb-6">Nexora Cloud has received the payment.</div>
+                    <div class="w-full bg-white rounded-3xl p-5 border border-slate-200 text-left">
+                      <div class="flex justify-between items-center mb-4">
+                        <span class="text-slate-500 text-sm">Amount</span>
+                        <span class="font-bold text-slate-900">49.00 USDC</span>
                       </div>
-                      <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Signature verified</div>
-                        <div class="text-xs text-slate-400">Payment authorization</div>
+                      <div class="flex justify-between items-center mb-4">
+                        <span class="text-slate-500 text-sm">Merchant</span>
+                        <span class="font-semibold text-slate-900">Nexora Cloud</span>
                       </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <div class="process-step w-6 h-6 border-2 border-cyan-400 rounded-full flex items-center justify-center" data-pstep="2">
-                        <div class="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></div>
-                      </div>
-                      <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-500">Processing transfer...</div>
-                        <div id="process-amount" class="text-xs text-slate-400">Sending 477.99 EURC</div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-slate-500 text-sm">Reference</span>
+                        <span class="font-mono text-xs text-slate-600">CM-1048</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <!-- Screen 8: Success -->
-              <div class="phone-screen" data-screen="7">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="w-20 h-20 bg-cyan-400 rounded-full flex items-center justify-center mb-5 shadow-xl" style="box-shadow: 0 10px 40px rgba(0, 212, 255, 0.5);">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-1">Payment Successful!</div>
-                  <div class="text-slate-500 text-sm mb-6">Your payment is complete</div>
-                  <div class="w-full bg-slate-50 rounded-2xl p-5 mb-4">
-                    <div class="text-center mb-4">
-                      <div class="text-slate-500 text-sm">Amount Paid</div>
-                      <div id="success-amount" class="text-2xl font-bold text-slate-900">477.99 EURC</div>
-                      <div class="text-slate-400 text-sm">to Nexora Cloud</div>
-                    </div>
-                    <div class="border-t border-slate-200 pt-4 flex justify-between text-sm">
-                      <span class="text-slate-500">Date</span>
-                      <span class="font-medium text-slate-600">Dec 14, 2024</span>
-                    </div>
-                  </div>
-                  <div class="w-full bg-slate-100 rounded-xl p-4 mb-5">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-2">Transaction Reference</div>
-                    <code class="text-xs text-slate-600">0x8f4d7a2c9e1b3f5a...</code>
-                  </div>
-                  <button class="w-full py-4 bg-slate-800 text-white font-semibold rounded-2xl">Done</button>
+                  <button class="w-full py-4 bg-slate-900 text-white font-semibold rounded-2xl">Done</button>
                 </div>
               </div>
 
@@ -1948,7 +1835,7 @@
 
         <!-- Step Caption -->
         <div class="mt-6 text-center">
-          <span class="text-white/50 text-sm">Step <span id="current-step">1</span> of 8: <span id="step-label" class="text-cyan-400 font-semibold">Checkout</span></span>
+          <span class="text-white/50 text-sm">Step <span id="current-step">1</span> of 5: <span id="step-label" class="text-cyan-400 font-semibold">Pay</span></span>
         </div>
 
       </div>
@@ -2171,11 +2058,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-bold mb-1">iGaming & Gambling</h3>
-          <p class="text-slate-600 text-sm mb-3">Instant deposits & withdrawals. Crypto-native get stablecoins, others get fiat.</p>
+          <h3 class="text-lg font-bold mb-1">Online Marketplaces</h3>
+          <p class="text-slate-600 text-sm mb-3">Buyers pay with the rail they know. Sellers receive the rail they prefer.</p>
           <div class="flex items-center gap-2 text-xs">
-            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDT → USDC</span>
-            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">USDC → EUR</span>
+            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">Card → Bank</span>
+            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → Seller</span>
           </div>
         </div>
         
@@ -2344,7 +2231,7 @@
             </div>
             <div class="flex items-center gap-2 text-sm">
               <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">SLA guarantees</span>
+              <span class="text-slate-600">Custom support targets</span>
             </div>
             <div class="flex items-center gap-2 text-sm">
               <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -2960,21 +2847,11 @@ console.<span class="text-yellow-300">log</span>(payment.route);
 
     const phoneScreens = phoneContent ? phoneContent.querySelectorAll('.phone-screen') : [];
 
-    const autoplayToggle = document.getElementById('autoplay-toggle');
-
-    const autoplayIcon = document.getElementById('autoplay-icon');
-    const autoplayText = document.getElementById('autoplay-text');
     const currentStepEl = document.getElementById('current-step');
     const stepLabelEl = document.getElementById('step-label');
     
-    const stepLabels = ['Checkout', 'Method', 'Wallet', 'Verify', 'Confirm', 'Sign', 'Process', 'Done'];
+    const stepLabels = ['Pay', 'Wallet', 'Confirm', 'Settle', 'Paid'];
     let currentPaymentStep = 0;
-    let paymentAutoPlayInterval = null;
-    let isPaymentAutoPlaying = true; // Start with autoplay enabled
-    const PAYMENT_STEP_DURATION = 4000; // 4 seconds per step
-    
-    // Stablecoin state
-    let selectedStablecoin = 'EURC';
     
     function updatePaymentStep(newStep) {
       currentPaymentStep = newStep;
@@ -3006,64 +2883,9 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       if (currentStepEl) currentStepEl.textContent = currentPaymentStep + 1;
       if (stepLabelEl) stepLabelEl.textContent = stepLabels[currentPaymentStep];
       
-      // Scroll to top then bottom after delay
       if (phoneContent) {
         phoneContent.scrollTop = 0;
-        setTimeout(() => {
-          phoneContent.scrollTo({ top: phoneContent.scrollHeight, behavior: 'smooth' });
-        }, 1500);
       }
-      
-      // Update stablecoin display
-      updateStablecoinDisplay();
-    }
-    
-    function updateStablecoinDisplay() {
-      const confirmAmount = document.getElementById('confirm-amount');
-      const confirmName = document.getElementById('confirm-name');
-      const switchText = document.getElementById('switch-text');
-      const signAmount = document.getElementById('sign-amount');
-      const processAmount = document.getElementById('process-amount');
-      const successAmount = document.getElementById('success-amount');
-      
-      if (selectedStablecoin === 'EURC') {
-        if (confirmAmount) confirmAmount.textContent = '477.99 EURC';
-        if (confirmName) confirmName.textContent = 'Euro Coin';
-        if (switchText) switchText.textContent = 'Switch to USDC';
-        if (signAmount) signAmount.textContent = '477.99 EURC';
-        if (processAmount) processAmount.textContent = 'Sending 477.99 EURC';
-        if (successAmount) successAmount.textContent = '477.99 EURC';
-      } else {
-        if (confirmAmount) confirmAmount.textContent = '519.21 USDC';
-        if (confirmName) confirmName.textContent = 'USD Coin';
-        if (switchText) switchText.textContent = 'Switch to EURC';
-        if (signAmount) signAmount.textContent = '519.21 USDC';
-        if (processAmount) processAmount.textContent = 'Sending 519.21 USDC';
-        if (successAmount) successAmount.textContent = '519.21 USDC';
-      }
-    }
-    
-    function nextPaymentStep() {
-      const next = (currentPaymentStep + 1) % 8;
-      updatePaymentStep(next);
-    }
-    
-    function startPaymentAutoPlay() {
-      if (paymentAutoPlayInterval) clearInterval(paymentAutoPlayInterval);
-      paymentAutoPlayInterval = setInterval(nextPaymentStep, PAYMENT_STEP_DURATION);
-      isPaymentAutoPlaying = true;
-      if (autoplayIcon) autoplayIcon.textContent = '⏸';
-      if (autoplayText) autoplayText.textContent = 'Pause';
-    }
-    
-    function stopPaymentAutoPlay() {
-      if (paymentAutoPlayInterval) {
-        clearInterval(paymentAutoPlayInterval);
-        paymentAutoPlayInterval = null;
-      }
-      isPaymentAutoPlaying = false;
-      if (autoplayIcon) autoplayIcon.textContent = '▶';
-      if (autoplayText) autoplayText.textContent = 'Play';
     }
     
     // Step button clicks - use event delegation for reliability
@@ -3072,8 +2894,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         const btn = e.target.closest('.demo-step-btn');
         if (btn) {
           const stepIndex = parseInt(btn.getAttribute('data-step'));
-          if (!isNaN(stepIndex)) {
-            stopPaymentAutoPlay();
+          if (!isNaN(stepIndex) && stepIndex >= 0 && stepIndex < stepLabels.length) {
             updatePaymentStep(stepIndex);
           }
         }
@@ -3082,49 +2903,9 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       console.error('demo-steps container not found!');
     }
     
-    // Autoplay toggle
-    if (autoplayToggle) {
-      autoplayToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (isPaymentAutoPlaying) {
-          stopPaymentAutoPlay();
-        } else {
-          startPaymentAutoPlay();
-        }
-      });
-    } else {
-      console.error('autoplay-toggle not found!');
-    }
-    
-    // Switch button
-    const switchBtn = document.getElementById('switch-btn');
-    if (switchBtn) {
-      switchBtn.addEventListener('click', () => {
-        selectedStablecoin = selectedStablecoin === 'EURC' ? 'USDC' : 'EURC';
-        updateStablecoinDisplay();
-        
-        // Update logos
-        const eurcLogo = document.getElementById('eurc-logo');
-        const usdcLogo = document.getElementById('usdc-logo');
-        if (eurcLogo && usdcLogo) {
-          if (selectedStablecoin === 'EURC') {
-            eurcLogo.style.display = 'block';
-            usdcLogo.style.display = 'none';
-          } else {
-            eurcLogo.style.display = 'none';
-            usdcLogo.style.display = 'block';
-          }
-        }
-      });
-    }
-    
-    // Initialize - show first screen and start autoplay
+    // Initialize - keep the demo calm and user-controlled.
     if (phoneScreens.length > 0) {
       updatePaymentStep(0);
-      // Auto-start the demo
-      setTimeout(() => {
-        startPaymentAutoPlay();
-      }, 500);
     } else {
       console.error('No phone screens found - demo will not work');
     }
