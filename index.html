@@ -2358,7 +2358,7 @@
       </div>
 
       <div class="mt-12 text-center space-y-3">
-        <p class="text-slate-500 text-sm">All plans include: Sandbox environment • 99.9% uptime • Authorization & settlement via regulated partners</p>
+        <p class="text-slate-500 text-sm">All plans include: Sandbox environment • pilot support targets • Authorization & settlement via regulated partners</p>
         <p class="text-slate-400 text-xs">Provider costs (PSP fees, blockchain gas) passed through at cost.</p>
         <p class="pt-2"><a href="/pricing.html" class="inline-flex items-center gap-1.5 text-cyan-600 hover:text-cyan-700 font-medium text-sm">See full pricing details, comparison table and FAQs <span aria-hidden="true">→</span></a></p>
       </div>
@@ -2463,7 +2463,7 @@
           <div class="p-6 font-mono text-sm overflow-x-auto">
             <pre class="text-slate-300"><span class="text-purple-400">import</span> <span class="text-blue-300">ChainMore</span> <span class="text-purple-400">from</span> <span class="text-cyan-400">'@chainmore/sdk'</span>;
 
-<span class="text-purple-400">const</span> chainmore = <span class="text-purple-400">new</span> <span class="text-blue-300">ChainMore</span>(<span class="text-cyan-400">'sk_live_...'</span>);
+<span class="text-purple-400">const</span> chainmore = <span class="text-purple-400">new</span> <span class="text-blue-300">ChainMore</span>(<span class="text-cyan-400">'cm_test_...'</span>);
 
 <span class="text-slate-500">// Create a cross-rail payment</span>
 <span class="text-purple-400">const</span> payment = <span class="text-purple-400">await</span> chainmore.payments.<span class="text-yellow-300">create</span>({
@@ -2950,24 +2950,18 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     startAutoPlay();
 
     // ========== NEW PAYMENT EXPERIENCE DEMO ==========
-    console.log('Initializing Payment Demo...');
-    
+
     // Use more specific selectors to avoid conflicts with other demo sections
     const demoStepsContainer = document.getElementById('demo-steps');
-    console.log('demo-steps container:', demoStepsContainer);
-    
+
     const paymentDemoSteps = demoStepsContainer ? demoStepsContainer.querySelectorAll('.demo-step-btn') : [];
-    console.log('Payment demo steps found:', paymentDemoSteps.length);
-    
+
     const phoneContent = document.getElementById('phone-content');
-    console.log('phone-content:', phoneContent);
-    
+
     const phoneScreens = phoneContent ? phoneContent.querySelectorAll('.phone-screen') : [];
-    console.log('Phone screens found:', phoneScreens.length);
-    
+
     const autoplayToggle = document.getElementById('autoplay-toggle');
-    console.log('autoplay-toggle:', autoplayToggle);
-    
+
     const autoplayIcon = document.getElementById('autoplay-icon');
     const autoplayText = document.getElementById('autoplay-text');
     const currentStepEl = document.getElementById('current-step');
@@ -3074,12 +3068,10 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     // Step button clicks - use event delegation for reliability
     if (demoStepsContainer) {
-      console.log('Adding click listener to demo-steps container');
       demoStepsContainer.addEventListener('click', function(e) {
         const btn = e.target.closest('.demo-step-btn');
         if (btn) {
           const stepIndex = parseInt(btn.getAttribute('data-step'));
-          console.log('Step button clicked:', stepIndex);
           if (!isNaN(stepIndex)) {
             stopPaymentAutoPlay();
             updatePaymentStep(stepIndex);
@@ -3092,10 +3084,8 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     // Autoplay toggle
     if (autoplayToggle) {
-      console.log('Adding click listener to autoplay toggle');
       autoplayToggle.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('Autoplay toggle clicked, currently playing:', isPaymentAutoPlaying);
         if (isPaymentAutoPlaying) {
           stopPaymentAutoPlay();
         } else {
@@ -3129,42 +3119,22 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     }
     
     // Initialize - show first screen and start autoplay
-    console.log('Starting initialization...');
     if (phoneScreens.length > 0) {
       updatePaymentStep(0);
       // Auto-start the demo
       setTimeout(() => {
         startPaymentAutoPlay();
-        console.log('Payment Demo auto-started!');
       }, 500);
-      console.log('Payment Demo initialized successfully!');
     } else {
       console.error('No phone screens found - demo will not work');
     }
-    
-    console.log('Payment Demo final state:', {
-      steps: paymentDemoSteps.length, screens: phoneScreens.length, autoplayToggle: !!autoplayToggle, isPlaying: isPaymentAutoPlaying
-    });
-    
-    console.log('All demos initialized');
-    
+
     // ========== HERO FLOW ANIMATION ==========
-    console.log('=== HERO ANIMATION SETUP ===');
-    
+
     var heroInputCards = document.querySelectorAll('.hero-input-card');
     var heroOutputCards = document.querySelectorAll('.hero-output-card');
     var heroRouteIndicators = document.querySelectorAll('.hero-route-indicator');
-    
-    console.log('Found:', heroInputCards.length, 'inputs,', heroOutputCards.length, 'outputs,', heroRouteIndicators.length, 'indicators');
-    
-    // Log each card's data-value
-    heroInputCards.forEach(function(c, i) {
-      console.log('Input card ' + i + ':', c.getAttribute('data-value'));
-    });
-    heroOutputCards.forEach(function(c, i) {
-      console.log('Output card ' + i + ':', c.getAttribute('data-value'));
-    });
-    
+
     var heroCases = [
       { input: 'card', output: 'bank' }, { input: 'card', output: 'usdc' }, { input: 'usdc', output: 'bank' }, { input: 'usdc', output: 'onchain' }
     ];
@@ -3174,8 +3144,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     function showHeroCase(index) {
       var caseData = heroCases[index];
-      console.log('>>> Case ' + index + ':', caseData.input, '->', caseData.output);
-      
+
       // Update input cards
       heroInputCards.forEach(function(card) {
         var val = card.getAttribute('data-value');
@@ -3216,7 +3185,6 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     }
     
     function startHeroAuto() {
-      console.log('Starting hero auto-rotate...');
       if (heroAutoInterval) clearInterval(heroAutoInterval);
       heroAutoInterval = setInterval(function() {
         heroCurrentCase = (heroCurrentCase + 1) % 4;
@@ -3227,7 +3195,6 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     // Click handlers for indicators
     heroRouteIndicators.forEach(function(ind, idx) {
       ind.addEventListener('click', function() {
-        console.log('Indicator clicked:', idx);
         if (heroAutoInterval) clearInterval(heroAutoInterval);
         showHeroCase(idx);
         startHeroAuto();
@@ -3236,171 +3203,12 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     // Initialize Hero
     if (heroInputCards.length > 0 && heroOutputCards.length > 0) {
-      console.log('Initializing hero animation...');
       showHeroCase(0);
       startHeroAuto();
-      console.log('Hero animation RUNNING!');
     } else {
       console.error('Hero cards not found!');
     }
   });
-</script>
-
-<!-- STANDALONE ANIMATION SCRIPT - runs after everything is loaded -->
-<script>
-window.onload = function() {
-  console.log('=== WINDOW ONLOAD - STARTING ANIMATIONS ===');
-  
-  // ===== HERO FLOW ANIMATION =====
-  var inputCards = document.querySelectorAll('.hero-input-card');
-  var outputCards = document.querySelectorAll('.hero-output-card');
-  var indicators = document.querySelectorAll('.hero-route-indicator');
-  
-  console.log('Hero cards:', inputCards.length, outputCards.length, indicators.length);
-  
-  var cases = [
-    { inp: 'card', out: 'bank' }, { inp: 'card', out: 'usdc' }, { inp: 'usdc', out: 'bank' }, { inp: 'usdc', out: 'onchain' }
-  ];
-  
-  var currentIdx = 0;
-  
-  function showCase(idx) {
-    console.log('Hero case:', idx);
-    var c = cases[idx];
-    
-    // Show/hide input cards
-    for (var i = 0; i < inputCards.length; i++) {
-      if (inputCards[i].getAttribute('data-value') === c.inp) {
-        inputCards[i].style.opacity = '1';
-        inputCards[i].style.pointerEvents = 'auto';
-      } else {
-        inputCards[i].style.opacity = '0';
-        inputCards[i].style.pointerEvents = 'none';
-      }
-    }
-    
-    // Show/hide output cards
-    for (var j = 0; j < outputCards.length; j++) {
-      if (outputCards[j].getAttribute('data-value') === c.out) {
-        outputCards[j].style.opacity = '1';
-        outputCards[j].style.pointerEvents = 'auto';
-      } else {
-        outputCards[j].style.opacity = '0';
-        outputCards[j].style.pointerEvents = 'none';
-      }
-    }
-    
-    // Update indicators
-    for (var k = 0; k < indicators.length; k++) {
-      var dot = indicators[k].querySelector('span');
-      if (k === idx) {
-        indicators[k].style.background = 'linear-gradient(to right, #06b6d4, #0891b2)';
-        indicators[k].style.color = 'white';
-        if (dot) dot.style.background = 'white';
-      } else {
-        indicators[k].style.background = '#f1f5f9';
-        indicators[k].style.color = '#64748b';
-        if (dot) dot.style.background = '#64748b';
-      }
-    }
-    
-    currentIdx = idx;
-  }
-  
-  // Start auto-rotation
-  if (inputCards.length > 0) {
-    showCase(0);
-    setInterval(function() {
-      currentIdx = (currentIdx + 1) % 4;
-      showCase(currentIdx);
-    }, 4500);
-    console.log('Hero auto-rotation STARTED');
-  }
-  
-  // Click handlers
-  for (var m = 0; m < indicators.length; m++) {
-    (function(index) {
-      indicators[index].onclick = function() {
-        showCase(index);
-      };
-    })(m);
-  }
-  
-  // ===== PAYMENT DEMO ANIMATION =====
-  var phoneScreens = document.querySelectorAll('#phone-content .phone-screen');
-  var demoSteps = document.querySelectorAll('#demo-steps .demo-step-btn');
-  var phoneContent = document.getElementById('phone-content');
-  
-  console.log('Payment demo:', phoneScreens.length, 'screens,', demoSteps.length, 'steps');
-  
-  var paymentStep = 0;
-  // Screens that need scrolling (0-indexed): Checkout(0), Method(1), Wallet(2), Confirm(4)
-  var screensNeedingScroll = [0, 1, 2, 4];
-  
-  function showPaymentStep(step) {
-    console.log('Payment step:', step);
-    
-    // First reset scroll position
-    if (phoneContent) {
-      phoneContent.scrollTop = 0;
-    }
-    
-    // Show/hide screens
-    for (var i = 0; i < phoneScreens.length; i++) {
-      if (i === step) {
-        phoneScreens[i].classList.add('active');
-        phoneScreens[i].style.display = 'block';
-      } else {
-        phoneScreens[i].classList.remove('active');
-        phoneScreens[i].style.display = 'none';
-      }
-    }
-    
-    // Update step buttons
-    for (var j = 0; j < demoSteps.length; j++) {
-      if (j === step) {
-        demoSteps[j].classList.add('bg-cyan-500', 'text-white');
-        demoSteps[j].classList.remove('bg-slate-700', 'text-slate-400');
-      } else {
-        demoSteps[j].classList.remove('bg-cyan-500', 'text-white');
-        demoSteps[j].classList.add('bg-slate-700', 'text-slate-400');
-      }
-    }
-    
-    // Only scroll on screens that need it, with smooth animation
-    if (phoneContent && screensNeedingScroll.indexOf(step) !== -1) {
-      setTimeout(function() {
-        var scrollDistance = phoneContent.scrollHeight - phoneContent.clientHeight;
-        if (scrollDistance > 20) {
-          phoneContent.scrollTo({ top: scrollDistance, behavior: 'smooth' });
-        }
-      }, 1500); // Wait 1.5s before scrolling
-    }
-    
-    paymentStep = step;
-  }
-  
-  // Start payment demo auto-rotation - slower pace (6 seconds)
-  if (phoneScreens.length > 0) {
-    showPaymentStep(0);
-    setInterval(function() {
-      paymentStep = (paymentStep + 1) % phoneScreens.length;
-      showPaymentStep(paymentStep);
-    }, 6000);
-    console.log('Payment demo auto-rotation STARTED');
-  }
-  
-  // Click handlers for demo steps
-  for (var n = 0; n < demoSteps.length; n++) {
-    (function(index) {
-      demoSteps[index].onclick = function() {
-        showPaymentStep(index);
-      };
-    })(n);
-  }
-  
-  console.log('=== ALL ANIMATIONS INITIALIZED ===');
-};
 </script>
 
 <!-- Nav-dropdown coordination, exclusive-open behavior.

@@ -116,7 +116,7 @@ info:
 
 servers:
   - url: https://api.chainmore.example
-    description: Production (placeholder URL — set at deploy time)
+    description: Documentation placeholder, not a live endpoint. Replace with the deployed gateway host before publishing generated docs.
   - url: http://localhost:8080
     description: Local development
 

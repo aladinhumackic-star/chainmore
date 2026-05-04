@@ -32,7 +32,7 @@ info:
     name: Proprietary
 servers:
   - url: https://api.chainmore.example/v1
-    description: Production (placeholder URL — set at deploy time)
+    description: Documentation placeholder, not a live endpoint. Replace with the deployed treasury host before publishing generated docs.
   - url: http://localhost:8080
     description: Local development
 

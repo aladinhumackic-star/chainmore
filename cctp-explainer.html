@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>How ChainMore moves USDC across chains | ChainMore</title>
-  <meta name="description" content="ChainMore's non-custodial cross-chain USDC architecture: Circle CCTP V2, sub-minute settlement, no Bridge.xyz-style custody, no liquidity providers, no slippage.">
+  <meta name="description" content="ChainMore's planned non-custodial cross-chain USDC architecture using Circle CCTP V2: native USDC, no liquidity-provider slippage, and Web2-style status tracking.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://chainmore.io/cctp-explainer">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -65,7 +65,7 @@
       <p class="text-slate-500">A short technical 1-pager for engineers and finance teams evaluating ChainMore against Bridge.xyz, BVNK, and similar stablecoin-payment providers.</p>
 
       <div class="callout">
-        <strong>The headline:</strong> ChainMore is the orchestration layer above Circle's CCTP. We never hold customer funds. The customer signs one transaction; the smart contract on the destination chain receives USDC and forwards it to the merchant in the same transaction. End-to-end in 30–90 seconds.
+        <strong>The headline:</strong> CCTP is ChainMore's first Mini-MVP rail, not the whole ChainMore product. In this path, the customer signs the source-chain burn directly, Circle burns native USDC on the source chain, and Circle mints native USDC on the destination chain. ChainMore's destination contract then validates the source burn and applies the accepted settlement pattern before merchant forwarding. Final settlement timing depends on that pattern, which is currently in architecture review.
       </div>
 
       <h2>The flow, in 5 stages</h2>
@@ -77,7 +77,7 @@
 
       <div class="stage"><div class="stage-num">2</div><div>
         <strong>Source chain burns the USDC and emits a Message.</strong>
-        <p>USDC is destroyed on the source chain. CCTP's <code>MessageSent</code> event captures the burn — including the destination chain, amount, and recipient. ChainMore's backend monitors for the event but does not custody the funds.</p>
+        <p>USDC is destroyed on the source chain. CCTP's <code>MessageSent</code> event captures the burn, including the destination chain, amount, and recipient. ChainMore's backend monitors for the event but does not custody the funds.</p>
       </div></div>
 
       <div class="stage"><div class="stage-num">3</div><div>
@@ -86,23 +86,23 @@
       </div></div>
 
       <div class="stage"><div class="stage-num">4</div><div>
-        <strong>Backend submits <code>receiveMessage</code> on the destination chain.</strong>
-        <p>ChainMore's backend wallet (gas-only, never holding USDC) submits the proof to Circle's <code>MessageTransmitterV2</code> contract on the destination. The wallet is single-purpose — its only capability is calling <code>receiveMessage</code>; an attacker compromising it cannot redirect funds (CCTP's protocol design enforces the recipient).</p>
+        <strong>The signed proof is submitted on the destination chain.</strong>
+        <p>The proof is submitted to Circle's <code>MessageTransmitterV2</code> directly or through ChainMore's destination settlement contract, depending on the accepted settlement pattern. CCTP's message binds the destination recipient; ChainMore's relayer role, where used, is gas submission and status orchestration, not discretionary custody.</p>
       </div></div>
 
       <div class="stage"><div class="stage-num">5</div><div>
-        <strong>Smart contract mints USDC and forwards to the merchant — atomically.</strong>
-        <p>USDC is minted to ChainMore's settlement contract, which executes the CCTP V2 Hook in the same transaction: it deducts our fee, transfers the rest to the merchant's wallet, and reverts if any USDC is left over. The merchant's wallet receives the funds; we hold nothing.</p>
+        <strong>Destination settlement completes under audited contract rules.</strong>
+        <p>Before mainnet launch, ChainMore will use an audited settlement pattern that validates the source burn, enforces replay protection, applies the configured fee, forwards net USDC to the merchant, and preserves reconciliation. Circle's core CCTP contracts do not execute an automatic recipient hook; ChainMore's settlement logic is integrator-owned and documented in the replacement ADR.</p>
       </div></div>
 
       <h2>What this gives the merchant</h2>
 
       <ul>
-        <li><strong>Sub-minute settlement</strong> — typically 30–60 seconds end-to-end with CCTP V2 Fast Transfer.</li>
-        <li><strong>No third-party bridge or LP</strong> — no liquidity-provider slippage, no wrapped-asset bridge layer. Circle's protocol burns USDC on one chain and mints native USDC on the other; the supply is unchanged. Smart-contract risk and protocol risk remain — see Trust model and audits below.</li>
-        <li><strong>Native USDC at destination</strong> — not a wrapped or bridged variant. The merchant receives the same Circle-issued USDC they would receive on a same-chain payment.</li>
-        <li><strong>Sub-30bps fee</strong> — ChainMore takes 15 bps for the orchestration. CCTP V2 Fast Transfer adds a small variable fee paid through to Circle.</li>
-        <li><strong>Idempotency by design</strong> — the protocol's nonce-binding makes the destination mint replay-safe at the contract level. Multiple submissions of the same proof produce one mint.</li>
+        <li><strong>Fast native-USDC movement</strong>: CCTP V2 Fast Transfer targets fast attestation where supported; ChainMore's end-to-end settlement SLO will be revalidated with the replacement settlement pattern.</li>
+        <li><strong>No third-party bridge or LP</strong>: no liquidity-provider slippage, no wrapped-asset bridge layer. Circle's protocol burns USDC on one chain and mints native USDC on the other; the supply is unchanged. Smart-contract risk and protocol risk remain. See Trust model and audits below.</li>
+        <li><strong>Native USDC at destination</strong>: not a wrapped or bridged variant. The merchant receives the same Circle-issued USDC they would receive on a same-chain payment.</li>
+        <li><strong>Sub-30bps fee</strong>: ChainMore takes 15 bps for the orchestration. CCTP V2 Fast Transfer adds a small variable fee paid through to Circle.</li>
+        <li><strong>Idempotency by design</strong>: the protocol's nonce-binding makes the destination mint replay-safe at the contract level. Multiple submissions of the same proof produce one mint.</li>
       </ul>
 
       <h2>Compare to a custodial provider</h2>
@@ -122,18 +122,18 @@
 
       <p>ChainMore Mini-MVP v1.0 is intentionally focused. It does <strong>not</strong> include:</p>
       <ul>
-        <li>Fiat off-ramp (USDC → EUR / USD bank transfer). That requires a licensed settlement partner; we integrate with one in v1.1+.</li>
-        <li>Cross-asset payments (e.g. customer pays USDT, merchant receives USDC). Token normalisation requires regulatory work we've explicitly deferred to v1.1 — see <a href="/docs">our docs</a> for the rationale.</li>
+        <li>Fiat off-ramp (USDC to EUR / USD bank transfer). That requires a licensed settlement partner; we integrate with one in v1.1+.</li>
+        <li>Cross-asset payments (e.g. customer pays USDT, merchant receives USDC). Token normalisation requires regulatory work we've explicitly deferred to v1.1. See <a href="/docs">our docs</a> for the rationale.</li>
         <li>Recurring billing or subscriptions. v2.0 surface.</li>
         <li>Card payments. We are a stablecoin-only product; for card payments use a card processor.</li>
       </ul>
 
-      <h2>Supported chains and assets — v1.0</h2>
+      <h2>Supported chains and assets | v1.0</h2>
 
       <ul>
         <li><strong>Asset:</strong> USDC (native, Circle-issued). Not USDT, not bridged USDC.e.</li>
-        <li><strong>Source chains:</strong> Ethereum, Base, Arbitrum, Polygon — customers can pay from any of these.</li>
-        <li><strong>Destination chains:</strong> Same set — merchants can receive on any of these.</li>
+        <li><strong>Source chains:</strong> Ethereum, Base, Arbitrum, Polygon. Customers can pay from any of these.</li>
+        <li><strong>Destination chains:</strong> Same set. Merchants can receive on any of these.</li>
         <li><strong>Cross-chain only.</strong> Same-chain USDC transfers go through our direct-payment path (also non-custodial), not the CCTP path described here.</li>
       </ul>
 
@@ -141,16 +141,16 @@
 
       <p>We trust:</p>
       <ul>
-        <li><strong>Circle</strong> — to issue USDC, run the CCTP attestor service, and not collude with attackers. Circle is a US-regulated stablecoin issuer.</li>
-        <li><strong>The underlying chains</strong> — Ethereum, Base, Arbitrum, Polygon — for consensus and finality. We require N confirmations per chain to insulate from short-range reorgs.</li>
-        <li><strong>The customer's wallet</strong> — to correctly sign the user's intent. The customer self-custodies; if their wallet is compromised, the funds at risk are their own.</li>
+        <li><strong>Circle</strong>: to issue USDC, run the CCTP attestor service, and not collude with attackers. Circle is a US-regulated stablecoin issuer.</li>
+        <li><strong>The underlying chains</strong>: Ethereum, Base, Arbitrum, Polygon, for consensus and finality. We require N confirmations per chain to insulate from short-range reorgs.</li>
+        <li><strong>The customer's wallet</strong>: to correctly sign the user's intent. The customer self-custodies; if their wallet is compromised, the funds at risk are their own.</li>
       </ul>
 
       <p>We do <strong>not</strong> trust:</p>
       <ul>
-        <li>The customer (could be malicious — sanctions screening at intent creation).</li>
-        <li>The merchant (could be malicious — sanctions screening at intent creation).</li>
-        <li>Our own backend (single-key compromise of the gas-only wallet cannot redirect funds — the destination is bound at burn time).</li>
+        <li>The customer (could be malicious; sanctions screening runs at intent creation).</li>
+        <li>The merchant (could be malicious; sanctions screening runs at intent creation).</li>
+        <li>Our own backend (single-key compromise of the gas-only wallet cannot redirect funds because the destination is bound at burn time).</li>
         <li>Our own smart contract (third-party audit before mainnet, plus an Immunefi bug bounty).</li>
       </ul>
 
@@ -165,8 +165,8 @@
 
       <p>If you're an engineer evaluating ChainMore against a build-it-yourself approach:</p>
       <ul>
-        <li>The CCTP integration alone is 2–3 weeks of careful engineering.</li>
-        <li>Smart-contract audit ($30–80k, 4–6 weeks) is the single biggest line-item.</li>
+        <li>The CCTP integration alone is 2-3 weeks of careful engineering.</li>
+        <li>Smart-contract audit ($30-80k, 4-6 weeks) is the single biggest line-item.</li>
         <li>AML vendor onboarding (Chainalysis or TRM) is required by every downstream partner.</li>
         <li>Per-chain operational tooling (RPC fallback, reorg handling, gas refill, alerting) is non-trivial.</li>
         <li>Or: integrate ChainMore's API in an afternoon.</li>
