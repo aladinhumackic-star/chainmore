@@ -82,6 +82,43 @@
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 6px;
       width: min(100%, 330px);
+      --demo-step-duration: 4s;
+    }
+
+    .demo-step-btn {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demo-step-btn::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 5px;
+      height: 2px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.75);
+      transform: scaleX(0);
+      transform-origin: left;
+      opacity: 0;
+    }
+
+    .demo-step-btn.is-active::after {
+      opacity: 1;
+      animation: demoStepProgress var(--demo-step-duration) linear forwards;
+    }
+
+    @keyframes demoStepProgress {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .demo-step-btn.is-active::after {
+        animation: none;
+        transform: scaleX(1);
+      }
     }
 
     .solution-card {
@@ -2885,6 +2922,9 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     const stepLabels = ['Pay', 'Connect', 'Approve', 'Route', 'Paid'];
     let currentPaymentStep = 0;
+    let paymentDemoInterval = null;
+    const PAYMENT_STEP_DURATION = 4000;
+    const paymentDemoReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     function updatePaymentStep(newStep) {
       currentPaymentStep = newStep;
@@ -2893,9 +2933,9 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       paymentDemoSteps.forEach((btn, i) => {
         if (i === currentPaymentStep) {
           btn.classList.remove('bg-white/10', 'text-white/60');
-          btn.classList.add('bg-cyan-400', 'text-white');
+          btn.classList.add('bg-cyan-400', 'text-white', 'is-active');
         } else {
-          btn.classList.remove('bg-cyan-400', 'text-white');
+          btn.classList.remove('bg-cyan-400', 'text-white', 'is-active');
           btn.classList.add('bg-white/10', 'text-white/60');
         }
       });
@@ -2920,6 +2960,21 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         phoneContent.scrollTop = 0;
       }
     }
+
+    function stopPaymentAutoPlay() {
+      if (paymentDemoInterval) {
+        clearInterval(paymentDemoInterval);
+        paymentDemoInterval = null;
+      }
+    }
+
+    function startPaymentAutoPlay() {
+      if (paymentDemoReduceMotion || paymentDemoSteps.length < 2) return;
+      stopPaymentAutoPlay();
+      paymentDemoInterval = setInterval(function() {
+        updatePaymentStep((currentPaymentStep + 1) % stepLabels.length);
+      }, PAYMENT_STEP_DURATION);
+    }
     
     // Step button clicks - use event delegation for reliability
     if (demoStepsContainer) {
@@ -2928,6 +2983,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         if (btn) {
           const stepIndex = parseInt(btn.getAttribute('data-step'));
           if (!isNaN(stepIndex) && stepIndex >= 0 && stepIndex < stepLabels.length) {
+            stopPaymentAutoPlay();
             updatePaymentStep(stepIndex);
           }
         }
@@ -2936,9 +2992,10 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       console.error('demo-steps container not found!');
     }
     
-    // Initialize - keep the demo calm and user-controlled.
+    // Initialize with calm autoplay; a manual step click hands control to the visitor.
     if (phoneScreens.length > 0) {
       updatePaymentStep(0);
+      startPaymentAutoPlay();
     } else {
       console.error('No phone screens found - demo will not work');
     }
