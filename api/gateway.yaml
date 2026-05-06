@@ -531,6 +531,35 @@ components:
           format: date-time
           description: Optional expiry. Defaults to 30 minutes after creation.
 
+    BindSourceBurnAuthorizationRequest:
+      type: object
+      description: |
+        Binds the payer wallet after Hosted Checkout wallet connection and
+        returns the signed PaymentSourceBurnAdapterV1 authorization. The
+        operation is idempotent for the same customer_wallet while the intent
+        is still awaiting deposit. Different-wallet retries or later lifecycle
+        states return 409 so one payment never has two live payer-bound
+        authorizations.
+      required: [customer_wallet]
+      properties:
+        customer_wallet:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+
+    ClaimCheckoutSourceTxRequest:
+      type: object
+      description: |
+        Browser-side tx handoff after the wallet provider returns a submitted
+        source-chain transaction hash. Hosted Checkout must call this only
+        after wallet confirmation, not when the wallet modal merely opens. The
+        endpoint stores the claim for reconciliation; the on-chain observer is
+        still responsible for verifying the tx and moving the intent to BURNED.
+      required: [tx_hash]
+      properties:
+        tx_hash:
+          type: string
+          pattern: '^0x[a-f0-9]{64}$'
+
     PaymentIntentCreateResponse:
       allOf:
         - $ref: "#/components/schemas/PaymentIntentStatus"
@@ -550,6 +579,13 @@ components:
             - expires_at
             - created_at
           properties:
+            checkout_token:
+              type: string
+              description: |
+                Raw customer-browser checkout token. Returned only on first
+                create, never on idempotent replay, and stored server-side
+                only as a SHA-256 hash. Scoped to this payment intent's
+                browser operations until expires_at.
             hook_payment_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
             source_chain: { type: string }
             dest_chain: { type: string }
@@ -568,23 +604,68 @@ components:
             expires_at: { type: string, format: date-time }
             created_at: { type: string, format: date-time }
 
+    SourceBurnAuthorizationResponse:
+      type: object
+      description: |
+        Signed source-burn authorization for a Pattern-E payment intent.
+        The response remains surface-only: it returns the merchant-facing
+        status vocabulary and never exposes the raw internal CCTP state.
+      required: [payment_id, surface_status, source_burn, updated_at]
+      properties:
+        payment_id: { type: string, format: uuid }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        source_burn:
+          $ref: "#/components/schemas/PatternESourceBurnInstructions"
+        updated_at: { type: string, format: date-time }
+
+    PaymentIntentCheckoutSessionResponse:
+      type: object
+      description: |
+        Customer-browser checkout view for one payment intent, resolved by
+        checkout token. This response is intentionally smaller than the
+        merchant-machine read surface and never includes merchant API-key
+        material or internal CCTP state.
+      required: [payment_id, surface_status, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
+      properties:
+        payment_id: { type: string, format: uuid }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        source_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        amount_usdc: { type: string }
+        asset: { type: string, enum: [USDC] }
+        expires_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
     PatternESourceBurnInstructions:
       type: object
       description: |
         Server-derived fields for constructing the source-chain CCTP V2 burn.
-        They are returned so Hosted Checkout does not infer or caller-supply
-        the Pattern-E route. The settlement_payload is ABI-encoded for
+        Hosted Checkout calls the ChainMore source-burn adapter with these
+        values. It must not call Circle TokenMessengerV2 directly, because
+        Circle encodes TokenMessengerV2 caller as BurnMessage.messageSender.
+        The settlement_payload is ABI-encoded for
         PaymentSettlementV4.SettlementPayload.
       required:
+        - source_burn_adapter
         - source_token_messenger
         - burn_token
         - recipient
         - destination_domain
         - mint_recipient
         - destination_caller
+        - max_fee
         - min_finality_threshold
         - settlement_payload
+        - authorization_status
       properties:
+        source_burn_adapter:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Source-chain ChainMore adapter that calls TokenMessengerV2 and becomes the V4 trusted burn sender.
         source_token_messenger:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
@@ -605,6 +686,9 @@ components:
           type: string
           pattern: '^0x[a-f0-9]{40}$'
           description: Must equal mint_recipient for Pattern E.
+        max_fee:
+          type: string
+          description: Maximum Circle fee, in atomic USDC units, bound into the source adapter authorization.
         min_finality_threshold:
           type: integer
           format: int32
@@ -612,6 +696,64 @@ components:
         settlement_payload:
           type: string
           pattern: '^0x[a-fA-F0-9]+$'
+        adapter_call_data:
+          type: string
+          pattern: '^0x[a-fA-F0-9]+$'
+          description: |
+            Fully encoded PaymentSourceBurnAdapterV1.burnWithAuthorization
+            calldata. Present only once the source burn authorization is ready.
+        authorization_status:
+          type: string
+          enum: [ready, requires_customer_wallet]
+          description: Whether the response includes a signed PaymentSourceBurnAdapterV1 authorization.
+        authorization:
+          $ref: "#/components/schemas/SourceBurnAuthorization"
+        signature:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{130}$'
+          description: EIP-712 signature over authorization, encoded r||s||v.
+        authorizer:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+          description: Backend authorizer address configured on PaymentSourceBurnAdapterV1.
+        eip712_domain:
+          $ref: "#/components/schemas/SourceBurnEIP712Domain"
+
+    SourceBurnAuthorization:
+      type: object
+      required:
+        - payer
+        - amount
+        - destination_domain
+        - mint_recipient
+        - destination_caller
+        - max_fee
+        - min_finality_threshold
+        - hook_data_hash
+        - deadline
+        - nonce
+      properties:
+        payer: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        amount: { type: string }
+        destination_domain: { type: integer, format: int32 }
+        mint_recipient: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        destination_caller: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        max_fee: { type: string }
+        min_finality_threshold: { type: integer, format: int32 }
+        hook_data_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        deadline:
+          type: string
+          description: Unix timestamp seconds. Equals the payment intent expires_at value; the default intent window is 30 minutes.
+        nonce: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+
+    SourceBurnEIP712Domain:
+      type: object
+      required: [name, version, chain_id, verifying_contract]
+      properties:
+        name: { type: string }
+        version: { type: string }
+        chain_id: { type: integer, format: int64 }
+        verifying_contract: { type: string, pattern: '^0x[a-f0-9]{40}$' }
 
     StartAttemptRequest:
       type: object
@@ -1473,6 +1615,110 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/HealthResponse" }
 
+  /v1/payment-intents/checkout/session:
+    get:
+      summary: Read the customer checkout view for a CCTP payment intent.
+      operationId: getPaymentIntentCheckoutSession
+      security: []
+      description: |
+        Browser-facing checkout-token endpoint. The token is scoped to one
+        payment intent and may be sent as `Authorization: Bearer <token>` or as
+        the `token` query parameter. It can read only the customer checkout
+        view and expires with the payment intent. If both credentials are sent,
+        they must match exactly.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: token
+          in: query
+          required: false
+          schema: { type: string }
+          description: Checkout token. Authorization Bearer is preferred when available.
+      responses:
+        '200':
+          description: Customer checkout view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntentCheckoutSessionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/payment-intents/checkout/source-burn-authorization:
+    post:
+      summary: Bind a checkout wallet and return source-burn calldata.
+      operationId: authorizePaymentIntentCheckoutSourceBurn
+      security: []
+      description: |
+        Browser-facing checkout-token endpoint. It binds the connected payer
+        wallet while the intent is still awaiting deposit, returns the signed
+        PaymentSourceBurnAdapterV1 authorization, and includes server-encoded
+        adapter calldata. The checkout token can only operate on its own
+        intent; it does not grant merchant API access. If both Authorization
+        Bearer and query token credentials are sent, they must match exactly.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: token
+          in: query
+          required: false
+          schema: { type: string }
+          description: Checkout token. Authorization Bearer is preferred when available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BindSourceBurnAuthorizationRequest" }
+      responses:
+        '200':
+          description: Source-burn authorization and adapter calldata ready.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SourceBurnAuthorizationResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  /v1/payment-intents/checkout/source-tx:
+    post:
+      summary: Claim the source-chain burn transaction hash from Hosted Checkout.
+      operationId: claimPaymentIntentCheckoutSourceTx
+      security: []
+      description: |
+        Browser-facing checkout-token endpoint. It records the tx hash returned
+        by the customer's wallet after `eth_sendTransaction` succeeds. This is
+        only a browser claim: it does not move the intent to BURNED. The
+        source-chain observer verifies the transaction and MessageSent event
+        before advancing state. Repeating the same tx hash is idempotent;
+        claiming a different tx hash for the same intent returns 409. If both
+        Authorization Bearer and query token credentials are sent, they must
+        match exactly.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: token
+          in: query
+          required: false
+          schema: { type: string }
+          description: Checkout token. Authorization Bearer is preferred when available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClaimCheckoutSourceTxRequest" }
+      responses:
+        '200':
+          description: Source tx claim stored; intent still awaits on-chain confirmation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntentStatus" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
   /v1/payment-intents/{paymentId}:
     get:
       summary: Read a CCTP payment-intent surface status.
@@ -1497,6 +1743,39 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
         '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/payment-intents/{paymentId}/source-burn-authorization:
+    post:
+      summary: Bind a payer wallet and return a source-burn authorization.
+      operationId: authorizePaymentIntentSourceBurn
+      description: |
+        Merchant-machine endpoint for server-side checkout integrations. The
+        public Hosted Checkout page should use
+        /v1/payment-intents/checkout/source-burn-authorization with the
+        checkout token instead of exposing a merchant API key in the browser.
+        The lookup is scoped by the authenticated API key's merchant_id and
+        mode; unknown, cross-merchant, and cross-mode UUIDs all return 404.
+      parameters:
+        - $ref: "#/components/parameters/PaymentIntentID"
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BindSourceBurnAuthorizationRequest" }
+      responses:
+        '200':
+          description: Source-burn authorization ready for adapter call.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SourceBurnAuthorizationResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
   /v1/payment-intents:
     get:

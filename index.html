@@ -77,6 +77,11 @@
       image-rendering: pixelated;
     }
 
+    .walletconnect-qr-frame {
+      width: 132px;
+      height: 132px;
+    }
+
     .demo-step-rail {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -173,6 +178,7 @@
 
     .paid-checkmark {
       animation: paidCheckPop 1.8s ease-in-out infinite;
+      box-shadow: 0 10px 40px rgba(0, 212, 255, 0.35);
     }
 
     @keyframes routeTravel {
@@ -1868,7 +1874,7 @@
                   </div>
                   <div class="bg-white border border-slate-200 rounded-3xl p-5 text-center">
                     <div class="text-xs text-slate-500 mb-3">Scan with WalletConnect</div>
-                    <div class="mx-auto rounded-2xl bg-white border border-slate-200 p-2 flex items-center justify-center" style="width:132px;height:132px;">
+                    <div class="walletconnect-qr-frame mx-auto rounded-2xl bg-white border border-slate-200 p-2 flex items-center justify-center">
                       <img src="/assets/walletconnect-demo-qr.png" alt="WalletConnect QR code for the demo payment" class="qr-code w-full h-full">
                     </div>
                   </div>
@@ -1974,7 +1980,7 @@
               <div class="phone-screen" data-screen="4">
                 <div class="min-h-full bg-slate-50 p-5 flex flex-col">
                   <div class="flex-1 flex flex-col items-center justify-center text-center">
-                    <div class="paid-checkmark w-20 h-20 bg-cyan-400 rounded-full flex items-center justify-center mb-5 shadow-xl" style="box-shadow: 0 10px 40px rgba(0, 212, 255, 0.35);">
+                    <div class="paid-checkmark w-20 h-20 bg-cyan-400 rounded-full flex items-center justify-center mb-5 shadow-xl">
                       <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <div class="text-2xl font-bold text-slate-900 mb-1">Paid</div>
@@ -2051,7 +2057,7 @@
             <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
             <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">SWIFT</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full" style="--bar-width: 100%"></div>
+              <div class="route-bar route-bar-swift bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full"></div>
             </div>
             <span class="text-red-400 w-12 md:w-14 text-right text-sm font-medium">3.2%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">3-5 days</span>
@@ -2062,7 +2068,7 @@
             <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
             <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">Wise</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full" style="--bar-width: 47%; animation-delay: 0.1s"></div>
+              <div class="route-bar route-bar-wise bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full"></div>
             </div>
             <span class="text-orange-400 w-12 md:w-14 text-right text-sm font-medium">1.5%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">1-2 days</span>
@@ -2073,7 +2079,7 @@
             <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
             <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">Remitly</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-yellow-500 to-yellow-400 h-full rounded-full" style="--bar-width: 38%; animation-delay: 0.2s"></div>
+              <div class="route-bar route-bar-remitly bg-gradient-to-r from-yellow-500 to-yellow-400 h-full rounded-full"></div>
             </div>
             <span class="text-yellow-400 w-12 md:w-14 text-right text-sm font-medium">1.2%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">4-8 hrs</span>
@@ -2092,7 +2098,7 @@
             <span class="text-cyan-400 text-xs w-12 md:w-16 font-medium shrink-0 relative">STABLE</span>
             <span class="text-cyan-300 w-16 md:w-24 text-sm font-medium shrink-0 relative">USDC/Poly</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden relative">
-              <div class="route-bar bg-gradient-to-r from-cyan-500 to-cyan-400 h-full rounded-full" style="--bar-width: 4%; animation-delay: 0.3s"></div>
+              <div class="route-bar route-bar-polygon bg-gradient-to-r from-cyan-500 to-cyan-400 h-full rounded-full"></div>
             </div>
             <span class="text-cyan-400 w-12 md:w-14 text-right text-sm font-bold relative">0.12%</span>
             <span class="text-cyan-400 w-16 md:w-20 text-right text-xs font-bold hidden sm:block relative">< 1 min</span>
@@ -2104,7 +2110,7 @@
             <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">STABLE</span>
             <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">USDC/Base</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-cyan-500/70 to-cyan-400/70 h-full rounded-full" style="--bar-width: 5%; animation-delay: 0.4s"></div>
+              <div class="route-bar route-bar-base bg-gradient-to-r from-cyan-500/70 to-cyan-400/70 h-full rounded-full"></div>
             </div>
             <span class="text-cyan-400/70 w-12 md:w-14 text-right text-sm">0.15%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">8 min</span>
@@ -2144,6 +2150,12 @@
       width: 0;
       animation: growBar 1s ease-out forwards;
     }
+
+    .route-bar-swift { --bar-width: 100%; }
+    .route-bar-wise { --bar-width: 47%; animation-delay: 0.1s; }
+    .route-bar-remitly { --bar-width: 38%; animation-delay: 0.2s; }
+    .route-bar-polygon { --bar-width: 4%; animation-delay: 0.3s; }
+    .route-bar-base { --bar-width: 5%; animation-delay: 0.4s; }
     
     @keyframes growBar {
       to {

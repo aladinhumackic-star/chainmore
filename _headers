@@ -47,21 +47,13 @@
   # default-src 'self' — start by allowing only same-origin assets,
   # then explicit per-directive carve-outs.
   #
-  # script-src includes 'unsafe-inline' because index.html ships
-  # ~790 lines of inline animation/carousel JS (hero flow, demo
-  # stepper). Externalising those into /assets/main.js is a planned
-  # follow-up; until then we accept the trade-off because (a) the
-  # site has zero user-data / cookies / auth, (b) all other
-  # mitigations (frame-ancestors, X-Frame-Options, COOP, etc.) are
-  # at maximum, (c) script-src remains scoped to 'self' for any
-  # external script — only inline is unsafe. NB: we did NOT add
-  # 'unsafe-eval'; new(Function), eval(), setTimeout(string) are all
-  # still blocked.
+  # script-src uses exact SHA-256 hashes for the static inline blocks
+  # that remain in the marketing HTML (JSON-LD, Redoc init, hero/demo
+  # interactions). No inline wildcard, no eval wildcard. Any inline JS
+  # edit must update this header and pass scripts/marketing-csp-hash-check.js.
   #
-  # style-src includes 'unsafe-inline' for the same pragmatic
-  # reason (Tailwind-compiled utilities inline classes via the HTML
-  # itself, which CSP treats as an inline style attribute when
-  # browsers reflect dynamic state). Same compensating controls.
+  # style-src follows the same hash discipline for static inline <style>
+  # blocks. Inline style attributes are forbidden by CI; use classes.
   #
   # connect-src 'self' — the marketing site makes zero fetch() /
   # XHR / WebSocket calls. Tightest possible.
@@ -84,7 +76,7 @@
   # at all; the directive is permissive only where there is nothing
   # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
   # changes.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-0CzR+kE2KYdVJltcTeHS5qWpfYWMzYKoWe2leyecoJI=' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-OaqrmoQg3cz1NijUm1BPp3G2/v3RV9Kp9S1ckooXyF4=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-cfUfouHzd3P7EAlg7JFsExD7K88FZfoQy5CgdrJSkco='; style-src 'self' 'sha256-/kaOULfzN1MmQBEMPTAh7G5Hj1Ixg5SHokLgiPetlzQ=' 'sha256-06m22s0Nvnzrxz0qfPokvD1Jofu8wwAvrj3Gz6NAico=' 'sha256-0ETkPuZCUWKHh8wtH4akk2DnHiBgizU2I62Wgo25p8w=' 'sha256-6tzp4ifN1wxmQ0y5f074+l6cwyZnCkLhoJEEopYNRW4=' 'sha256-AgMV/iTGVHsf/PUSKDb/Oyc0buDrWUOgNDJTNB01NCU=' 'sha256-H/7MI6x5O+vK7x6C3nB3idAvoJ1jdOAujmkoYa7GC9I=' 'sha256-IbRIND5dK/S/4+MfphUNnXGxTjlrJWknKd4XSxedmTo=' 'sha256-NtwGSRDxwMaWqf3bhdJ2BA6YFK01SB2MtLR+FhQYVaw=' 'sha256-ewti0XyPtGYMPkeQIgGdAvLR3+tCq8oTavfdd9YcSdk=' 'sha256-mucSbbxzqYFxnbM66GEiboLBbzblPMhgJGQ83LTHjYE=' 'sha256-muqd1az46vpaKe0tGNd+4W2aNl7pzXKKkyvOP6ULanY=' 'sha256-uIQy2KeRM63O0SSAl7pQMhN4aHGRX8pb1FqiSTgjbzU=' 'sha256-zAJNsLT09VNJJ4+nT0G9YCtEjhCkGcKUvSMHry7PN/E='; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
   # X-Frame-Options DENY — legacy header; modern browsers prefer

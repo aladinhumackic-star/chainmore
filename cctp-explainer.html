@@ -65,14 +65,14 @@
       <p class="text-slate-500">A short technical 1-pager for engineers and finance teams evaluating ChainMore against Bridge.xyz, BVNK, and similar stablecoin-payment providers.</p>
 
       <div class="callout">
-        <strong>The headline:</strong> CCTP is ChainMore's first Mini-MVP rail, not the whole ChainMore product. In this path, the customer signs the source-chain burn directly, Circle burns native USDC on the source chain, and Circle mints native USDC on the destination chain. ChainMore's destination contract then validates the source burn and applies the accepted settlement pattern before merchant forwarding. Final settlement timing depends on that pattern, which is currently in architecture review.
+        <strong>The headline:</strong> CCTP is ChainMore's first Mini-MVP rail, not the whole ChainMore product. In this path, the customer signs a source-chain transaction through ChainMore's adapter, Circle burns native USDC on the source chain, and Circle mints native USDC on the destination chain. ChainMore's destination contract validates the source burn, applies the merchant policy, and forwards net USDC to the merchant in one orchestrated destination step.
       </div>
 
       <h2>The flow, in 5 stages</h2>
 
       <div class="stage"><div class="stage-num">1</div><div>
-        <strong>Customer signs <code>depositForBurn</code> on the source chain.</strong>
-        <p>The customer's wallet (MetaMask, Coinbase Wallet, Rainbow, any WalletConnect-compatible) signs a single transaction calling Circle's <code>TokenMessengerV2</code> contract. ChainMore never holds the signing key.</p>
+        <strong>Customer signs the source-chain payment transaction.</strong>
+        <p>The customer's wallet (MetaMask, Coinbase Wallet, Rainbow, any WalletConnect-compatible) signs a transaction to ChainMore's source-burn adapter. The adapter verifies ChainMore's route authorization and calls Circle's <code>TokenMessengerV2</code>. ChainMore never holds the signing key.</p>
       </div></div>
 
       <div class="stage"><div class="stage-num">2</div><div>
@@ -87,18 +87,18 @@
 
       <div class="stage"><div class="stage-num">4</div><div>
         <strong>The signed proof is submitted on the destination chain.</strong>
-        <p>The proof is submitted to Circle's <code>MessageTransmitterV2</code> directly or through ChainMore's destination settlement contract, depending on the accepted settlement pattern. CCTP's message binds the destination recipient; ChainMore's relayer role, where used, is gas submission and status orchestration, not discretionary custody.</p>
+        <p>The proof is submitted through ChainMore's versioned destination settlement contract. That contract validates the Circle message, then calls <code>MessageTransmitterV2.receiveMessage</code> and forwards net USDC to the merchant. CCTP's message binds the destination caller and recipient; ChainMore's relayer role is gas submission and status orchestration, not discretionary custody.</p>
       </div></div>
 
       <div class="stage"><div class="stage-num">5</div><div>
         <strong>Destination settlement completes under audited contract rules.</strong>
-        <p>Before mainnet launch, ChainMore will use an audited settlement pattern that validates the source burn, enforces replay protection, applies the configured fee, forwards net USDC to the merchant, and preserves reconciliation. Circle's core CCTP contracts do not execute an automatic recipient hook; ChainMore's settlement logic is integrator-owned and documented in the replacement ADR.</p>
+        <p>ChainMore's Pattern-E settlement route validates the source burn, enforces replay protection, applies the configured fee, forwards net USDC to the merchant, and preserves reconciliation. Circle's core CCTP contracts do not execute an automatic recipient hook; ChainMore owns the settlement logic in its destination contract.</p>
       </div></div>
 
       <h2>What this gives the merchant</h2>
 
       <ul>
-        <li><strong>Fast native-USDC movement</strong>: CCTP V2 Fast Transfer targets fast attestation where supported; ChainMore's end-to-end settlement SLO will be revalidated with the replacement settlement pattern.</li>
+        <li><strong>Fast native-USDC movement</strong>: CCTP V2 Fast Transfer targets fast attestation where supported; ChainMore completes the destination mint and merchant settlement through its Pattern-E route.</li>
         <li><strong>No third-party bridge or LP</strong>: no liquidity-provider slippage, no wrapped-asset bridge layer. Circle's protocol burns USDC on one chain and mints native USDC on the other; the supply is unchanged. Smart-contract risk and protocol risk remain. See Trust model and audits below.</li>
         <li><strong>Native USDC at destination</strong>: not a wrapped or bridged variant. The merchant receives the same Circle-issued USDC they would receive on a same-chain payment.</li>
         <li><strong>Sub-30bps fee</strong>: ChainMore takes 15 bps for the orchestration. CCTP V2 Fast Transfer adds a small variable fee paid through to Circle.</li>
@@ -114,7 +114,7 @@
         </div>
         <div class="compare-cm">
           <h3>ChainMore (orchestrator)</h3>
-          <p>Customer signs transaction directly. Funds flow through Circle's permissionless protocol; ChainMore never custodies. Light merchant-onboarding (email, wallet address, sanctions screening). Days, not weeks. We position ourselves as a software / IaaS provider; our regulatory classification is being validated by Estonian counsel and we'll publish the opinion when it's in writing.</p>
+          <p>Customer signs the source transaction. Funds move through Circle's permissionless protocol and ChainMore's audited adapter and settlement contracts; ChainMore never holds keys or discretionary control. Light merchant-onboarding (email, wallet address, sanctions screening). Days, not weeks. We position ourselves as a software / IaaS provider; our regulatory classification will be validated before mainnet launch.</p>
         </div>
       </div>
 
