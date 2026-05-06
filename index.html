@@ -2905,6 +2905,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     const stepLabels = ['Pay', 'Connect', 'Approve', 'Route', 'Paid'];
     let currentPaymentStep = 0;
     let paymentDemoInterval = null;
+    let paymentDemoManual = false;
     const PAYMENT_STEP_DURATION = 5000;
     const paymentDemoReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
@@ -2953,7 +2954,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     }
 
     function startPaymentAutoPlay() {
-      if (paymentDemoReduceMotion || paymentDemoSteps.length < 2) return;
+      if (paymentDemoManual || paymentDemoReduceMotion || paymentDemoSteps.length < 2) return;
       stopPaymentAutoPlay();
       paymentDemoInterval = setInterval(function() {
         updatePaymentStep((currentPaymentStep + 1) % stepLabels.length);
@@ -2967,21 +2968,28 @@ console.<span class="text-yellow-300">log</span>(payment.route);
         if (btn) {
           const stepIndex = parseInt(btn.getAttribute('data-step'));
           if (!isNaN(stepIndex) && stepIndex >= 0 && stepIndex < stepLabels.length) {
+            paymentDemoManual = true;
             stopPaymentAutoPlay();
             updatePaymentStep(stepIndex);
           }
         }
       });
-    } else {
-      console.error('demo-steps container not found!');
+    }
+
+    const paymentDemoSection = document.getElementById('payment-demo');
+    if (paymentDemoSection) {
+      paymentDemoSection.addEventListener('mouseenter', function() {
+        stopPaymentAutoPlay();
+      });
+      paymentDemoSection.addEventListener('mouseleave', function() {
+        startPaymentAutoPlay();
+      });
     }
     
     // Initialize with calm autoplay; a manual step click hands control to the visitor.
     if (phoneScreens.length > 0) {
       updatePaymentStep(0);
       startPaymentAutoPlay();
-    } else {
-      console.error('No phone screens found - demo will not work');
     }
 
     // ========== HERO FLOW ANIMATION ==========
@@ -3026,6 +3034,8 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     
     var heroCurrentCase = 0;
     var heroAutoInterval = null;
+    var heroManual = false;
+    var heroReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     function showHeroCase(index) {
       var caseData = heroCases[index];
@@ -3073,28 +3083,37 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     }
     
     function startHeroAuto() {
+      if (heroManual || heroReduceMotion || heroCases.length < 2) return;
       if (heroAutoInterval) clearInterval(heroAutoInterval);
       heroAutoInterval = setInterval(function() {
         heroCurrentCase = (heroCurrentCase + 1) % 4;
         showHeroCase(heroCurrentCase);
-      }, 4500);
+      }, 5000);
     }
     
     // Click handlers for indicators
     heroRouteIndicators.forEach(function(ind, idx) {
       ind.addEventListener('click', function() {
+        heroManual = true;
         if (heroAutoInterval) clearInterval(heroAutoInterval);
         showHeroCase(idx);
-        startHeroAuto();
       });
     });
+
+    var heroSection = heroRouteIndicators.length ? heroRouteIndicators[0].closest('section') : null;
+    if (heroSection) {
+      heroSection.addEventListener('mouseenter', function() {
+        if (heroAutoInterval) clearInterval(heroAutoInterval);
+      });
+      heroSection.addEventListener('mouseleave', function() {
+        startHeroAuto();
+      });
+    }
     
     // Initialize Hero
     if (heroInputCards.length > 0 && heroOutputCards.length > 0) {
       showHeroCase(0);
       startHeroAuto();
-    } else {
-      console.error('Hero cards not found!');
     }
   });
 </script>
