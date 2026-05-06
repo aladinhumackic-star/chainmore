@@ -82,7 +82,7 @@
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
       width: min(100%, 360px);
-      --demo-step-duration: 4.5s;
+      --demo-step-duration: 5s;
     }
 
     .demo-step-btn {
@@ -2888,126 +2888,6 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       });
     });
 
-    // ========== CROSS-RAIL DEMO SECTION ==========
-    const demoTabs = document.querySelectorAll('.demo-tab');
-    const demoFlows = document.querySelectorAll('.demo-flow');
-    
-    let currentUseCase = 'checkout';
-    let currentStep = 1;
-    let maxSteps = { checkout: 5, payouts: 4 };
-    let autoPlayInterval = null;
-    const STEP_DURATION = 3000; // 3 seconds - balanced speed
-
-    function updateDemoStep() {
-      const activeFlow = document.querySelector(`.demo-flow[data-usecase="${currentUseCase}"]`);
-      if (!activeFlow) return;
-
-      // Update boxes
-      const boxes = activeFlow.querySelectorAll('.demo-box');
-      boxes.forEach(box => {
-        const boxStep = parseInt(box.dataset.step);
-        if (boxStep <= currentStep) {
-          box.classList.remove('opacity-40');
-          box.classList.add('opacity-100');
-        } else {
-          box.classList.add('opacity-40');
-          box.classList.remove('opacity-100');
-        }
-      });
-
-      // Update phone screens
-      const screens = activeFlow.querySelectorAll('.phone-screen');
-      screens.forEach(screen => {
-        const screenStep = parseInt(screen.dataset.step);
-        if (screenStep === currentStep) {
-          screen.classList.add('active');
-          screen.style.opacity = '1';
-        } else {
-          screen.classList.remove('active');
-          screen.style.opacity = '0';
-        }
-      });
-
-      // Update dots
-      const dots = activeFlow.querySelectorAll('.demo-dot');
-      dots.forEach(dot => {
-        const dotStep = parseInt(dot.dataset.step);
-        if (dotStep <= maxSteps[currentUseCase]) {
-          dot.style.display = 'block';
-          if (dotStep <= currentStep) {
-            dot.classList.remove('bg-slate-600');
-            dot.classList.add('bg-cyan-500');
-          } else {
-            dot.classList.remove('bg-cyan-500');
-            dot.classList.add('bg-slate-600');
-          }
-        } else {
-          dot.style.display = 'none';
-        }
-      });
-
-      // Update connection lines
-      const lines = activeFlow.querySelectorAll('.connection-line');
-      lines.forEach(line => {
-        const lineStep = parseInt(line.dataset.step);
-        if (lineStep <= currentStep) {
-          line.classList.add('active');
-        } else {
-          line.classList.remove('active');
-        }
-      });
-    }
-
-    function nextDemoStep() {
-      if (currentStep < maxSteps[currentUseCase]) {
-        currentStep++;
-      } else {
-        currentStep = 1;
-      }
-      updateDemoStep();
-    }
-
-    function switchUseCase(useCase) {
-      currentUseCase = useCase;
-      currentStep = 1;
-
-      demoTabs.forEach(tab => {
-        if (tab.dataset.usecase === useCase) {
-          tab.classList.add('bg-white', 'text-slate-900', 'shadow-lg');
-          tab.classList.remove('bg-slate-800', 'text-slate-400', 'border-slate-700');
-        } else {
-          tab.classList.remove('bg-white', 'text-slate-900', 'shadow-lg');
-          tab.classList.add('bg-slate-800', 'text-slate-400', 'border-slate-700');
-        }
-      });
-
-      demoFlows.forEach(flow => {
-        if (flow.dataset.usecase === useCase) {
-          flow.classList.remove('hidden');
-          flow.classList.add('active');
-        } else {
-          flow.classList.add('hidden');
-          flow.classList.remove('active');
-        }
-      });
-
-      updateDemoStep();
-    }
-
-    demoTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        switchUseCase(tab.dataset.usecase);
-      });
-    });
-
-    function startAutoPlay() {
-      if (autoPlayInterval) clearInterval(autoPlayInterval);
-      autoPlayInterval = setInterval(nextDemoStep, STEP_DURATION);
-    }
-
-    updateDemoStep();
-    startAutoPlay();
-
     // ========== NEW PAYMENT EXPERIENCE DEMO ==========
 
     // Use more specific selectors to avoid conflicts with other demo sections
@@ -3025,7 +2905,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     const stepLabels = ['Pay', 'Connect', 'Approve', 'Route', 'Paid'];
     let currentPaymentStep = 0;
     let paymentDemoInterval = null;
-    const PAYMENT_STEP_DURATION = 4500;
+    const PAYMENT_STEP_DURATION = 5000;
     const paymentDemoReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     function updatePaymentStep(newStep) {
