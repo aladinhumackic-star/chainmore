@@ -31,8 +31,8 @@ info:
   license:
     name: Proprietary
 servers:
-  - url: https://api.chainmore.example/v1
-    description: Documentation placeholder, not a live endpoint. Replace with the deployed treasury host before publishing generated docs.
+  - url: https://api.chainmore.io/v1
+    description: Operator-internal treasury API host. Not intended for public merchant integrations.
   - url: http://localhost:8080
     description: Local development
 

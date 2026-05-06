@@ -115,8 +115,8 @@ info:
     name: Proprietary
 
 servers:
-  - url: https://api.chainmore.example
-    description: Documentation placeholder, not a live endpoint. Replace with the deployed gateway host before publishing generated docs.
+  - url: https://api.chainmore.io
+    description: Production gateway host for pilot and live merchant integrations.
   - url: http://localhost:8080
     description: Local development
 
