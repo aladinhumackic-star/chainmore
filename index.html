@@ -2879,13 +2879,31 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        const hash = this.getAttribute('href');
+        const target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           // Close mobile menu if open
           if (mobileMenu) mobileMenu.classList.add('hidden');
         }
       });
+    });
+
+    // Direct links such as /#payment-demo can land before fonts,
+    // responsive panels, or deferred assets finish sizing. Re-apply
+    // the hash scroll after the layout settles so shared section
+    // links open at the actual section start, especially on mobile.
+    function settleInitialHashScroll() {
+      if (!window.location.hash || window.location.hash.length < 2) return;
+      const target = document.getElementById(window.location.hash.slice(1));
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+    setTimeout(settleInitialHashScroll, 0);
+    window.addEventListener('load', function() {
+      setTimeout(settleInitialHashScroll, 120);
+      setTimeout(settleInitialHashScroll, 450);
+      setTimeout(settleInitialHashScroll, 900);
     });
 
     // ========== NEW PAYMENT EXPERIENCE DEMO ==========
