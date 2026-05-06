@@ -33,8 +33,6 @@ info:
 servers:
   - url: https://api.chainmore.io/v1
     description: Operator-internal treasury API host. Not intended for public merchant integrations.
-  - url: http://localhost:8080
-    description: Local development
 
 # ---------------------------------------------------------------------------
 # Security
