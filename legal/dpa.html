@@ -76,7 +76,7 @@
       <p>The Technical and Organisational Measures annex is grounded in the actual security work shipped in our codebase. Every measure is traceable to a specific file, ADR, or test, and the underlying evidence pack is shared with controllers and partner-bank diligence teams on request. Highlights:</p>
       <ul>
         <li>HTTPS / TLS 1.2+ on every customer-facing surface, with HSTS, CSP, X-Frame-Options, Permissions-Policy, COOP, CORP, and Cross-Origin-Resource-Policy all enforced</li>
-        <li>Cookie hardening with explicit per-cookie HttpOnly / SameSite / Secure / __Host- prefixes</li>
+        <li>Cookie hardening with explicit per-cookie HttpOnly / SameSite / Secure / __Host- prefixes wherever protected product areas use session cookies</li>
         <li>OIDC-based authentication (Keycloak), role-based authorisation, audience-separated tokens (the gateway accepts only access tokens with <code>aud=chainmore-gateway</code>)</li>
         <li>Hash-chained audit log for all administrative actions</li>
         <li>72-hour personal-data-breach notification commitment to controllers, with regulatory notification windows aligned to DORA Article 19 and GDPR Article 33</li>
@@ -97,7 +97,7 @@
       <p>For DPA-specific questions: <a href="mailto:support@chainmore.io?subject=DPA%20question">support@chainmore.io</a> with subject "DPA question". For data-protection-officer escalations: same address with subject "DPO escalation".</p>
 
       <hr>
-      <p class="text-sm text-slate-500"><em>Last updated: April 2026. Canonical version is held by Chainmore OÜ and provided on request.</em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: May 2026. Canonical version is held by Chainmore OÜ and provided on request.</em></p>
     </article>
   </main>
 
