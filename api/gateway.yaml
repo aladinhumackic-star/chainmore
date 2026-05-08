@@ -627,16 +627,30 @@ components:
         checkout token. This response is intentionally smaller than the
         merchant-machine read surface and never includes merchant API-key
         material or internal CCTP state.
-      required: [payment_id, surface_status, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
+      required: [payment_id, surface_status, checkout_step, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
       properties:
         payment_id: { type: string, format: uuid }
         surface_status:
           type: string
           enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        checkout_step:
+          type: string
+          enum: [connect_wallet, confirm_payment, waiting_for_chain, done]
+          description: |
+            Coarse browser action state. This is not the internal CCTP state:
+            it only tells Hosted Checkout whether to connect a wallet, confirm
+            the source transaction, wait for chain verification, or show a
+            terminal screen.
         source_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         amount_usdc: { type: string }
         asset: { type: string, enum: [USDC] }
+        customer_wallet:
+          type: string
+          description: Present only after the customer browser binds a wallet for this intent.
+        source_tx_hash:
+          type: string
+          description: Present only after the browser has claimed the submitted source-chain tx hash.
         expires_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 

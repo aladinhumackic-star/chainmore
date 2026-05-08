@@ -15,7 +15,7 @@
 #
 # This file has completed the initial conservative rollout steps:
 #
-#   - HSTS max-age=15768000 (6 months, NOT 2 years)
+#   - HSTS max-age=31536000 (1 year, NOT preload)
 #   - HSTS without `preload` directive
 #   - CSP enforced (marketing site has no auth/cookies → safe to enforce)
 #
@@ -25,7 +25,7 @@
 #                                                          doesn't break
 #   day 1   after smoke pass:  max-age=86400              — 1-day commit
 #   day 7   after smoke pass:  max-age=2592000            — 30-day commit
-#   current deployed posture:  max-age=15768000           — 6-month commit
+#   current deployed posture:  max-age=31536000           — 1-year commit
 #   future + investor sign-off:
 #                              max-age=63072000; preload  — submit to
 #                                                          hstspreload.org
@@ -36,12 +36,12 @@
 
 /*
   # ── Transport security ────────────────────────────────────────────
-  # HSTS is now on the 6-month ramp step without preload. See the
+  # HSTS is now on the 1-year ramp step without preload. See the
   # historical ramp procedure above. includeSubDomains is on because if
   # any subdomain (api., auth., app.) is served over http, we want to
   # know immediately. The preload directive remains off until the
   # explicit preload sign-off step.
-  Strict-Transport-Security: max-age=15768000; includeSubDomains
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
 
   # ── Content Security Policy ───────────────────────────────────────
   # default-src 'self' — start by allowing only same-origin assets,
