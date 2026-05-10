@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChainMore | Payment Orchestration for the Stablecoin Era</title>
-  <meta name="description" content="ChainMore is payment orchestration for the stablecoin era. Your customer chooses how to pay. You choose how to receive. ChainMore handles everything in between.">
+  <title>ChainMore | One Checkout for Every Way to Pay</title>
+  <meta name="description" content="Your customer chooses how to pay. You choose how to receive. ChainMore handles everything in between.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.chainmore.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.chainmore.io/">
-  <meta property="og:title" content="ChainMore | Payment Orchestration for the Stablecoin Era">
+  <meta property="og:title" content="ChainMore | One Checkout for Every Way to Pay">
   <meta property="og:description" content="Your customer chooses how to pay. You choose how to receive. ChainMore handles everything in between.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ChainMore | Payment Orchestration for the Stablecoin Era">
+  <meta name="twitter:title" content="ChainMore | One Checkout for Every Way to Pay">
   <meta name="twitter:description" content="Your customer chooses how to pay. You choose how to receive. ChainMore handles everything in between.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
@@ -28,7 +28,7 @@
   -->
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "Payment orchestration for the stablecoin era. One checkout for every way to pay, without custody.", "foundingDate": "2026", "address": {
+    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "One checkout for every way to pay. Non-custodial payment infrastructure for regulated businesses.", "foundingDate": "2026", "address": {
       "@type": "PostalAddress", "streetAddress": "Kotkapoja tn 2a-10", "postalCode": "10615", "addressLocality": "Tallinn", "addressCountry": "EE"
     }, "identifier": {
       "@type": "PropertyValue", "propertyID": "Estonian Commercial Register (Registrikood)", "value": "17448638"
@@ -106,6 +106,47 @@
       border: 1px solid rgba(148, 163, 184, 0.24);
       background: rgba(255, 255, 255, 0.78);
       backdrop-filter: blur(18px);
+    }
+
+    .benefit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .trust-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.75rem;
+      padding: 0.65rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(203, 213, 225, 0.75);
+      background: rgba(248, 250, 252, 0.82);
+      color: #0f172a;
+      font-weight: 700;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    .trust-dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 999px;
+      background: #22d3ee;
+      box-shadow: 0 0 0 5px rgba(34, 211, 238, 0.13);
+      flex: none;
+    }
+
+    @media (min-width: 720px) {
+      .benefit-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1180px) {
+      .benefit-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
     }
 
     .pain-grid {
@@ -326,7 +367,7 @@
 
     .chaos-cloud {
       position: relative;
-      min-height: 310px;
+      min-height: 340px;
     }
 
     .chaos-chip {
@@ -347,6 +388,9 @@
     .chaos-cloud .chaos-chip:nth-child(8) { --x: 172px; --y: 190px; --r: 7deg; --i: 7; }
     .chaos-cloud .chaos-chip:nth-child(9) { --x: 18px; --y: 238px; --r: 4deg; --i: 8; }
     .chaos-cloud .chaos-chip:nth-child(10) { --x: 104px; --y: 256px; --r: -6deg; --i: 9; }
+    .chaos-cloud .chaos-chip:nth-child(11) { --x: 198px; --y: 244px; --r: 5deg; --i: 10; }
+    .chaos-cloud .chaos-chip:nth-child(12) { --x: 6px; --y: 292px; --r: -4deg; --i: 11; }
+    .chaos-cloud .chaos-chip:nth-child(13) { --x: 140px; --y: 304px; --r: 6deg; --i: 12; }
 
     .chaos-chip::after {
       content: "";
@@ -788,7 +832,18 @@
       .route-flow-line::after,
       .route-node-pulse,
       .paid-checkmark,
-      .complexity-pill {
+      .complexity-pill,
+      .chaos-chip,
+      .chaos-chip::after,
+      .core-orb,
+      .core-orb::before,
+      .core-orb::after,
+      .outcome-card,
+      .story-cue,
+      .vision-path,
+      .floating-rail,
+      .payment-orb,
+      .gradient-text {
         animation: none;
       }
     }
@@ -1264,7 +1319,7 @@
                 <div class="platform-content active" data-content="platform">
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
                     <h3 class="text-white font-bold text-lg mb-2">ChainMore Platform</h3>
-                    <p class="text-slate-400 text-sm">One checkout for fiat and stablecoin payments. Built for businesses that want payments to feel simple.</p>
+                    <p class="text-slate-400 text-sm">One checkout for every way to pay. Built for businesses that want payments to feel simple.</p>
                   </div>
                   <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                     <span>Explore Features</span>
@@ -1645,7 +1700,7 @@
           <span class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
           Limited Early Access
         </div>
-        <p class="text-cyan-600 font-semibold text-sm md:text-base mb-3">Payment orchestration for the stablecoin era</p>
+        <p class="text-cyan-600 font-semibold text-sm md:text-base mb-3">One checkout for every way to pay</p>
         <h1 class="vision-wordmark text-4xl md:text-6xl lg:text-7xl font-bold mb-5 leading-[0.95] text-slate-950">
           Every way to pay.<br>
           <span class="gradient-text">One beautiful checkout.</span>
@@ -1675,7 +1730,9 @@
             <span class="chaos-chip rounded-full bg-white/[0.06] border border-white/10 px-3 py-2 text-xs text-white/45">Buy fees</span>
             <span class="chaos-chip rounded-full bg-white/[0.08] border border-white/10 px-3 py-2 text-xs text-white/55">Switch app</span>
             <span class="chaos-chip rounded-full bg-white/[0.07] border border-white/10 px-3 py-2 text-xs text-white/50">Review</span>
+            <span class="chaos-chip rounded-full bg-white/[0.07] border border-white/10 px-3 py-2 text-xs text-white/50">Confirm</span>
             <span class="chaos-chip rounded-full bg-white/[0.06] border border-white/10 px-3 py-2 text-xs text-white/45">Wait</span>
+            <span class="chaos-chip rounded-full bg-white/[0.06] border border-white/10 px-3 py-2 text-xs text-white/45">Refresh</span>
             <span class="chaos-chip rounded-full bg-white/[0.08] border border-white/10 px-3 py-2 text-xs text-white/55">Ask support</span>
             <span class="chaos-chip rounded-full bg-white/[0.07] border border-white/10 px-3 py-2 text-xs text-white/50">Retry</span>
           </div>
@@ -1723,7 +1780,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
+      <div class="benefit-grid mb-8">
         <div class="benefit-tile rounded-2xl p-4 flex flex-col justify-between">
           <div class="w-8 h-8 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-4">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h10"/></svg>
@@ -1744,7 +1801,7 @@
         </div>
         <div class="benefit-tile rounded-2xl p-4 flex flex-col justify-between">
           <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.5 0-4 1.2-4 2.8S9.5 13 12 13s4 1.2 4 2.8S14.5 19 12 19m0-11V5m0 14v-3"/></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h5M5 19l3-3h9a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v5a3 3 0 003 3h1"/></svg>
           </div>
           <div>
             <div class="font-bold text-slate-950">Fewer support tickets</div>
@@ -1756,13 +1813,13 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-5M12 22C7 20 4 16 4 10V5l8-3 8 3v5c0 6-3 10-8 12z"/></svg>
           </div>
           <div>
-            <div class="font-bold text-slate-950">Your payout</div>
-            <div class="text-sm text-slate-500 mt-1 leading-snug">Receive how you choose.</div>
+            <div class="font-bold text-slate-950">Lower payment waste</div>
+            <div class="text-sm text-slate-500 mt-1 leading-snug">Fewer failed detours.</div>
           </div>
         </div>
         <div class="benefit-tile rounded-2xl p-4 flex flex-col justify-between">
           <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mb-4">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4"/></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h10l2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2V5l2-2zm2 6h6m-6 4h6m-6 4h4"/></svg>
           </div>
           <div>
             <div class="font-bold text-slate-950">Clean records</div>
@@ -1793,12 +1850,12 @@
   </section>
 
   <!-- Trust Strip -->
-  <section class="py-5 px-4 md:px-6 bg-white border-y border-slate-100">
-    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-      <div class="text-sm md:text-base font-semibold text-slate-800">Non-custodial</div>
-      <div class="text-sm md:text-base font-semibold text-slate-800">EU company</div>
-      <div class="text-sm md:text-base font-semibold text-slate-800">Patent-protected</div>
-      <div class="text-sm md:text-base font-semibold text-slate-800">Built for regulated businesses</div>
+  <section class="py-6 px-4 md:px-6 bg-white border-y border-slate-100">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
+      <div class="trust-pill"><span class="trust-dot"></span>Non-custodial</div>
+      <div class="trust-pill"><span class="trust-dot"></span>EU company</div>
+      <div class="trust-pill"><span class="trust-dot"></span>Patent-protected</div>
+      <div class="trust-pill"><span class="trust-dot"></span>Built for regulated businesses</div>
     </div>
   </section>
 
@@ -1812,7 +1869,7 @@
 		            Thirteen payment steps become two.
 		          </h2>
 		          <p class="text-lg text-slate-600 leading-relaxed max-w-xl">
-		            Every extra payment step becomes churn. ChainMore turns a fragmented payment journey into one clear moment, so more customers finish and fewer payments become tickets.
+		            Every extra payment step becomes churn, support, and reconciliation work. ChainMore turns a fragmented payment journey into one clear moment, so more customers finish and your team gets a clean record.
 		          </p>
         </div>
 
@@ -1851,7 +1908,7 @@
                   <div class="rounded-2xl bg-slate-950 px-4 py-4 font-bold text-lg text-white">Confirm once</div>
                 </div>
               </div>
-	              <p class="mt-6 text-sm font-semibold text-slate-800/70">The complexity stays behind the checkout.</p>
+	              <p class="mt-6 text-sm font-semibold text-slate-800/70">The customer sees two steps. Your team sees paid, recorded, and ready.</p>
 	            </div>
           </div>
         </div>
@@ -2230,7 +2287,7 @@
               <div class="merchant-outcome-tag">Conversion</div>
             </div>
             <div class="merchant-outcome-row">
-              <div class="merchant-outcome-mark bg-emerald-300">–</div>
+              <div class="merchant-outcome-mark bg-emerald-300">-</div>
               <div>
                 <div class="font-black text-slate-950">No support loop</div>
                 <div class="text-sm text-slate-500">Fewer retries, explanations, and manual checks.</div>
@@ -2460,7 +2517,7 @@
               <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
             </span>
           </div>
-          <p class="text-sm mb-4 max-w-xs">Payment orchestration for the stablecoin era. One checkout for every way to pay.</p>
+          <p class="text-sm mb-4 max-w-xs">One checkout for every way to pay. Built for regulated businesses.</p>
         </div>
         
         <!-- Platform Links -->
