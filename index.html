@@ -2024,9 +2024,9 @@
   <section id="routing" class="py-10 md:py-14 px-4 md:px-6 bg-slate-900">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-6 md:mb-8">
-        <div class="text-cyan-400 font-semibold text-sm uppercase tracking-wider mb-2">Routing Insight</div>
+        <div class="text-cyan-400 font-semibold text-sm uppercase tracking-wider mb-2">Example Routing Logic</div>
         <h2 class="text-2xl md:text-4xl font-bold text-white mb-2">Dynamic Route Selection</h2>
-        <p class="text-slate-400 text-base max-w-2xl mx-auto">ChainMore analyzes all available routes and selects the optimal path based on cost, speed, and reliability.</p>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto">A sample payment shows how ChainMore can compare cost, speed, and reliability before selecting a path.</p>
       </div>
 
       <!-- Routing Visualization -->
@@ -2122,7 +2122,7 @@
           <div class="flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <div class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-white font-medium text-sm">Route selected:</span>
+              <span class="text-white font-medium text-sm">Example route:</span>
               <span class="text-cyan-400 font-bold text-sm">USDC via Polygon</span>
             </div>
             <div class="flex items-center gap-6 text-sm">
@@ -2230,7 +2230,7 @@
           <p class="text-slate-600 text-sm mb-3">Pay remote teams in 180+ countries. USDC for speed, local currency for convenience.</p>
           <div class="route-chips flex items-center gap-2 text-xs">
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → PHP</span>
-            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → NGN</span>
+            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → BRL</span>
           </div>
         </div>
 
@@ -2443,7 +2443,7 @@
         <div>
           <div class="text-cyan-500 font-semibold text-sm uppercase tracking-wider mb-3">For Developers</div>
           <h2 class="text-3xl md:text-4xl font-bold mb-6">One API. All Payment Rails.</h2>
-          <p class="text-slate-600 text-lg mb-8">Stop integrating multiple PSPs, stablecoin providers, and bridges. ChainMore unifies everything behind a single, elegant API.</p>
+          <p class="text-slate-600 text-lg mb-8">Stop integrating dozens of providers. ChainMore unifies every payment rail behind a single, elegant API.</p>
 
           <div class="space-y-4">
             <div class="flex items-start gap-3">
@@ -3118,27 +3118,20 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       heroAutoInterval = setInterval(function() {
         heroCurrentCase = (heroCurrentCase + 1) % 4;
         showHeroCase(heroCurrentCase);
-      }, 5000);
+      }, 4000);
     }
 
     // Click handlers for indicators
     heroRouteIndicators.forEach(function(ind, idx) {
       ind.addEventListener('click', function() {
         heroManual = true;
-        if (heroAutoInterval) clearInterval(heroAutoInterval);
+        if (heroAutoInterval) {
+          clearInterval(heroAutoInterval);
+          heroAutoInterval = null;
+        }
         showHeroCase(idx);
       });
     });
-
-    var heroSection = heroRouteIndicators.length ? heroRouteIndicators[0].closest('section') : null;
-    if (heroSection) {
-      heroSection.addEventListener('mouseenter', function() {
-        if (heroAutoInterval) clearInterval(heroAutoInterval);
-      });
-      heroSection.addEventListener('mouseleave', function() {
-        startHeroAuto();
-      });
-    }
 
     // Initialize Hero
     if (heroInputCards.length > 0 && heroOutputCards.length > 0) {
