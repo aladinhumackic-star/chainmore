@@ -82,6 +82,18 @@
       height: 132px;
     }
 
+    .verify-spinner {
+      animation: verifySpinnerRotate 1.15s linear infinite;
+    }
+
+    .verify-spinner svg {
+      animation: verifySpinnerCounterRotate 1.15s linear infinite;
+    }
+
+    .mini-spinner {
+      animation: verifySpinnerRotate 0.9s linear infinite;
+    }
+
     .demo-step-rail {
       display: flex;
       flex-wrap: wrap;
@@ -131,6 +143,16 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
+    }
+
+    @keyframes verifySpinnerRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes verifySpinnerCounterRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(-360deg); }
     }
 
     .route-flow-line {
@@ -214,12 +236,15 @@
       }
 
       .phone-screen.active,
-      .route-flow-line::before,
-      .route-flow-line::after,
-      .route-node-pulse,
-      .paid-checkmark {
-        animation: none;
-      }
+	      .route-flow-line::before,
+	      .route-flow-line::after,
+	      .route-node-pulse,
+	      .verify-spinner,
+	      .verify-spinner svg,
+	      .mini-spinner,
+	      .paid-checkmark {
+	        animation: none;
+	      }
     }
 
     .solution-card {
@@ -1928,11 +1953,15 @@
                       </div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-                      <div class="mx-auto w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 font-bold mb-2">C</div>
+                      <div class="mx-auto w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center overflow-hidden mb-2">
+                        <img src="/assets/coinbase-wallet-logo.png" alt="Coinbase Wallet" class="w-8 h-8">
+                      </div>
                       <div class="font-bold text-slate-900 text-sm">Coinbase</div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-                      <div class="mx-auto w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold mb-2">T</div>
+                      <div class="mx-auto w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center overflow-hidden mb-2">
+                        <img src="/assets/trust-wallet-logo.png" alt="Trust Wallet" class="w-8 h-8">
+                      </div>
                       <div class="font-bold text-slate-900 text-sm">Trust</div>
                     </div>
                     <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
@@ -1956,7 +1985,7 @@
               <div class="phone-screen" data-screen="3">
                 <div class="min-h-full bg-white p-5 flex flex-col">
                   <div class="flex-1 flex flex-col items-center justify-center text-center">
-                    <div class="mx-auto w-20 h-20 rounded-full border-[7px] border-slate-200 border-t-cyan-400 flex items-center justify-center mb-7 route-node-pulse">
+                    <div class="mx-auto w-20 h-20 rounded-full border-[7px] border-slate-200 border-t-cyan-400 flex items-center justify-center mb-7 verify-spinner">
                       <svg class="w-8 h-8 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4"/></svg>
                     </div>
                     <div class="text-xl font-bold text-slate-900 mb-1">Connecting securely...</div>
@@ -1980,7 +2009,7 @@
                         <span class="text-sm font-semibold text-slate-900">Wallet connected</span>
                       </div>
                       <div class="flex items-center gap-3">
-                        <div class="w-6 h-6 rounded-full border-4 border-cyan-200 border-t-cyan-400"></div>
+                        <div class="w-6 h-6 rounded-full border-4 border-cyan-200 border-t-cyan-400 mini-spinner"></div>
                         <span class="text-sm font-semibold text-slate-500">Preparing payment...</span>
                       </div>
                     </div>
