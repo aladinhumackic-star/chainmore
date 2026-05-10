@@ -214,6 +214,100 @@ components:
       properties:
         note: { type: string }
 
+    RefundIntent:
+      type: object
+      description: Operator-visible refund intent for ADR-0062 refund workflows.
+      required:
+        - refund_id
+        - original_payment_id
+        - merchant_id
+        - mode
+        - amount_atomic
+        - currency
+        - state
+        - reason_code
+        - customer_wallet
+        - customer_chain
+        - merchant_refund_wallet
+        - merchant_refund_chain
+        - cctp_hook_payment_id
+        - expires_at
+        - created_at
+        - updated_at
+      properties:
+        refund_id: { type: string, format: uuid }
+        original_payment_id: { type: string, format: uuid }
+        merchant_id: { type: string }
+        mode: { type: string, enum: [test, live] }
+        amount_atomic: { type: string, pattern: "^[0-9]+$" }
+        currency: { type: string, enum: [USDC] }
+        state:
+          type: string
+          enum:
+            - requested
+            - approved
+            - signed_pending_burn
+            - burn_inflight
+            - burned
+            - attestation_pending
+            - settlement_inflight
+            - settled
+            - cancelled
+            - source_compliance_block
+            - destination_compliance_block
+            - recovering
+            - merchant_made_whole
+            - settled_after_make_whole
+            - failed
+        reason_code: { type: string }
+        reason_text: { type: string }
+        customer_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        customer_chain: { type: string }
+        merchant_refund_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        merchant_refund_chain: { type: string }
+        cctp_hook_payment_id: { type: string, pattern: '^0x[a-f0-9]{64}$' }
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    RefundListResponse:
+      type: object
+      required: [refunds]
+      properties:
+        refunds:
+          type: array
+          items: { $ref: "#/components/schemas/RefundIntent" }
+
+    OperatorRefundReasonRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 512
+
+    DeclareRefundFailedRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 512
+        confirm_failed_reason:
+          type: boolean
+          default: false
+
+    DeclareRefundFailedResponse:
+      type: object
+      required: [status, refund]
+      properties:
+        status:
+          type: string
+          enum: [awaiting_second_declarer, failed]
+        refund: { $ref: "#/components/schemas/RefundIntent" }
+
     # Health
     HealthResponse:
       type: object
@@ -489,6 +583,120 @@ paths:
             schema: { $ref: "#/components/schemas/AlertAcknowledgeRequest" }
       responses:
         "200": { description: OK }
+
+  # Refunds (refund_handler.go) ----------------------------------------------
+  /treasury/refunds:
+    get:
+      operationId: listRefunds
+      tags: [Refunds]
+      x-rbac-permission: refund:read
+      parameters:
+        - name: mode
+          in: query
+          required: false
+          schema: { type: string, enum: [live, test, all], default: all }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundListResponse" }
+
+  /treasury/refunds/{refundID}:
+    get:
+      operationId: getRefundForOperator
+      tags: [Refunds]
+      x-rbac-permission: refund:read
+      parameters:
+        - name: refundID
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+
+  /treasury/refunds/{refundID}/approve:
+    post:
+      operationId: approveRefund
+      tags: [Refunds]
+      x-rbac-permission: refund:approve
+      parameters:
+        - name: refundID
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OperatorRefundReasonRequest" }
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+
+  /treasury/refunds/{refundID}/cancel:
+    post:
+      operationId: cancelRefundForOperator
+      tags: [Refunds]
+      x-rbac-permission: refund:cancel
+      parameters:
+        - name: refundID
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OperatorRefundReasonRequest" }
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+
+  /treasury/refunds/{refundID}/declare-failed:
+    post:
+      operationId: declareRefundFailed
+      tags: [Refunds]
+      x-rbac-permission: refund:declare_failed
+      description: |
+        Dual-operator pre-money failure declaration. The first admin call
+        records the first seat and returns 202; the second distinct admin must
+        confirm the previous reason before the refund becomes failed.
+      parameters:
+        - name: refundID
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeclareRefundFailedRequest" }
+      responses:
+        "200":
+          description: Failed declaration completed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeclareRefundFailedResponse" }
+        "202":
+          description: First declarer recorded; waiting for a second distinct operator.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeclareRefundFailedResponse" }
 
   # Analytics (handler.go, sla_handlers.go) -----------------------------------
   /treasury/analytics/gas-cost:
@@ -836,6 +1044,7 @@ tags:
   - { name: Rebalance, description: Rebalance log + trigger }
   - { name: Alerts, description: Active alert list + acknowledge }
   - { name: Health, description: Liveness + per-chain health }
+  - { name: Refunds, description: Refund review and operator-control endpoints }
   - { name: Analytics, description: Gas, margin, savings, P&L, SLA }
   - { name: Audit, description: Audit trail + reconciliation }
   - { name: Admin, description: Chain/wallet/webhook admin operations }

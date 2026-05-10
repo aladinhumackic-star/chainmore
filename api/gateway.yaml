@@ -101,13 +101,15 @@ info:
     (`POST /v1/webhook_endpoints/{id}/test`) is the single
     dual-auth route that accepts either kind.
 
-    **Idempotency:** every POST, PUT, PATCH, and DELETE request MUST
-    include an `Idempotency-Key` header. The key scopes server-side
-    deduplication: a retry of the same request with the same key
-    returns the cached response without producing a second side
-    effect. Generate one key per logical operation (e.g. per
-    user-clicked Submit), not per network attempt. Missing keys
-    return `400 idempotency_required`.
+    **Idempotency:** routes that declare the `Idempotency-Key` parameter
+    require one key per logical operation. The key scopes server-side
+    deduplication: a retry of the same request with the same key returns
+    the existing resource or cached decision without producing a second
+    side effect. Generate one key per logical operation (e.g. per
+    user-clicked Submit), not per network attempt. Missing keys on those
+    routes return `400 idempotency_required`. Some state-transition routes
+    are deliberately non-idempotency-keyed and instead reject a second
+    call by state (`409 refund_state_conflict`, `409 invalid_state`, etc.).
   contact:
     name: ChainMore
     url: https://github.com/chainmore/chainmore
@@ -160,11 +162,13 @@ components:
       in: header
       required: false
       description: |
-        Idempotency key for mutation endpoints. Required on
-        `/v1/routing/plan`, `/v1/validation/validate`,
-        `/v1/dispatch/decide`, and `POST /v1/payments/{id}/attempts`
-        in strict modes; optional on checkout endpoints where the
-        session ID already provides idempotency.
+        Idempotency key for mutation endpoints that explicitly declare
+        this parameter. Required on create/plan/decision surfaces such as
+        `/v1/payment-intents`, `/v1/refunds`, `/v1/routing/plan`,
+        `/v1/validation/validate`, `/v1/dispatch/decide`, and
+        `POST /v1/payments/{id}/attempts` in strict modes; optional on
+        checkout endpoints where the session ID already provides the
+        dedupe boundary.
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     PaymentID:
@@ -340,6 +344,15 @@ components:
             - register_direct_tx_failed
             - replay_delivery_failed
             - replay_of_test_event_forbidden
+            - refund_capacity_exceeded
+            - refund_captured_amount_missing
+            - refund_endpoint_disabled
+            - refund_idempotency_conflict
+            - refund_in_flight_exists
+            - refund_operation_failed
+            - refund_payment_not_refundable
+            - refund_state_conflict
+            - refund_wallet_missing
             - revoke_key_failed
             - rotate_endpoint_secret_failed
             - rotate_key_failed
@@ -485,6 +498,193 @@ components:
         refusal_title: { type: string }
         estimated_wait: { type: string }
         entered_review_at: { type: string, format: date-time }
+
+    CreateRefundRequest:
+      type: object
+      description: |
+        Merchant request to open a refund intent against one settled CCTP
+        payment intent. The API key supplies merchant_id and mode; callers
+        cannot choose tenant, mode, refund source wallet, or CCTP route.
+      required: [original_payment_id, amount_atomic, reason_code]
+      properties:
+        original_payment_id: { type: string, format: uuid }
+        amount_atomic:
+          type: string
+          pattern: "^[1-9][0-9]*$"
+          description: USDC atomic units the customer should receive.
+        reason_code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        reason_text:
+          type: string
+          maxLength: 512
+
+    CancelRefundRequest:
+      type: object
+      description: Optional merchant cancellation reason for a pre-money refund intent.
+      properties:
+        reason:
+          type: string
+          maxLength: 512
+
+    RefundBurnAuthorization:
+      type: object
+      description: |
+        Merchant-signed EIP-712 refund authorization. The refund recipient is
+        visible at top level and also bound through hook_data_hash. The
+        gateway derives merchant and mode from authentication; this payload is
+        accepted only with a dashboard render token and route-registry checks.
+      required:
+        - refund_id
+        - original_payment_id
+        - merchant_id_hash
+        - merchant_refund_wallet
+        - refund_recipient
+        - mint_recipient
+        - destination_caller
+        - source_chain_domain
+        - destination_chain_domain
+        - source_token
+        - amount
+        - max_fee
+        - min_finality_threshold
+        - hook_data_hash
+        - deadline
+        - nonce
+      properties:
+        refund_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        original_payment_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        merchant_id_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        merchant_refund_wallet: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        refund_recipient: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        mint_recipient: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        destination_caller: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        source_chain_domain: { type: integer, format: int32, minimum: 0 }
+        destination_chain_domain: { type: integer, format: int32, minimum: 0 }
+        source_token: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        amount:
+          type: string
+          pattern: "^[1-9][0-9]*$"
+        max_fee:
+          type: string
+          pattern: "^[0-9]+$"
+        min_finality_threshold: { type: integer, format: int32, minimum: 0 }
+        hook_data_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        deadline:
+          type: string
+          pattern: "^[1-9][0-9]*$"
+        nonce: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+
+    SubmitRefundSignatureRequest:
+      type: object
+      description: |
+        Submits the merchant wallet's refund EIP-712 signature and the exact
+        V4 hook data that will later be used by the refund burn worker. This
+        endpoint moves only from approved pre-money state to signed_pending_burn;
+        it does not broadcast a chain transaction.
+      required:
+        - authorization
+        - hook_data
+        - signature
+        - chain_id
+        - source_adapter
+        - expected_source_domain
+        - expected_destination_v4
+        - dashboard_render_token_id
+      properties:
+        authorization: { $ref: "#/components/schemas/RefundBurnAuthorization" }
+        hook_data:
+          type: string
+          pattern: '^0x[a-fA-F0-9]*$'
+        signature:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{130}$'
+        chain_id: { type: integer, format: int64, minimum: 1 }
+        source_adapter: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        expected_source_domain: { type: integer, format: int32, minimum: 0 }
+        expected_destination_v4: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+        dashboard_render_token_id:
+          type: string
+          minLength: 32
+          maxLength: 128
+
+    DashboardRefundRenderTokenResponse:
+      type: object
+      description: |
+        One-shot dashboard render token for refund signing. It is scoped to
+        the authenticated merchant, mode, and refund intent, and is redeemed by
+        `POST /v1/refunds/{refundId}/signature` before the service accepts a
+        merchant EIP-712 authorization. The token is not a money signature.
+      required:
+        - dashboard_render_token_id
+        - expires_at
+      properties:
+        dashboard_render_token_id:
+          type: string
+          minLength: 32
+          maxLength: 128
+        expires_at:
+          type: string
+          format: date-time
+
+    RefundIntent:
+      type: object
+      description: |
+        Merchant-visible refund intent. Slice 2 records and controls the
+        pre-money refund lifecycle only: no burn, settlement, or chain
+        broadcast has happened until a later worker slice moves the state
+        past `signed_pending_burn`.
+      required:
+        - refund_id
+        - original_payment_id
+        - amount_atomic
+        - currency
+        - state
+        - reason_code
+        - customer_wallet
+        - customer_chain
+        - merchant_refund_wallet
+        - merchant_refund_chain
+        - cctp_hook_payment_id
+        - expires_at
+        - created_at
+        - updated_at
+      properties:
+        refund_id: { type: string, format: uuid }
+        original_payment_id: { type: string, format: uuid }
+        amount_atomic:
+          type: string
+          pattern: "^[0-9]+$"
+        currency: { type: string, enum: [USDC] }
+        state:
+          type: string
+          enum:
+            - requested
+            - approved
+            - signed_pending_burn
+            - burn_inflight
+            - burned
+            - attestation_pending
+            - settlement_inflight
+            - settled
+            - cancelled
+            - source_compliance_block
+            - destination_compliance_block
+            - recovering
+            - merchant_made_whole
+            - settled_after_make_whole
+            - failed
+        reason_code: { type: string }
+        reason_text: { type: string }
+        customer_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        customer_chain: { type: string }
+        merchant_refund_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        merchant_refund_chain: { type: string }
+        cctp_hook_payment_id: { type: string, pattern: '^0x[a-f0-9]{64}$' }
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     CreatePaymentIntentRequest:
       type: object
@@ -1858,6 +2058,127 @@ paths:
         '429': { $ref: "#/components/responses/RateLimited" }
         '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
+  /v1/refunds:
+    post:
+      summary: Request a refund for a settled CCTP payment intent.
+      operationId: createRefund
+      description: |
+        Creates a merchant-scoped refund intent for an already settled CCTP
+        payment intent. The authenticated API key determines merchant and
+        mode; callers cannot supply tenant or mode. This Slice-2 endpoint
+        records the request and idempotency boundary only. It does not burn,
+        settle, or broadcast any chain transaction.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRefundRequest" }
+      responses:
+        '201':
+          description: Refund intent created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+        '200':
+          description: Idempotent replay of an existing refund intent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '422': { $ref: "#/components/responses/BadRequest" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/refunds/{refundId}:
+    get:
+      summary: Read a merchant-scoped refund intent.
+      operationId: getRefund
+      parameters:
+        - name: refundId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Refund intent view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/refunds/{refundId}/cancel:
+    post:
+      summary: Cancel a requested or approved refund intent.
+      operationId: cancelRefund
+      description: |
+        Cancels only pre-money refund states. Signed, burn, settlement,
+        recovery, and terminal states are intentionally not cancellable by
+        this Slice-2 endpoint.
+      parameters:
+        - name: refundId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CancelRefundRequest" }
+      responses:
+        '200':
+          description: Refund intent cancelled.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/refunds/{refundId}/signature:
+    post:
+      summary: Submit merchant refund authorization signature.
+      operationId: submitRefundSignature
+      description: |
+        Accepts the merchant refund wallet's EIP-712 signature after operator
+        approval and dashboard render-token redemption. The gateway validates
+        route-bound fields before calling the refund service. Without a wired
+        render-token verifier this endpoint fails closed with
+        `refund_endpoint_disabled`.
+      parameters:
+        - name: refundId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitRefundSignatureRequest" }
+      responses:
+        '200':
+          description: Refund authorization accepted; refund enters signed_pending_burn.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundIntent" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '503': { $ref: "#/components/responses/ServerMisconfigured" }
+
   /v1/payments:
     post:
       summary: Create a payment.
@@ -2344,6 +2665,36 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardReconciliationPage" }
         '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/refunds/{refundId}/render-token:
+    post:
+      summary: Issue a one-shot dashboard render token for refund signing.
+      operationId: issueDashboardRefundRenderToken
+      description: |
+        JWT-only merchant-dashboard control-plane route. It issues a short
+        lived, one-shot token bound to the authenticated merchant, mode, and
+        refund intent. The token is consumed by
+        `POST /v1/refunds/{refundId}/signature` together with the merchant
+        wallet's EIP-712 signature. This endpoint does not move money and does
+        not broadcast a chain transaction.
+      parameters:
+        - name: refundId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '201':
+          description: Dashboard render token issued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardRefundRenderTokenResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '503': { $ref: "#/components/responses/ServerMisconfigured" }
 
   /v1/dashboard/policy/{mode}:
     get:
