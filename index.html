@@ -1492,7 +1492,7 @@
               <!-- Metrics - Inline -->
               <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1.5">
-                  <span id="route-metric-cost" class="text-green-400 font-bold">85%</span>
+                  <span id="route-metric-cost" class="text-green-400 font-bold">92%</span>
                   <span class="text-green-300/70 text-xs">Cost Saved</span>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -1501,8 +1501,8 @@
                 </div>
                 <div class="flex items-center gap-1.5">
                   <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">0%</span>
-                  <span class="text-green-300/70 text-xs">Chargebacks</span>
+                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">Managed</span>
+                  <span id="route-metric-risk-label" class="text-green-300/70 text-xs">Disputes</span>
                 </div>
               </div>
             </div>
@@ -2052,14 +2052,14 @@
 
         <!-- Route Comparison with Animations -->
         <div class="space-y-2">
-          <!-- SWIFT -->
+          <!-- Bank-route baseline -->
           <div class="route-row flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 transition">
             <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
-            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">SWIFT</span>
+            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">Bank route</span>
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
               <div class="route-bar route-bar-swift bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full"></div>
             </div>
-            <span class="text-red-400 w-12 md:w-14 text-right text-sm font-medium">3.2%</span>
+            <span class="text-red-400 w-12 md:w-14 text-right text-sm font-medium">6.36%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">3-5 days</span>
           </div>
 
@@ -2070,7 +2070,7 @@
             <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
               <div class="route-bar route-bar-wise bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full"></div>
             </div>
-            <span class="text-orange-400 w-12 md:w-14 text-right text-sm font-medium">1.5%</span>
+            <span class="text-orange-400 w-12 md:w-14 text-right text-sm font-medium">0.7%</span>
             <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">1-2 days</span>
           </div>
 
@@ -2128,8 +2128,8 @@
             <div class="flex items-center gap-6 text-sm">
               <div>
                 <span class="text-slate-400">Saving</span>
-                <span class="text-green-400 font-bold ml-1">€308</span>
-                <span class="text-green-400/70 text-xs ml-1">(96.4% less)</span>
+                <span class="text-green-400 font-bold ml-1">€624</span>
+                <span class="text-green-400/70 text-xs ml-1">(98.1% less)</span>
               </div>
               <div>
                 <span class="text-slate-400">Settlement</span>
@@ -2152,10 +2152,10 @@
     }
 
     .route-bar-swift { --bar-width: 100%; }
-    .route-bar-wise { --bar-width: 47%; animation-delay: 0.1s; }
-    .route-bar-remitly { --bar-width: 38%; animation-delay: 0.2s; }
-    .route-bar-polygon { --bar-width: 4%; animation-delay: 0.3s; }
-    .route-bar-base { --bar-width: 5%; animation-delay: 0.4s; }
+    .route-bar-wise { --bar-width: 11%; animation-delay: 0.1s; }
+    .route-bar-remitly { --bar-width: 19%; animation-delay: 0.2s; }
+    .route-bar-polygon { --bar-width: 2%; animation-delay: 0.3s; }
+    .route-bar-base { --bar-width: 2.4%; animation-delay: 0.4s; }
 
     @keyframes growBar {
       to {
@@ -3224,6 +3224,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
   var metricCost         = document.getElementById('route-metric-cost');
   var metricSpeed        = document.getElementById('route-metric-speed');
   var metricChargebacks  = document.getElementById('route-metric-chargebacks');
+  var metricRiskLabel    = document.getElementById('route-metric-risk-label');
   if (!routeInputLabel || !routeOutputLabel) return;
 
   // Pretty labels for the input column.
@@ -3246,36 +3247,38 @@ console.<span class="text-yellow-300">log</span>(payment.route);
 
   // Per-pair metrics. Numbers are illustrative for the marketing
   // surface; they do not pretend to be the result of a live cost
-  // calculation. Keep them realistic so the widget reads like a
-  // value-prop calculator, not a slot machine.
+  // calculation. The more cross-rail / multi-leg the payment gets, the
+  // stronger the displayed upside becomes because ChainMore removes more
+  // handoffs, provider hops, gas/network choices, and reconciliation work.
   //
-  // Schema: routeMetrics[input][output] = { cost, speed, chargebacks }
-  // where cost and speed are "% saved" / "% faster" claims and
-  // chargebacks is the residual chargeback rate for the route.
+  // Schema: routeMetrics[input][output] = { cost, speed, risk, riskLabel }.
+  // Card/APM-originated payments say "Managed Disputes" instead of "0%
+  // Chargebacks" because card-network disputes can still exist on the source
+  // leg. Native stablecoin / bank-wire-style routes can show "0% Chargebacks".
   var routeMetrics = {
     'card': {
-      'bank':       { cost: '40%', speed: '60%', chargebacks: '0.5%' },
-      'stablecoin': { cost: '85%', speed: '95%', chargebacks: '0%'   },
-      'exchange':   { cost: '70%', speed: '85%', chargebacks: '0%'   },
-      'onchain':    { cost: '90%', speed: '95%', chargebacks: '0%'   },
+      'bank':       { cost: '40%', speed: '60%', risk: 'Managed', riskLabel: 'Disputes' },
+      'stablecoin': { cost: '92%', speed: '95%', risk: 'Managed', riskLabel: 'Disputes' },
+      'exchange':   { cost: '88%', speed: '90%', risk: 'Managed', riskLabel: 'Disputes' },
+      'onchain':    { cost: '95%', speed: '96%', risk: 'Managed', riskLabel: 'Disputes' },
     },
     'stablecoin': {
-      'bank':       { cost: '60%', speed: '70%', chargebacks: '0%'   },
-      'stablecoin': { cost: '95%', speed: '99%', chargebacks: '0%'   },
-      'exchange':   { cost: '80%', speed: '90%', chargebacks: '0%'   },
-      'onchain':    { cost: '95%', speed: '99%', chargebacks: '0%'   },
+      'bank':       { cost: '88%', speed: '95%', risk: '0%', riskLabel: 'Chargebacks' },
+      'stablecoin': { cost: '98%', speed: '99%', risk: '0%', riskLabel: 'Chargebacks' },
+      'exchange':   { cost: '90%', speed: '95%', risk: '0%', riskLabel: 'Chargebacks' },
+      'onchain':    { cost: '98%', speed: '99%', risk: '0%', riskLabel: 'Chargebacks' },
     },
     'bank-wire': {
-      'bank':       { cost: '20%', speed: '30%', chargebacks: '0%'   },
-      'stablecoin': { cost: '70%', speed: '85%', chargebacks: '0%'   },
-      'exchange':   { cost: '55%', speed: '70%', chargebacks: '0%'   },
-      'onchain':    { cost: '75%', speed: '90%', chargebacks: '0%'   },
+      'bank':       { cost: '25%', speed: '35%', risk: '0%', riskLabel: 'Chargebacks' },
+      'stablecoin': { cost: '95%', speed: '98%', risk: '0%', riskLabel: 'Chargebacks' },
+      'exchange':   { cost: '86%', speed: '90%', risk: '0%', riskLabel: 'Chargebacks' },
+      'onchain':    { cost: '96%', speed: '98%', risk: '0%', riskLabel: 'Chargebacks' },
     },
     'apm': {
-      'bank':       { cost: '35%', speed: '55%', chargebacks: '0.3%' },
-      'stablecoin': { cost: '80%', speed: '92%', chargebacks: '0%'   },
-      'exchange':   { cost: '65%', speed: '82%', chargebacks: '0%'   },
-      'onchain':    { cost: '85%', speed: '93%', chargebacks: '0%'   },
+      'bank':       { cost: '35%', speed: '55%', risk: 'Managed', riskLabel: 'Disputes' },
+      'stablecoin': { cost: '90%', speed: '94%', risk: 'Managed', riskLabel: 'Disputes' },
+      'exchange':   { cost: '84%', speed: '88%', risk: 'Managed', riskLabel: 'Disputes' },
+      'onchain':    { cost: '93%', speed: '95%', risk: 'Managed', riskLabel: 'Disputes' },
     },
   };
 
@@ -3332,7 +3335,8 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     if (m) {
       if (metricCost)        metricCost.textContent        = m.cost;
       if (metricSpeed)       metricSpeed.textContent       = m.speed;
-      if (metricChargebacks) metricChargebacks.textContent = m.chargebacks;
+      if (metricChargebacks) metricChargebacks.textContent = m.risk;
+      if (metricRiskLabel) metricRiskLabel.textContent = m.riskLabel;
     }
   }
 
