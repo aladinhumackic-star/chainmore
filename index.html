@@ -50,6 +50,31 @@
     html { scroll-behavior: smooth; }
     section[id] { scroll-margin-top: 64px; }
 
+    .skip-link {
+      position: fixed;
+      left: 1rem;
+      top: 1rem;
+      z-index: 100;
+      transform: translateY(-150%);
+      transition: transform 160ms ease;
+      border-radius: 999px;
+      background: #00D4FF;
+      color: #020617;
+      padding: 0.75rem 1rem;
+      font-weight: 800;
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.2);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+      outline: 3px solid rgba(34, 211, 238, 0.95);
+      outline-offset: 4px;
+      border-radius: 0.875rem;
+    }
+
     .vision-hero {
       position: relative;
       overflow: hidden;
@@ -1089,6 +1114,7 @@
   </style>
 </head>
 <body class="bg-white text-slate-900 overflow-x-hidden">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Navigation - Enterprise Grade with Dropdowns -->
   <nav class="fixed top-0 w-full bg-slate-900 z-50">
@@ -1121,12 +1147,12 @@
 
         <!-- Platform Dropdown -->
         <div class="relative group nav-group" id="platform-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" aria-haspopup="true" aria-expanded="false" aria-controls="platform-menu">
             Platform
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Platform Mega Menu -->
-          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div id="platform-menu" class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-0 w-[780px] grid grid-cols-[220px_1fr] overflow-hidden">
               <!-- Left Column - Tab Navigation -->
               <div class="bg-slate-50 py-4 border-r border-slate-200">
@@ -1359,11 +1385,11 @@
         
         <!-- Outcomes Dropdown -->
         <div class="relative group nav-group" id="solutions-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" aria-haspopup="true" aria-expanded="false" aria-controls="solutions-menu">
             Benefits
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div id="solutions-menu" class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[620px]">
               <div class="bg-slate-900 rounded-xl p-5 mb-5 flex gap-5">
                 <div class="flex-1">
@@ -1433,12 +1459,12 @@
 
         <!-- Developers Dropdown -->
         <div class="relative group nav-group" id="developers-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" aria-haspopup="true" aria-expanded="false" aria-controls="developers-menu">
             Developers
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Developers Mega Menu -->
-          <div class="nav-panel absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div id="developers-menu" class="nav-panel absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[480px]">
               <!-- Coming Soon Banner -->
               <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 mb-5">
@@ -1505,7 +1531,7 @@
       </a>
       
       <!-- Mobile Menu Button -->
-      <button class="lg:hidden p-2 text-white" id="mobile-menu-btn">
+      <button type="button" class="lg:hidden p-2 text-white" id="mobile-menu-btn" aria-label="Open navigation menu" aria-controls="mobile-menu" aria-expanded="false">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -1526,6 +1552,7 @@
     </div>
   </nav>
 
+  <main id="main-content" tabindex="-1">
   <!-- Hero Section: Vision first, mechanics hidden -->
   <section class="vision-hero pt-24 md:pt-28 pb-10 md:pb-16 px-4 md:px-6">
     <div class="relative max-w-7xl mx-auto">
@@ -1859,7 +1886,7 @@
                       </div>
                     </div>
                     <div class="flex-1"></div>
-                    <button type="button" class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl">Pay $49.00</button>
+                    <button type="button" class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl" tabindex="-1" aria-hidden="true">Pay $49.00</button>
                     <div class="text-center text-xs text-slate-400 mt-3">Secured by ChainMore</div>
                   </div>
                 </div>
@@ -1897,7 +1924,7 @@
                     </div>
                   </div>
                   <div class="flex-1"></div>
-                  <button type="button" class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl">Connect wallet</button>
+                  <button type="button" class="w-full py-3.5 bg-cyan-400 text-white font-semibold rounded-2xl" tabindex="-1" aria-hidden="true">Connect wallet</button>
                   <div class="text-center text-xs text-slate-400 mt-3">Powered by ChainMore</div>
                 </div>
               </div>
@@ -1942,8 +1969,8 @@
                         </div>
                       </div>
                       <div class="flex gap-3">
-                        <button type="button" class="flex-1 py-3 rounded-xl border border-slate-300 font-semibold text-slate-500">Reject</button>
-                        <button type="button" class="flex-1 py-3 rounded-xl bg-cyan-400 text-white font-semibold">Confirm</button>
+                        <button type="button" class="flex-1 py-3 rounded-xl border border-slate-300 font-semibold text-slate-500" tabindex="-1" aria-hidden="true">Reject</button>
+                        <button type="button" class="flex-1 py-3 rounded-xl bg-cyan-400 text-white font-semibold" tabindex="-1" aria-hidden="true">Confirm</button>
                       </div>
                     </div>
                   </div>
@@ -2022,7 +2049,7 @@
                       </div>
                     </div>
                   </div>
-                  <button type="button" class="w-full py-4 bg-slate-900 text-white font-semibold rounded-2xl">Done</button>
+                  <button type="button" class="w-full py-4 bg-slate-900 text-white font-semibold rounded-2xl" tabindex="-1" aria-hidden="true">Done</button>
                 </div>
               </div>
 
@@ -2290,6 +2317,8 @@
   </section>
 
   <!-- Footer -->
+  </main>
+
   <footer class="py-16 px-4 md:px-6 bg-slate-950 text-slate-400">
     <div class="max-w-6xl mx-auto">
       <div class="grid md:grid-cols-5 gap-8 mb-12">
@@ -2371,12 +2400,16 @@
       const setMenuClosed = () => {
         mobileMenu.classList.add('hidden');
         document.body.style.overflow = '';
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        mobileMenuBtn.setAttribute('aria-label', 'Open navigation menu');
         const icon = mobileMenuBtn.querySelector('svg');
         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
       };
       const setMenuOpen = () => {
         mobileMenu.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        mobileMenuBtn.setAttribute('aria-expanded', 'true');
+        mobileMenuBtn.setAttribute('aria-label', 'Close navigation menu');
         const icon = mobileMenuBtn.querySelector('svg');
         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
       };
@@ -2509,6 +2542,9 @@
         const target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (hash === '#main-content' && typeof target.focus === 'function') {
+            target.focus({ preventScroll: true });
+          }
           // Close mobile menu if open
           if (mobileMenu) mobileMenu.classList.add('hidden');
         }
@@ -2672,12 +2708,18 @@
     groups.forEach(function (g) {
       if (g === group) g.setAttribute('data-active', '');
       else g.removeAttribute('data-active');
+      var trigger = g.querySelector('button');
+      if (trigger) trigger.setAttribute('aria-expanded', g === group ? 'true' : 'false');
     });
   }
 
   function deactivate() {
     nav.setAttribute('data-active-menu', '');
-    groups.forEach(function (g) { g.removeAttribute('data-active'); });
+    groups.forEach(function (g) {
+      g.removeAttribute('data-active');
+      var trigger = g.querySelector('button');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
   }
 
   groups.forEach(function (group) {
