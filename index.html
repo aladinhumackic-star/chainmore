@@ -230,19 +230,69 @@
       border-color: rgba(14, 165, 233, 0.18);
     }
 
-    .merchant-value-strip {
+    .merchant-outcome-board {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+      gap: 0.9rem;
+      align-items: stretch;
     }
 
-    .merchant-value-card {
-      min-height: 120px;
-      border-radius: 1.35rem;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.95);
+    .merchant-outcome-hero,
+    .merchant-outcome-list {
+      border-radius: 1.65rem;
+      background: rgba(255, 255, 255, 0.96);
       border: 1px solid rgba(148, 163, 184, 0.22);
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+    }
+
+    .merchant-outcome-hero {
+      padding: clamp(1.25rem, 2.6vw, 2rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.6rem;
+    }
+
+    .merchant-outcome-list {
+      padding: 0.65rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .merchant-outcome-row {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.85rem;
+      min-height: 72px;
+      border-radius: 1.15rem;
+      padding: 0.85rem 1rem;
+      background: rgba(248, 250, 252, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.86);
+    }
+
+    .merchant-outcome-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #0f172a;
+      background: #22d3ee;
+      box-shadow: 0 12px 30px rgba(34, 211, 238, 0.28);
+    }
+
+    .merchant-outcome-tag {
+      border-radius: 999px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: #0f172a;
+      background: rgba(34, 211, 238, 0.15);
     }
 
     .customer-outcome-card {
@@ -490,8 +540,17 @@
 
       .scenario-main,
       .scenario-mini-grid,
-      .merchant-value-strip {
+      .merchant-outcome-board {
         grid-template-columns: 1fr;
+      }
+
+      .merchant-outcome-row {
+        grid-template-columns: 40px minmax(0, 1fr);
+      }
+
+      .merchant-outcome-tag {
+        grid-column: 2;
+        width: max-content;
       }
 
       .scenario-panel {
@@ -2145,26 +2204,55 @@
           </div>
         </div>
 
-        <div class="merchant-value-strip">
-          <div class="merchant-value-card">
-            <div class="text-emerald-500 text-xs uppercase tracking-[0.18em] font-black mb-3">Conversion</div>
-            <div class="text-slate-950 text-xl font-black mb-2">More payments finish.</div>
-            <p class="text-slate-500 text-sm">Less drop-off from payment complexity.</p>
+        <div class="merchant-outcome-board">
+          <div class="merchant-outcome-hero">
+            <div>
+              <div class="text-cyan-500 text-xs uppercase tracking-[0.2em] font-black mb-4">Merchant outcome</div>
+              <div class="text-slate-950 text-3xl md:text-4xl font-black tracking-tight leading-tight mb-4">The payment feels finished.</div>
+              <p class="text-slate-500 text-base leading-relaxed">Your customer gets one simple moment. Your business gets the payment, the status, and the record without the messy middle.</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950 p-4 text-white">
+              <div class="text-white/45 text-xs uppercase tracking-[0.18em] font-bold mb-2">Business sees</div>
+              <div class="flex items-end justify-between gap-4">
+                <div class="text-3xl font-black tracking-tight">Paid.</div>
+                <div class="text-cyan-300 text-sm font-bold">Clean receipt</div>
+              </div>
+            </div>
           </div>
-          <div class="merchant-value-card">
-            <div class="text-cyan-500 text-xs uppercase tracking-[0.18em] font-black mb-3">Cost</div>
-            <div class="text-slate-950 text-xl font-black mb-2">Lower operating cost.</div>
-            <p class="text-slate-500 text-sm">Fewer retries, reversals, and manual support loops.</p>
-          </div>
-          <div class="merchant-value-card">
-            <div class="text-amber-500 text-xs uppercase tracking-[0.18em] font-black mb-3">Safety</div>
-            <div class="text-slate-950 text-xl font-black mb-2">Safer checkout decisions.</div>
-            <p class="text-slate-500 text-sm">Checks happen before the customer commits.</p>
-          </div>
-          <div class="merchant-value-card">
-            <div class="text-purple-500 text-xs uppercase tracking-[0.18em] font-black mb-3">Finance</div>
-            <div class="text-slate-950 text-xl font-black mb-2">A clean money trail.</div>
-            <p class="text-slate-500 text-sm">Status, reference, and receipt stay together.</p>
+
+          <div class="merchant-outcome-list">
+            <div class="merchant-outcome-row">
+              <div class="merchant-outcome-mark">✓</div>
+              <div>
+                <div class="font-black text-slate-950">Checkout completed</div>
+                <div class="text-sm text-slate-500">Fewer customers abandon the payment moment.</div>
+              </div>
+              <div class="merchant-outcome-tag">Conversion</div>
+            </div>
+            <div class="merchant-outcome-row">
+              <div class="merchant-outcome-mark bg-emerald-300">–</div>
+              <div>
+                <div class="font-black text-slate-950">No support loop</div>
+                <div class="text-sm text-slate-500">Fewer retries, explanations, and manual checks.</div>
+              </div>
+              <div class="merchant-outcome-tag bg-emerald-100">Ops</div>
+            </div>
+            <div class="merchant-outcome-row">
+              <div class="merchant-outcome-mark bg-amber-300">◎</div>
+              <div>
+                <div class="font-black text-slate-950">Cost protected</div>
+                <div class="text-sm text-slate-500">Less waste from failed, repeated, or unclear flows.</div>
+              </div>
+              <div class="merchant-outcome-tag bg-amber-100">Cost</div>
+            </div>
+            <div class="merchant-outcome-row">
+              <div class="merchant-outcome-mark bg-purple-300">#</div>
+              <div>
+                <div class="font-black text-slate-950">Record matched</div>
+                <div class="text-sm text-slate-500">Status, reference, and receipt stay together.</div>
+              </div>
+              <div class="merchant-outcome-tag bg-purple-100">Finance</div>
+            </div>
           </div>
         </div>
       </div>
