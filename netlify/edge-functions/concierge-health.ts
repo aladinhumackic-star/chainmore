@@ -14,14 +14,17 @@
 
 import type { Context } from "https://edge.netlify.com";
 
-const VERSION = 1;
+const VERSION = 2;
 
 export default async (_req: Request, _ctx: Context) => {
   const hasApiKey        = !!Deno.env.get("OPENAI_API_KEY");
   const hasVectorStoreId = !!Deno.env.get("OPENAI_VECTOR_STORE_ID");
+  // Chat now uses inline knowledge — OPENAI_API_KEY is the only hard
+  // requirement. The vector store id is reported for diagnostics in
+  // case file_search is re-enabled in the future.
   return new Response(
     JSON.stringify({
-      ok: hasApiKey && hasVectorStoreId,
+      ok: hasApiKey,
       version: VERSION,
       env: { hasApiKey, hasVectorStoreId },
     }),
