@@ -255,6 +255,27 @@
       send: inputWrap.querySelector('button[type="submit"]'),
     };
 
+    // Defensive close-paths beyond the X button:
+    //   - Escape key closes the panel when it's open (every modal users
+    //     have ever met responds to Escape; people try it instinctively).
+    //   - Event delegation on the header: any click anywhere on the
+    //     dark header strip, except on the reset button, closes the
+    //     panel. Makes the X "hit area" effectively the entire header
+    //     when the visible X is small.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && state.open) closePanel();
+    });
+    header.addEventListener('click', function (e) {
+      // Skip if the click landed on the reset button (or its children
+      // via event bubbling) — reset has its own handler.
+      var t = e.target;
+      while (t && t !== header) {
+        if (t.getAttribute && t.getAttribute('aria-label') === 'Reset conversation') return;
+        t = t.parentNode;
+      }
+      closePanel();
+    });
+
     renderWelcome();
   }
 

@@ -142,8 +142,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  /* 40×40 hit area (was 32) — gives the X a more forgiving target.
+   * The visual icon stays the same; only the clickable region grows.
+   * Helps trackpad users where small clicks miss by 2–5px. */
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: 0;
   color: var(--cm-c-white);
