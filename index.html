@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChainMore | Cross-Rail Payment Orchestration</title>
-  <meta name="description" content="ChainMore is a non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails, with automatic failover. Operated by Chainmore OÜ, Tallinn, Estonia.">
+  <meta name="description" content="Web3 payments, Web2 checkout. Your customer pays like with a card. Cross-rail payment orchestration by Chainmore OÜ, Tallinn, Estonia.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.chainmore.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.chainmore.io/">
   <meta property="og:title" content="ChainMore | Cross-Rail Payment Orchestration">
-  <meta property="og:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails | with automatic failover.">
+  <meta property="og:description" content="Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ChainMore | Cross-Rail Payment Orchestration">
-  <meta name="twitter:description" content="One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails, with automatic failover.">
+  <meta name="twitter:description" content="Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
     knowledge-panel correctly (legal name + jurisdiction + contact)
@@ -43,6 +43,8 @@
   </script>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
   <link rel="stylesheet" href="/tailwind.css">
+  <!-- ChainMore Concierge widget — self-hosted CSS, same-origin. -->
+  <link rel="stylesheet" href="/assets/concierge-widget.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
 
@@ -1086,14 +1088,14 @@
       <div class="text-center mb-6">
         <div class="inline-flex items-center gap-2 bg-cyan-50 text-cyan-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
           <span class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-          Limited Early Access
+          Web3 payments, Web2 checkout
         </div>
         <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
           Cross-Rail Payment<br>
           <span class="gradient-text">Orchestration</span>
         </h1>
         <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-6">
-          One platform. 8+ providers. Dynamic routing across fiat and stablecoin rails, with automatic failover.
+          Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.
         </p>
 
         <!-- Stats Bar - Integrated into Hero -->
@@ -1323,15 +1325,15 @@
         <div class="grid grid-cols-3 gap-3 sm:gap-6 md:gap-12 text-center">
           <div>
             <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">100%</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">rail-agnostic</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">every rail covered</div>
           </div>
           <div>
             <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">Failover</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">route continuity</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">automatic backup routes</div>
           </div>
           <div>
             <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">1 API</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">one integration</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">one contract, every rail</div>
           </div>
         </div>
       </div>
@@ -3030,7 +3032,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     let currentPaymentStep = 0;
     let paymentDemoInterval = null;
     let paymentDemoManual = false;
-    const PAYMENT_STEP_DURATION = 5000;
+    const PAYMENT_STEP_DURATION = 3500;
     const paymentDemoReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function updatePaymentStep(newStep) {
@@ -3100,20 +3102,53 @@ console.<span class="text-yellow-300">log</span>(payment.route);
       });
     }
 
+    // Track whether the phone-mockup section has ever entered the viewport.
+    // Auto-cycle is deferred until the visitor actually scrolls to the section,
+    // so they always see step 0 first instead of walking in on a cycle that
+    // started silently at page-load.
+    var paymentHasEnteredViewport = false;
+
     const paymentDemoSection = document.getElementById('payment-demo');
     if (paymentDemoSection) {
       paymentDemoSection.addEventListener('mouseenter', function() {
         stopPaymentAutoPlay();
       });
       paymentDemoSection.addEventListener('mouseleave', function() {
-        startPaymentAutoPlay();
+        if (paymentHasEnteredViewport && !paymentDemoManual) {
+          startPaymentAutoPlay();
+        }
       });
     }
 
-    // Initialize with calm autoplay; a manual step click hands control to the visitor.
+    // Initialize visual state immediately at step 0; defer the auto-cycle
+    // start until the section enters the viewport (Intersection Observer).
     if (phoneScreens.length > 0) {
       updatePaymentStep(0);
-      startPaymentAutoPlay();
+
+      if (paymentDemoSection && 'IntersectionObserver' in window) {
+        var paymentObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              if (!paymentHasEnteredViewport && !paymentDemoManual) {
+                // First viewport entry: ensure we start at step 0
+                paymentHasEnteredViewport = true;
+                updatePaymentStep(0);
+                startPaymentAutoPlay();
+              } else if (paymentHasEnteredViewport && !paymentDemoManual) {
+                // Re-entering after scroll-away: resume from current step
+                startPaymentAutoPlay();
+              }
+            } else {
+              // Out of viewport: pause auto-cycle
+              stopPaymentAutoPlay();
+            }
+          });
+        }, { threshold: 0.3 });
+        paymentObserver.observe(paymentDemoSection);
+      } else {
+        // Fallback for browsers without IntersectionObserver
+        startPaymentAutoPlay();
+      }
     }
 
     // ========== HERO FLOW ANIMATION ==========
@@ -3231,6 +3266,24 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     if (heroInputCards.length > 0 && heroOutputCards.length > 0) {
       showHeroCase(0);
       startHeroAuto();
+
+      // Pause hero cycle when scrolled out of view; resume on scroll back.
+      // Without this, scrolling back to the top of the page would land on a
+      // mid-cycle frame instead of the calm sequence the visitor first saw.
+      var heroSection = heroInputCards[0] ? heroInputCards[0].closest('section') : null;
+      if (heroSection && 'IntersectionObserver' in window) {
+        var heroObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              if (!heroManual) startHeroAuto();
+            } else if (heroAutoInterval) {
+              clearInterval(heroAutoInterval);
+              heroAutoInterval = null;
+            }
+          });
+        }, { threshold: 0.2 });
+        heroObserver.observe(heroSection);
+      }
     }
   });
 </script>
@@ -3448,5 +3501,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
   selectOutput('stablecoin');
 })();
 </script>
+<!-- ChainMore Concierge widget — vanilla JS, same-origin asset. -->
+<script src="/assets/concierge-widget.js" defer></script>
 </body>
 </html>

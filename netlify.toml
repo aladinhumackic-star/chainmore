@@ -1,0 +1,51 @@
+# Netlify build + functions config for chainmore.io marketing site.
+#
+# This file is required because the marketing site introduced its first
+# server-side surface (the Concierge widget API endpoint). Until now the
+# site shipped as pure static + _headers + _redirects; the Concierge
+# Edge Function lives in netlify/edge-functions/ and is wired into the
+# /api/concierge path below.
+#
+# Scope discipline:
+#   - publish points at the root (this file lives next to index.html).
+#   - functions points at netlify/functions for any future Node-runtime
+#     functions (none yet).
+#   - edge_functions points at netlify/edge-functions for Deno-runtime
+#     Edge Functions (Concierge lives here for streaming + low TTFB).
+#
+# Local dev (optional): `netlify dev` will pick this up.
+
+[build]
+  publish    = "."
+  functions  = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# ──────────────────────────────────────────────────────────────────────
+# Edge Functions
+# ──────────────────────────────────────────────────────────────────────
+# /api/concierge → Concierge chat API.
+#
+# Why Edge (and not a regular Netlify Function):
+#   - Deno runtime gives us ReadableStream + fetch SSE forwarding
+#     without the AWS-Lambda buffering issue. We can stream the OpenAI
+#     Responses-API output directly to the browser without buffering
+#     the full reply server-side. Lower TTFB, better perceived UX.
+#   - Edge runs close to the user (CDN PoP), which matters for a
+#     conversational latency budget where every 100 ms is felt.
+#
+# The path is bound to /api/concierge — same-origin under chainmore.io,
+# which means the strict `connect-src 'self'` CSP does not need to
+# loosen for this endpoint.
+
+[[edge_functions]]
+  path     = "/api/concierge"
+  function = "concierge"
+
+# Health probe — separate endpoint that does NOT call OpenAI; used by
+# CI smoke tests and the operator runbook to confirm the function is
+# deployed and the secrets are wired. Returns {"ok":true,"version":N}.
+[[edge_functions]]
+  path     = "/api/concierge/health"
+  function = "concierge-health"
