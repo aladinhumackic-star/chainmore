@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book a Discovery Call | ChainMore</title>
+  <meta name="description" content="Tell us about your payment flow. We'll review and respond within one business day to schedule a 30-minute discovery call.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://www.chainmore.io/demo">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <!-- Open Graph — when this page is shared in chat/email it should look
+       like the rest of chainmore.io rather than a beige Netlify default. -->
+  <meta property="og:title" content="Book a Discovery Call | ChainMore">
+  <meta property="og:description" content="Tell us about your payment flow. We'll review and respond within one business day to schedule a 30-minute discovery call.">
+  <meta property="og:url" content="https://www.chainmore.io/demo">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Book a Discovery Call | ChainMore">
+  <meta name="twitter:description" content="Tell us about your payment flow. We'll review and respond within one business day.">
+
+  <link rel="stylesheet" href="/tailwind.css">
+  <!-- ChainMore Concierge widget — visitors who have a quick question
+       before filling the form can ask the bot first. -->
+  <link rel="stylesheet" href="/assets/concierge-widget.css">
+
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); }
+    .grid-dot { background-image: radial-gradient(rgba(0, 217, 255, 0.07) 1px, transparent 1px); background-size: 24px 24px; }
+    /* Form field focus ring — matches the cyan accent used everywhere
+       else on the site. Defined here to avoid pulling in another
+       framework. */
+    .field {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      width: 100%;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .field::placeholder { color: #64748b; }
+    .field:focus {
+      outline: none;
+      border-color: #00D9FF;
+      background: rgba(15, 23, 42, 0.85);
+      box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.18);
+    }
+    .field-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 0.35rem;
+    }
+    .field-help {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 0.35rem;
+    }
+    .field-required::after {
+      content: " *";
+      color: #00D9FF;
+    }
+    /* The hidden honeypot label/input — visually removed but still
+       reachable to bots that auto-fill every input.  CSP forbids
+       inline style attributes site-wide; this class is the same
+       discipline as the rest of the site. */
+    .honeypot { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col grid-dot">
+
+  <header class="bg-slate-900/40 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
+          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
+          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
+        </svg>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        </span>
+      </a>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
+    </div>
+  </header>
+
+  <main class="flex-1 px-4 sm:px-6 lg:px-8 py-16">
+    <div class="max-w-3xl mx-auto">
+
+      <!-- Hero block — keeps the page consistent with the marketing
+           tone: outcome-first, no superlatives, no exclamation marks. -->
+      <div class="text-center mb-12">
+        <div class="text-[#00D9FF] font-mono text-sm tracking-widest uppercase mb-3">Discovery Call</div>
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-4">Tell us about your payment flow</h1>
+        <p class="text-lg text-slate-300 max-w-2xl mx-auto">
+          A 30-minute call where we walk through your specific corridors, rails, and settlement preferences — and confirm whether ChainMore is the right fit before any contract conversation.
+        </p>
+      </div>
+
+      <!-- Form card -->
+      <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 sm:p-10 shadow-xl">
+
+        <!--
+          Netlify Forms wiring:
+            - name="discovery-call" — identifier in the Netlify dashboard
+              (Forms tab). Submissions land there and are emailed +
+              webhooked per Notifications config.
+            - data-netlify="true" — opts the form into Netlify's
+              built-in form-handling.
+            - netlify-honeypot="bot-field" — hidden field that bots fill
+              in; Netlify silently drops submissions with bot-field set.
+            - action="/thank-you-demo.html" — branded post-submit page.
+            - method="POST" — explicit; Netlify treats this as a form
+              submission regardless, but explicit beats implicit.
+          The hidden input form-name="discovery-call" is required for
+          form-submission registration in deploys without JS evaluation.
+        -->
+        <form
+          name="discovery-call"
+          method="POST"
+          action="/thank-you-demo.html"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          autocomplete="on"
+          novalidate
+        >
+          <input type="hidden" name="form-name" value="discovery-call">
+
+          <!-- Honeypot — hidden from humans, harvested by spam bots. -->
+          <p class="honeypot" aria-hidden="true">
+            <label>Don't fill this out if you're human: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+          </p>
+
+          <div class="grid sm:grid-cols-2 gap-6">
+
+            <!-- Name -->
+            <div>
+              <label class="field-label field-required" for="df-name">Your name</label>
+              <input class="field" id="df-name" name="name" type="text" autocomplete="name" required maxlength="120">
+            </div>
+
+            <!-- Work email -->
+            <div>
+              <label class="field-label field-required" for="df-email">Work email</label>
+              <input class="field" id="df-email" name="email" type="email" autocomplete="email" required maxlength="160">
+            </div>
+
+            <!-- Company -->
+            <div>
+              <label class="field-label field-required" for="df-company">Company name</label>
+              <input class="field" id="df-company" name="company" type="text" autocomplete="organization" required maxlength="160">
+            </div>
+
+            <!-- Company website (optional) -->
+            <div>
+              <label class="field-label" for="df-website">Company website</label>
+              <input class="field" id="df-website" name="website" type="url" autocomplete="url" placeholder="https://" maxlength="200">
+            </div>
+
+            <!-- Monthly volume -->
+            <div>
+              <label class="field-label field-required" for="df-volume">Monthly payment volume</label>
+              <select class="field" id="df-volume" name="monthly_volume" required>
+                <option value="" disabled selected>Select a range</option>
+                <option value="under_250k">Under $250K</option>
+                <option value="250k_1m">$250K – $1M</option>
+                <option value="1m_10m">$1M – $10M</option>
+                <option value="10m_50m">$10M – $50M</option>
+                <option value="over_50m">Over $50M</option>
+                <option value="not_yet">Not live yet</option>
+              </select>
+            </div>
+
+            <!-- Region -->
+            <div>
+              <label class="field-label field-required" for="df-region">Where you operate</label>
+              <select class="field" id="df-region" name="region" required>
+                <option value="" disabled selected>Select a region</option>
+                <option value="eu_eea">EU / EEA</option>
+                <option value="uk">UK</option>
+                <option value="us_canada">US / Canada</option>
+                <option value="latam">Latin America</option>
+                <option value="apac">Asia / Pacific</option>
+                <option value="mena">Middle East / Africa</option>
+                <option value="global">Global / multi-region</option>
+              </select>
+            </div>
+
+            <!-- Use case — full width -->
+            <div class="sm:col-span-2">
+              <label class="field-label field-required" for="df-use-case">Primary use case</label>
+              <select class="field" id="df-use-case" name="use_case" required>
+                <option value="" disabled selected>Select what fits closest</option>
+                <option value="ecommerce">E-commerce / checkout</option>
+                <option value="marketplace">Marketplace / two-sided platform</option>
+                <option value="payroll">Global payroll / contractor payouts</option>
+                <option value="subscriptions">Subscriptions / SaaS billing</option>
+                <option value="creator_affiliate">Creator / affiliate payouts</option>
+                <option value="b2b_invoicing">B2B invoicing / treasury</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Flow context -->
+            <div class="sm:col-span-2">
+              <label class="field-label" for="df-flow">Tell us about your flow</label>
+              <textarea class="field" id="df-flow" name="flow_context" rows="5" maxlength="2000" placeholder="What's driving you to look right now? What's the current stack? Anything we should know before the call?"></textarea>
+              <p class="field-help">Optional — but the more context you share, the sharper the call will be.</p>
+            </div>
+
+          </div>
+
+          <!-- Privacy hint above submit — sets expectations honestly
+               and pre-empts the "where does my data go" objection. -->
+          <p class="text-xs text-slate-500 mt-8 mb-4">
+            By submitting, you consent to Chainmore OÜ processing the information above to schedule and prepare this call. Details in our <a href="/legal/datenschutz.html" class="text-[#00D9FF] hover:text-white transition">Privacy Policy</a>.
+          </p>
+
+          <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-md bg-[#00D9FF] text-slate-900 font-semibold hover:bg-[#00bfe6] transition">
+            Request a discovery call
+          </button>
+          <p class="text-sm text-slate-500 mt-4">
+            We respond within one business day with a calendar link.
+          </p>
+
+        </form>
+      </div>
+
+      <!-- Quick-question alternative — for visitors who'd rather ask
+           something small than fill a whole form. The Concierge widget
+           is already mounted globally, so this is just a pointer. -->
+      <div class="mt-10 text-center">
+        <p class="text-sm text-slate-400">
+          Have a quick question first? Open the <span class="text-[#00D9FF]">ChainMore Concierge</span> in the bottom-right — answers about how rails are routed, what's covered, and how integration fits.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="bg-slate-950/60 backdrop-blur border-t border-slate-800 text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+          <a href="/" class="hover:text-white transition text-sm">← Home</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/dpa.html" class="hover:text-white transition text-sm">DPA</a>
+          <span class="text-slate-700">·</span>
+          <a href="/security" class="hover:text-white transition text-sm">Security</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Concierge widget — same script as the homepage. Visitors can ask
+       a question without leaving this page. -->
+  <script src="/assets/concierge-widget.js" defer></script>
+</body>
+</html>
