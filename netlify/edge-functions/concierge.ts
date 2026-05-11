@@ -34,7 +34,14 @@
 //     console.error and surface to the operator in Netlify logs.
 
 import type { Context } from "https://edge.netlify.com";
-import { CONCIERGE_KNOWLEDGE } from "./concierge-knowledge.ts";
+// Knowledge module lives OUTSIDE netlify/edge-functions/ on purpose:
+// Netlify treats every .ts file inside the edge-functions directory as
+// a deployable Edge Function and tries to bundle it expecting a default
+// export. concierge-knowledge.ts only exports a single string constant
+// — without a default export the bundle fails. Keeping it in
+// netlify/lib/ keeps it bundleable as a module while invisible to the
+// function discovery pass.
+import { CONCIERGE_KNOWLEDGE } from "../lib/concierge-knowledge.ts";
 
 // ──────────────────────────────────────────────────────────────────────
 // Configuration

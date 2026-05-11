@@ -8,19 +8,18 @@
 #
 # Scope discipline:
 #   - publish points at the root (this file lives next to index.html).
-#   - functions points at netlify/functions for any future Node-runtime
-#     functions (none yet).
 #   - edge_functions points at netlify/edge-functions for Deno-runtime
 #     Edge Functions (Concierge lives here for streaming + low TTFB).
+#   - No regular Node Functions are declared because we don't have any.
+#     Pointing [build].functions at a non-existing directory makes the
+#     bundler warn loudly and, depending on Netlify build version,
+#     fail the deploy. When we add Node Functions later, set both
+#     [build].functions and [functions] back.
 #
 # Local dev (optional): `netlify dev` will pick this up.
 
 [build]
   publish    = "."
-  functions  = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
 
 # ──────────────────────────────────────────────────────────────────────
 # Edge Functions
