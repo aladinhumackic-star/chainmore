@@ -326,6 +326,9 @@
   justify-content: center;
   flex-wrap: wrap;
 }
+/* Used on /404 to put more space above the action row because there
+ * is no "next" card directly preceding it. */
+.df-actions--top { margin-top: 2rem; }
 .df-btn-secondary {
   display: inline-flex;
   align-items: center;
