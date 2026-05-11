@@ -9,19 +9,14 @@
   <link rel="canonical" href="https://www.chainmore.io/thank-you-demo.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css">
-  <style>
-    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
-    body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); }
-    .grid-dot { background-image: radial-gradient(rgba(0, 217, 255, 0.07) 1px, transparent 1px); background-size: 24px 24px; }
-  </style>
+  <link rel="stylesheet" href="/assets/discovery-form.css">
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col grid-dot">
+<body class="df-body">
 
-  <header class="bg-slate-900/40 backdrop-blur border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2.5">
-        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <header class="df-header">
+    <div class="df-header__inner">
+      <a href="/" class="df-logo">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
           <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
           <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
@@ -29,81 +24,66 @@
           <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
           <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
         </svg>
-        <span class="text-lg font-bold tracking-tight">
-          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+        <span class="df-logo__text">
+          <span class="df-logo__text--white">Chain</span><span class="df-logo__text--cyan">More</span>
         </span>
       </a>
-      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
+      <a href="/" class="df-header__back">← Back to homepage</a>
     </div>
   </header>
 
-  <main class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16">
-    <div class="max-w-xl text-center">
-      <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-cyan-500/15 mb-6 border border-cyan-500/30">
-        <svg class="h-10 w-10 text-[#00D9FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+  <main class="df-main df-main--centered">
+    <div class="df-container df-container--narrow">
+      <div class="df-check-circle" aria-hidden="true">
+        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7"/>
         </svg>
       </div>
 
-      <div class="text-[#00D9FF] font-mono text-sm tracking-widest uppercase mb-3">Request received</div>
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-4">Thanks — we'll be in touch</h1>
-      <p class="text-lg text-slate-300 mb-8">
+      <span class="df-eyebrow">Request received</span>
+      <h1 class="df-title">Thanks — we'll be in touch</h1>
+      <p class="df-subtitle">
         We received your discovery-call request and will respond within one business day with a calendar link.
       </p>
 
-      <div class="text-left bg-slate-800/40 border border-slate-700 rounded-xl p-6 mb-10">
-        <h2 class="text-white font-semibold mb-3">What happens next</h2>
-        <ul class="space-y-3 text-slate-300 text-sm">
-          <li class="flex gap-3">
-            <span class="text-[#00D9FF] font-mono">01</span>
-            <span>We review your flow context and confirm route-fit at our end.</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="text-[#00D9FF] font-mono">02</span>
-            <span>You receive a calendar link with a few slot options in your timezone, plus a short pre-call note.</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="text-[#00D9FF] font-mono">03</span>
-            <span>The call is 30 minutes, focused on your specific corridors, rails, and settlement preferences. No deck.</span>
-          </li>
+      <div class="df-next">
+        <h2 class="df-next__heading">What happens next</h2>
+        <ul class="df-next__list">
+          <li><span class="num">01</span><span>We review your flow context and confirm route-fit at our end.</span></li>
+          <li><span class="num">02</span><span>You receive a calendar link with a few slot options in your timezone, plus a short pre-call note.</span></li>
+          <li><span class="num">03</span><span>The call is 30 minutes, focused on your specific corridors, rails, and settlement preferences. No deck.</span></li>
         </ul>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <a href="/" class="inline-flex items-center justify-center px-5 py-2.5 rounded-md border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition">
-          Back to homepage
-        </a>
-        <a href="mailto:support@chainmore.io?subject=Discovery%20call%20follow-up" class="inline-flex items-center justify-center px-5 py-2.5 rounded-md bg-[#00D9FF] text-slate-900 font-medium hover:bg-[#00bfe6] transition">
-          Add more context
-        </a>
+      <div class="df-actions">
+        <a href="/" class="df-btn-secondary">Back to homepage</a>
+        <a href="mailto:support@chainmore.io?subject=Discovery%20call%20follow-up" class="df-btn-primary">Add more context</a>
       </div>
 
-      <p class="text-sm text-slate-500 mt-10">
-        Need to change something? <a href="mailto:support@chainmore.io?subject=Update%20discovery-call%20request" class="text-[#00D9FF] hover:text-white transition">Email support</a> with the email you used.
+      <p class="df-followup">
+        Need to change something? <a href="mailto:support@chainmore.io?subject=Update%20discovery-call%20request">Email support</a> with the email you used.
       </p>
     </div>
   </main>
 
-  <footer class="bg-slate-950/60 backdrop-blur border-t border-slate-800 text-slate-400">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-2 flex-wrap justify-center">
-          <a href="/" class="hover:text-white transition text-sm">← Home</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/dpa.html" class="hover:text-white transition text-sm">DPA</a>
-          <span class="text-slate-700">·</span>
-          <a href="/security" class="hover:text-white transition text-sm">Security</a>
-        </div>
-        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
+  <footer class="df-footer">
+    <div class="df-footer__inner">
+      <div class="df-footer__links">
+        <a href="/">← Home</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/legal/impressum.html">Legal Notice</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/legal/datenschutz.html">Privacy Policy</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/legal/agb.html">Terms</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/legal/sub-processors.html">Sub-Processors</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/legal/dpa.html">DPA</a>
+        <span class="df-footer__sep">·</span>
+        <a href="/security">Security</a>
       </div>
+      <div class="df-footer__copyright">© 2026 Chainmore OÜ · Patent pending</div>
     </div>
   </footer>
 
