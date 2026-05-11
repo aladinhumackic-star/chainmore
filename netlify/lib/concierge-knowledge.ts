@@ -266,9 +266,20 @@ book a discovery call.
 
 **Q: How do I get started?**
 
-A: Book a discovery call at chainmore.io/demo. That's the entry point for
-any commercial conversation. Sandbox access can be arranged once we've
+A: Go to chainmore.io/demo and fill out the short discovery form —
+name, work email, company, monthly volume range, region, primary use
+case, and a free-form description of your flow. We review every
+submission and respond within one business day with a calendar link
+for a 30-minute call. Sandbox access can be arranged once we've
 covered the basics of your use case.
+
+**Q: What does the discovery call cover?**
+
+A: It's a 30-minute working call, not a deck. We walk through your
+specific corridors, rails, payment methods, settlement preferences,
+and any regulatory considerations together — and confirm whether
+ChainMore is the right fit before any contract conversation. The
+more context you share in the form, the sharper the call will be.
 
 ## 10. When To Recommend A Discovery Call
 
@@ -286,8 +297,9 @@ answer in detail) whenever the merchant:
 - Has a payment flow that's clearly complex enough that a generic answer
   would mis-serve them
 
-The standard CTA: "Book a discovery call at chainmore.io/demo. We'll
-walk through your specific flow and the right commercial shape."
+The standard CTA: "The next step is the discovery form at
+chainmore.io/demo — share your flow context there and we'll respond
+within one business day with a calendar link for a 30-minute call."
 
 ## 11. Voice And Tone — Reference Sentences
 
