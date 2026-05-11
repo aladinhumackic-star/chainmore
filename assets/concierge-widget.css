@@ -68,6 +68,20 @@
   white-space: nowrap;
 }
 
+/* Pointer-events on inner SVG/spans inside our buttons:
+ * Without this, clicks landing on the SVG <line> / <path> children
+ * become event.target = the SVG element, and some browsers' bubbling
+ * up to the button can be flaky (especially Safari with focus-trap
+ * interactions). Pinning pointer-events to none on children ensures
+ * every mouse / touch event resolves to the button itself, so the
+ * close (X), reset (↻), send (▶) and the FAB all reliably fire their
+ * click handlers. */
+.cm-concierge-fab > *,
+.cm-concierge-iconbtn > *,
+.cm-concierge-input__send > * {
+  pointer-events: none;
+}
+
 #cm-concierge-root.cm-concierge--open .cm-concierge-fab {
   display: none;
 }
