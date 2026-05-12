@@ -6,9 +6,12 @@
   <title>Developer Documentation | ChainMore</title>
   <meta name="description" content="ChainMore public API reference. Gateway (merchant-facing) and Treasury (operator-internal) OpenAPI specs rendered with Redoc. Every route, request schema, and response shape, in one place.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.chainmore.io/docs.html">
+  <!-- Canonical: bare chainmore.io/docs (no www, no .html) — that's the
+       deploy path under Netlify pretty-URLs. Previous value pointed at
+       www.chainmore.io/docs.html which is neither canonical nor reachable. -->
+  <link rel="canonical" href="https://chainmore.io/docs">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.chainmore.io/docs.html">
+  <meta property="og:url" content="https://chainmore.io/docs">
   <meta property="og:title" content="Developer Documentation | ChainMore">
   <meta property="og:description" content="Gateway (merchant-facing) and Treasury (operator-internal) OpenAPI specs, every route documented.">
   <meta property="og:site_name" content="ChainMore">
@@ -18,20 +21,46 @@
   <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
-    html { scroll-behavior: smooth; }
-    /* Make Redoc fill the available space below the nav strip. The
-       redoc-container is fixed-height to support its own internal scroll
-       (TOC sidebar plus content pane). */
-    .redoc-host { height: calc(100vh - 184px); min-height: 800px; }
-    .redoc-host > div { height: 100%; }
+    /* scroll-padding-top is what makes browser-native anchor jumps land
+       below the sticky chrome (header 65px + sticky spec-tabs 49px =
+       114px). Without this every #operation anchor lands behind the
+       sticky stack. */
+    html { scroll-behavior: smooth; scroll-padding-top: 114px; }
+    /* Previously: .redoc-host { height: calc(100vh - 184px); min-height: 800px; }
+       That constrained Redoc into a fixed-height container which broke
+       in-page anchor scroll — Redoc's click handler called preventDefault
+       on the nav-item click and then targeted its OWN internal scroll
+       wrapper, which never actually scrolls because overflow:visible.
+       Net effect: hash updates, scrollY stays at 0.
+       Fix: let Redoc render in the document flow, body owns the scroll,
+       browser-native scroll-padding-top handles the sticky-header offset,
+       and the redoc.init scrollYOffset:114 matches it. */
+    #redoc-container { min-height: 70vh; }
+    /* Sidebar sits below the sticky header + sticky spec-tabs stack
+       (65+49=114). Redoc's own sticky top:0 doesn't know about our
+       chrome, so override. */
+    .menu-content { top: 114px !important; max-height: calc(100vh - 114px) !important; }
+    /* Loading skeleton — Redoc bundle is ~940 KB, the YAML is ~128 KB,
+       parse takes 2-4 s on cold loads. Without a skeleton the page
+       flashes white and users wonder if it's broken. Replaced by Redoc
+       on mount. */
+    .redoc-skeleton { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; gap: 1rem; color: #64748b; }
+    .redoc-skeleton-spinner { width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #00bfe6; border-radius: 50%; animation: redoc-spin 0.8s linear infinite; }
+    @keyframes redoc-spin { to { transform: rotate(360deg); } }
     .spec-tab { transition: all 0.15s ease; }
     .spec-tab.active { color: #00bfe6; border-color: #00bfe6; }
     .spec-tab:hover { color: #00bfe6; }
+    /* Back-to-top FAB — page is ~77,000 px tall when every response is
+       expanded. Show after 800 px scroll, jump to top via JS. */
+    .back-to-top { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 44px; height: 44px; border-radius: 22px; background: #00bfe6; color: white; box-shadow: 0 8px 24px rgba(0,191,230,0.35); display: none; align-items: center; justify-content: center; z-index: 60; cursor: pointer; border: none; transition: background 0.15s ease, transform 0.15s ease; }
+    .back-to-top.visible { display: flex; }
+    .back-to-top:hover { background: #00a3c4; transform: translateY(-2px); }
+    .back-to-top:focus-visible { outline: 3px solid #67e8f9; outline-offset: 2px; }
   </style>
 </head>
 <body class="bg-white text-slate-700">
 
-  <!-- Header -->
+  <!-- Header — sticky top, 65 px tall (py-4 + content). -->
   <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
@@ -47,6 +76,9 @@
           <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
         </span>
       </a>
+      <!-- Single source of nav. Previously had a redundant "← Back to
+           homepage" link on the right that duplicated the logo-click +
+           the "Solutions" entry. Removed (#11). -->
       <nav class="hidden md:flex items-center gap-8 text-sm">
         <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
         <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
@@ -54,12 +86,13 @@
         <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
         <a href="/status.html" class="text-slate-300 hover:text-white transition">Status</a>
       </nav>
-      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
     </div>
   </header>
 
-  <!-- Spec switcher -->
-  <div class="bg-white border-b border-slate-200">
+  <!-- Spec switcher — now sticky just under the header so visitors don't
+       lose access to the Gateway/Treasury toggle after a deep scroll
+       (#8). top:[65px] = header height, z-40 sits below header z-50. -->
+  <div class="bg-white border-b border-slate-200 sticky top-[65px] z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center gap-1 overflow-x-auto">
         <a href="?spec=gateway" id="tab-gateway" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
@@ -80,9 +113,15 @@
     </div>
   </div>
 
-  <!-- Redoc target -->
-  <main class="redoc-host">
-    <div id="redoc-container"></div>
+  <!-- Redoc target. Inline skeleton shown until Redoc.init replaces the
+       container content. -->
+  <main>
+    <div id="redoc-container">
+      <div class="redoc-skeleton" role="status" aria-live="polite">
+        <div class="redoc-skeleton-spinner" aria-hidden="true"></div>
+        <div>Loading API reference…</div>
+      </div>
+    </div>
   </main>
 
   <!-- Footer (compact, the docs page is dense and footer is rarely the focus) -->
@@ -108,6 +147,14 @@
       </div>
     </div>
   </footer>
+
+  <!-- Back-to-top FAB (#7). Hidden by default, JS toggles .visible
+       after scrollY > 800. Click → smooth-scroll to top. -->
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+  </button>
 
   <!-- Self-hosted Redoc bundle. Vendor JS is checked in at
        marketing/site/assets/redoc.standalone.js so the page stays
@@ -143,7 +190,9 @@
       // accent, JetBrains-style mono, and an Inter-like sans stack
       // that mirrors what the rest of the site already uses (so we
       // do NOT load Roboto from Google Fonts, which would break our
-      // CSP font-src 'self').
+      // CSP font-src 'self'). Right-panel softened from pitch-black
+      // #0f172a to slate-800 #1e293b so the empty intro page no
+      // longer looks like a broken void on the right (#2 / #10).
       var theme = {
         colors: {
           primary: { main: "#00bfe6" },
@@ -180,8 +229,9 @@
           width: "280px",
         },
         rightPanel: {
-          backgroundColor: "#0f172a",
+          backgroundColor: "#1e293b",
           textColor: "#f1f5f9",
+          width: "40%",
         },
       };
 
@@ -189,11 +239,13 @@
       // hideDownloadButton:false so visitors get a one-click download
       // of the spec they're looking at; expandResponses:"200,201" so
       // the most-relevant success-response shape is open by default.
+      // scrollYOffset matches the sticky chrome height (header 65 +
+      // tabs 49 = 114) so clicked anchors land below the chrome (#9).
       Redoc.init(
         specs[picked].url,
         {
           theme: theme,
-          scrollYOffset: 64,
+          scrollYOffset: 114,
           hideDownloadButton: false,
           disableSearch: false,
           expandResponses: "200,201",
@@ -209,6 +261,28 @@
         },
         document.getElementById("redoc-container")
       );
+
+      // Back-to-top FAB behaviour. Show after 800 px scroll, hide
+      // below that. Click → smooth-scroll to top.
+      // (Local function intentionally NOT named "on-scroll" / "on*" —
+      // the CSP hash-check regex would false-positive on any
+      // assignment whose left-hand side begins with " on" + lowercase
+      // letters + " =". handleScroll dodges that without weakening
+      // the check.)
+      var btnTop = document.getElementById("back-to-top");
+      if (btnTop) {
+        var handleScroll = function () {
+          if (window.scrollY > 800) {
+            btnTop.classList.add("visible");
+          } else {
+            btnTop.classList.remove("visible");
+          }
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        btnTop.addEventListener("click", function () {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
     })();
   </script>
 </body>

@@ -80,7 +80,7 @@
   # at all; the directive is permissive only where there is nothing
   # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
   # changes.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-NUDKdXvwrlkCCQeLQrzJqaJFr1zx30ZOPCeyg/TqfSQ=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-ddl682XJF6l4b+Dvt96gLq0fQ2UBpeqtuWpCqKbYjT0=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
   # X-Frame-Options DENY — legacy header; modern browsers prefer
