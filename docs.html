@@ -40,6 +40,22 @@
        (65+49=114). Redoc's own sticky top:0 doesn't know about our
        chrome, so override. */
     .menu-content { top: 114px !important; max-height: calc(100vh - 114px) !important; }
+    /* Redoc applies overflow:hidden + position:relative to .api-content
+       via styled-components. That makes .api-content the scroll context
+       for scrollIntoView, but it never actually scrolls (its height
+       equals its scrollHeight). Net effect: nav-item clicks update the
+       hash but the page doesn't move. Force overflow:visible so
+       scrollIntoView walks PAST api-content to the body/html scroll
+       context which DOES scroll. */
+    .api-content { overflow-y: visible !important; overflow-x: visible !important; }
+    /* Tailwind's prebuilt stylesheet doesn't include arbitrary-value
+       classes like top-[65px]. position:sticky needs a defined top
+       offset or it silently degrades to static — that's exactly what
+       made the spec-switcher non-sticky on the first deploy. Pin the
+       offset here in plain CSS so we don't depend on a Tailwind
+       rebuild. 65 px = header content (32) + py-4 padding (32) + 1 px
+       border. */
+    .spec-switcher-sticky { position: sticky; top: 65px; z-index: 40; }
     /* Loading skeleton — Redoc bundle is ~940 KB, the YAML is ~128 KB,
        parse takes 2-4 s on cold loads. Without a skeleton the page
        flashes white and users wonder if it's broken. Replaced by Redoc
@@ -91,8 +107,11 @@
 
   <!-- Spec switcher — now sticky just under the header so visitors don't
        lose access to the Gateway/Treasury toggle after a deep scroll
-       (#8). top:[65px] = header height, z-40 sits below header z-50. -->
-  <div class="bg-white border-b border-slate-200 sticky top-[65px] z-40">
+       (#8). Uses .spec-switcher-sticky (in <style> above) instead of
+       Tailwind's top-[65px] arbitrary value because tailwind.css is
+       prebuilt without JIT — the arbitrary class silently drops out
+       and sticky degrades to static. -->
+  <div class="bg-white border-b border-slate-200 spec-switcher-sticky">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center gap-1 overflow-x-auto">
         <a href="?spec=gateway" id="tab-gateway" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
