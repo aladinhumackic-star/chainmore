@@ -129,6 +129,37 @@
 /tailwind.css
   Cache-Control: public, max-age=31536000, immutable
 
+# ─────────────────────────────────────────────────────────────────────
+# /assets/* cache discipline
+# ─────────────────────────────────────────────────────────────────────
+# None of these files carry a hash in the filename yet, so we cannot
+# use the "max-age=31536000, immutable" pattern (a deploy with a
+# changed widget would not invalidate the user's browser cache).
+# Compromise: 1 hour for code we edit often (widget JS/CSS, form
+# CSS), 1 day for images we rarely change. Far better than no
+# cache header at all (default Netlify is `public, max-age=0,
+# must-revalidate` which forces an end-to-end revalidate every page
+# load).
+#
+# When a deploy needs to invalidate aggressively, drop the file
+# name (the deploy hash in the response ETag is enough for the
+# revalidate-not-modified path) or rev the path itself.
+
+/assets/concierge-widget.js
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/concierge-widget.css
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/discovery-form.css
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/og-image.png
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/assets/og-image.svg
+  Cache-Control: public, max-age=86400, must-revalidate
+
 # robots.txt + sitemap.xml — short cache so updates propagate.
 /robots.txt
   Cache-Control: public, max-age=3600
@@ -159,3 +190,27 @@
 # path-bust.
 /assets/redoc.standalone.js
   Cache-Control: public, max-age=31536000, immutable
+
+# ─────────────────────────────────────────────────────────────────────
+# /docs.html — relaxed style-src for ReDoc
+# ─────────────────────────────────────────────────────────────────────
+# ReDoc renders the OpenAPI specs with styled-components 5.x, which
+# uses `CSSStyleSheet.insertRule()` to inject computed CSS at
+# runtime. The strict site-wide CSP `style-src 'self' 'sha256-…'`
+# blocks that — visible in the console as "An error occurred"
+# pointing at https://git.io/JUIaE#17 from inside redoc.standalone.js
+# at insertRules / generateAndInjectStyles. The page rendered blank
+# below the topbar.
+#
+# Scoped fix: only /docs.html gets `'unsafe-inline'` on style-src.
+# We don't loosen any other directive (script-src, connect-src,
+# img-src, etc. stay strict) and we don't loosen it for any other
+# page. The risk surface is the developer-docs page which renders
+# our own first-party YAML specs — no user-generated content, no
+# third-party scripts.
+#
+# When ReDoc ships a CSP-nonce-aware build, this override can be
+# replaced with a nonce-based rule. See:
+#   https://github.com/Redocly/redoc/issues/1408
+/docs.html
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-OaqrmoQg3cz1NijUm1BPp3G2/v3RV9Kp9S1ckooXyF4=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
