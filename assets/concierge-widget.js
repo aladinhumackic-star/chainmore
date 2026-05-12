@@ -13,8 +13,9 @@
  *    - All DOM is created in JS so the widget can be dropped onto any
  *      page by including this script — no markup edits required beyond
  *      the script tag.
- *    - CSS is a sibling file (assets/concierge-widget.css). Both ship
- *      via marketing/site/assets/, both same-origin under chainmore.io.
+ *    - CSS is a sibling file (assets/concierge-widget.css). The widget
+ *      script loads it after DOM-ready so the below-the-fold Concierge
+ *      UI does not block the page's first paint.
  *    - Endpoint is hard-pinned to /api/concierge — same-origin, the
  *      CSP connect-src 'self' covers it.
  */
@@ -26,6 +27,7 @@
   var API_ENDPOINT     = '/api/concierge';
   var MAX_HISTORY      = 20;          // user + assistant turns
   var MAX_INPUT_CHARS  = 2000;        // matches server-side cap
+  var CSS_HREF         = '/assets/concierge-widget.css';
 
   // ─── Welcome / placeholder copy ─────────────────────────────────────
   // Voice mirrors the system prompt: outcome language, no superlatives,
@@ -134,6 +136,35 @@
   }
 
   // ─── Mount ──────────────────────────────────────────────────────────
+
+  function ensureStylesheet(done) {
+    var existing = document.querySelector('link[data-cm-concierge-css="true"], link[href="' + CSS_HREF + '"]');
+    if (existing) {
+      done();
+      return;
+    }
+
+    var link = document.createElement('link');
+    var finished = false;
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+      done();
+    }
+
+    link.rel = 'stylesheet';
+    link.href = CSS_HREF;
+    link.setAttribute('data-cm-concierge-css', 'true');
+    link.onload = finish;
+    link.onerror = finish;
+
+    document.head.appendChild(link);
+
+    // Do not let a transient CSS load issue remove the entry point.
+    // The widget is a helper, not the critical page experience.
+    setTimeout(finish, 1500);
+  }
 
   function mount() {
     // Container — fixed position, sits above page content.
@@ -488,9 +519,13 @@
 
   // ─── Bootstrap ──────────────────────────────────────────────────────
 
+  function bootstrap() {
+    ensureStylesheet(mount);
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mount);
+    document.addEventListener('DOMContentLoaded', bootstrap);
   } else {
-    mount();
+    bootstrap();
   }
 })();
