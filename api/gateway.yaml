@@ -2219,7 +2219,7 @@ paths:
 
   /v1/payments/{id}/attempts:
     post:
-      summary: Start a payment attempt (EXE-GATE-I1 : refuses without wired gate).
+      summary: "Start a payment attempt (EXE-GATE-I1: refuses without wired gate)."
       operationId: startAttempt
       parameters:
         - $ref: "#/components/parameters/PaymentID"
@@ -2772,7 +2772,7 @@ paths:
             schema: { $ref: "#/components/schemas/CreateKeyRequest" }
       responses:
         '201':
-          description: Key created : plaintext secret returned once.
+          description: "Key created — plaintext secret returned once."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CreateKeyResponse" }
@@ -2781,7 +2781,7 @@ paths:
 
   /v1/keys/{id}:
     delete:
-      summary: Revoke an API key. Idempotent : revoking an already-revoked key is a no-op.
+      summary: "Revoke an API key. Idempotent — revoking an already-revoked key is a no-op."
       operationId: revokeKey
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
@@ -2803,7 +2803,7 @@ paths:
 
   /v1/keys/{id}/rotate:
     post:
-      summary: Rotate an API key : mint a successor, revoke the predecessor, in one transaction.
+      summary: "Rotate an API key — mint a successor, revoke the predecessor, in one transaction."
       operationId: rotateKey
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
