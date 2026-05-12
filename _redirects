@@ -19,4 +19,8 @@
 # the monorepo for internal tooling. Anyone hitting the public path
 # (cached bookmark, old marketing copy, scraper) gets a 410 Gone so
 # they don't treat it as "temporarily missing".
-/api/treasury.yaml  410!
+#
+# Netlify _redirects 410 syntax is `path  410` (no destination, no `!`).
+# The previous `/api/treasury.yaml  410!` was malformed and Netlify
+# silently fell back to a plain 404.
+/api/treasury.yaml  410
