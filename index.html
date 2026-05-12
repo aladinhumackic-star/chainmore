@@ -3001,21 +3001,23 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     // remains as a tombstone so a future reader does not reintroduce
     // the broken block by accident.
 
-    // Smooth scroll for anchor links.
-    // We use behavior:'auto' here — NOT 'smooth' — because the page's
-    // CSS already has `html { scroll-behavior: smooth }`. Asking JS for
-    // a smooth scroll on top of that hits a Chrome quirk where the
-    // smooth animation over ~7000 px silently aborts (verified live
-    // 2026-05-12: scrollIntoView({behavior:'smooth'}) left scrollY at
-    // 17, scrollIntoView({behavior:'auto'}) jumped to 6853 as expected).
-    // The CSS rule still smooths the actual scroll motion.
+    // Anchor-link scroll. behavior:'instant' is REQUIRED here —
+    // 'smooth' and 'auto' both fail on this page over long distances
+    // (~7000 px to #contact) because the page declares
+    //   html { scroll-behavior: smooth }
+    // in inline CSS, and both 'smooth' (explicit) and 'auto' (defers
+    // to the CSS rule) trigger Chrome's smooth-scroll animator which
+    // silently aborts mid-flight on long scrolls. 'instant' bypasses
+    // CSS scroll-behavior and always lands at the target.
+    // Verified live 2026-05-12: 'smooth' → scrollY=17, 'auto' →
+    // scrollY=0, 'instant' → scrollY=6853.
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const hash = this.getAttribute('href');
         const target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
         if (target) {
-          target.scrollIntoView({ behavior: 'auto', block: 'start' });
+          target.scrollIntoView({ behavior: 'instant', block: 'start' });
           // Close mobile menu if open
           if (mobileMenu) mobileMenu.classList.add('hidden');
         }
