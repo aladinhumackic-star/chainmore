@@ -20,7 +20,8 @@
 # (cached bookmark, old marketing copy, scraper) gets a 410 Gone so
 # they don't treat it as "temporarily missing".
 #
-# Netlify _redirects 410 syntax is `path  410` (no destination, no `!`).
-# The previous `/api/treasury.yaml  410!` was malformed and Netlify
-# silently fell back to a plain 404.
-/api/treasury.yaml  410
+# Netlify _redirects requires a destination URL even for status-only
+# responses. Send to /404.html with explicit 410 status — the body
+# users see is the branded 404 page, but the response status is the
+# correct "gone permanently".
+/api/treasury.yaml  /404.html  410!
