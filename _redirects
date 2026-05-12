@@ -12,3 +12,11 @@
 /docs            /docs.html             200
 /cctp-explainer  /cctp-explainer.html   200
 /demo            /demo.html             200
+
+# Treasury OpenAPI spec was pulled from the public surface 2026-05-12.
+# It is operator-internal — no merchant use case, exposed internal
+# architecture. Source of truth remains api/openapi/treasury.yaml in
+# the monorepo for internal tooling. Anyone hitting the public path
+# (cached bookmark, old marketing copy, scraper) gets a 410 Gone so
+# they don't treat it as "temporarily missing".
+/api/treasury.yaml  410!

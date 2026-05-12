@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Developer Documentation | ChainMore</title>
-  <meta name="description" content="ChainMore public API reference. Gateway (merchant-facing) and Treasury (operator-internal) OpenAPI specs rendered with Redoc. Every route, request schema, and response shape, in one place.">
+  <meta name="description" content="ChainMore public API reference. Gateway (merchant-facing) OpenAPI spec rendered with Redoc — every route, request schema, and response shape in one place.">
   <meta name="robots" content="index, follow">
   <!-- Canonical: bare chainmore.io/docs (no www, no .html) — that's the
        deploy path under Netlify pretty-URLs. Previous value pointed at
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://chainmore.io/docs">
   <meta property="og:title" content="Developer Documentation | ChainMore">
-  <meta property="og:description" content="Gateway (merchant-facing) and Treasury (operator-internal) OpenAPI specs, every route documented.">
+  <meta property="og:description" content="Gateway (merchant-facing) OpenAPI spec, every route documented.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -109,28 +109,25 @@
     </div>
   </header>
 
-  <!-- Spec switcher — now sticky just under the header so visitors don't
-       lose access to the Gateway/Treasury toggle after a deep scroll
-       (#8). Uses .spec-switcher-sticky (in <style> above) instead of
-       Tailwind's top-[65px] arbitrary value because tailwind.css is
-       prebuilt without JIT — the arbitrary class silently drops out
-       and sticky degrades to static. -->
+  <!-- Spec switcher — sticky just under the header.
+       Treasury API was removed from the public surface 2026-05-12.
+       It was labelled "operator-internal" and exposed Treasury Engine
+       routing/balance/reconciliation routes that have no merchant
+       use case and revealed internal architecture to competitors.
+       Source spec stays in api/openapi/treasury.yaml as canonical
+       for internal tooling, but it is NOT served from the marketing
+       site. If a second public spec is added later, restore the tab
+       layout here. -->
   <div class="bg-white border-b border-slate-200 spec-switcher-sticky">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center gap-1 overflow-x-auto">
-        <a href="?spec=gateway" id="tab-gateway" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
+        <span id="tab-gateway" class="spec-tab spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap active">
           Gateway API
           <span class="text-xs font-normal text-slate-500">(merchant-facing)</span>
-        </a>
-        <a href="?spec=treasury" id="tab-treasury" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
-          Treasury API
-          <span class="text-xs font-normal text-slate-500">(operator-internal)</span>
-        </a>
+        </span>
         <div class="ml-auto hidden md:flex items-center gap-3 text-xs text-slate-500 py-3">
           <span>Raw spec:</span>
           <a id="raw-gateway" href="/api/gateway.yaml?v=20260512b" class="text-cyan-600 hover:underline">gateway.yaml</a>
-          <span class="text-slate-300">·</span>
-          <a id="raw-treasury" href="/api/treasury.yaml?v=20260512b" class="text-cyan-600 hover:underline">treasury.yaml</a>
         </div>
       </div>
     </div>
@@ -186,26 +183,22 @@
   <script src="/assets/redoc.standalone.js"></script>
   <script>
     (function () {
-      // Resolve which spec to render from ?spec=… (default: gateway).
-      // Two specs ship today; if more land later, add them to specs[]
-      // and let the same query string drive the switcher.
+      // Only one public spec right now (gateway). The treasury spec
+      // was removed from the public surface 2026-05-12 — it's
+      // operator-internal, no merchant use case. ?spec=treasury in
+      // any old deep-link gets silently treated as ?spec=gateway so
+      // we don't 404 anyone who has the URL bookmarked.
       var specs = {
         gateway: {
           url: "/api/gateway.yaml?v=20260512b",
           tabId: "tab-gateway",
         },
-        treasury: {
-          url: "/api/treasury.yaml?v=20260512b",
-          tabId: "tab-treasury",
-        },
       };
 
-      var params = new URLSearchParams(window.location.search);
-      var requested = params.get("spec");
-      var picked = specs[requested] ? requested : "gateway";
+      var picked = "gateway";
 
-      // Highlight the active tab so visitors land where they think
-      // they are.
+      // Highlight the active tab (single-spec mode — tab is a span
+      // now, but keep the class hook in case more specs come back).
       var tabEl = document.getElementById(specs[picked].tabId);
       if (tabEl) tabEl.classList.add("active");
 
