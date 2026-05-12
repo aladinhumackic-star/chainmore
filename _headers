@@ -56,7 +56,7 @@
   # blocks. Inline style attributes are forbidden by CI; use classes.
   #
   # connect-src 'self' — same-origin only. The Concierge widget on
-  # /index.html POSTs to /api/concierge (a Netlify Edge Function
+  # public marketing pages POSTs to /api/concierge (a Netlify Edge Function
   # bound by netlify.toml), which is same-origin under chainmore.io
   # and therefore covered by 'self'. No third-party endpoint is
   # contacted from the browser; the Edge Function fans out to OpenAI
@@ -80,7 +80,7 @@
   # at all; the directive is permissive only where there is nothing
   # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
   # changes.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8zmlcBslvshtiKa1urUA0gHaN44Sx1XIJ+sHIgbL1AA=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0=' 'sha256-XPnLXps2q0vQ3ZMKTxKxkqz7tFIqtcEAqadG7HauIkE=' 'sha256-mptnLldByypb3s1jVFN5yFZ354oronWfrsx/dBWkSjE='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-1IlPwFYBIHJDgbPUz1Em5UM1L4AFQeN+jc3sMq0A4P8=' 'sha256-Bc2xDxybnsfbC6/eCw39XBIjVz8CGhmjIs1J3b07Q5g=' 'sha256-DhWxWmTaHaEqIGlTUCstvJvh6W5B0w+T5p/B5IhuGA8=' 'sha256-IbkbN+oAm/ffUNAJlKWrCGed9g77yRr/z0rkNMV5kXk=' 'sha256-IciAsp1llQo/W8LQGakhkZHZb0YXL2uHExuqaN0lpbc=' 'sha256-TM+QoJzl23nqkQvdlijLOZUKBpcrT3JUYgk9ndyLIH0=' 'sha256-XPnLXps2q0vQ3ZMKTxKxkqz7tFIqtcEAqadG7HauIkE=' 'sha256-bfePUdRMg46NsZL8WCeIN3088R6AT2HZtET1t/6Fe+4=' 'sha256-cLCQjm5qYyJToWBav68t4mrDPKvx1pHTJdZMJajSsPk=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0=' 'sha256-grwsyKJPr4saaluB8+rm1VEv1ffEGKMGbZioCeeKSnI=' 'sha256-lbc5vzq1k/AHJMqu2XP5O6XC0zvFkv7kDXPQUUM8X4c=' 'sha256-lmyKP5votawxUnCp6VkuDjK+zqYCozOBmhTWOjg1BIE=' 'sha256-mptnLldByypb3s1jVFN5yFZ354oronWfrsx/dBWkSjE=' 'sha256-pLEGvm4yhgrtEEw1eifbzeY4MbnNQijpvQyL5Cgr/Dc=' 'sha256-uBFZ2ZEOyu2/Crs7SEszFf5zf87LiOpBgIrxAX74HOA='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
   # X-Frame-Options DENY — legacy header; modern browsers prefer
