@@ -302,6 +302,50 @@
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       }
+
+      // Manual scroll-on-nav-click. Redoc updates location.hash when
+      // a menu item is clicked, but doesn't reliably scroll the page
+      // to the operation block under this layout. Even after we cleared
+      // .api-content overflow:hidden and removed the fixed-height host,
+      // window.scrollY stays at 0 across the click. Browser-verified.
+      // Workaround: capture clicks on [role=menuitem], wait briefly
+      // for Redoc to update the hash, then scrollIntoView ourselves
+      // on the operation block. scroll-padding-top:114px on <html>
+      // handles the sticky-chrome offset, so block:"start" is fine.
+      document.addEventListener("click", function (ev) {
+        var item = ev.target.closest && ev.target.closest('[role="menuitem"]');
+        if (!item) return;
+        setTimeout(function () {
+          var hash = location.hash.replace(/^#/, "");
+          if (!hash) return;
+          // Hash values include slashes ("operation/health"), so use
+          // attribute-selector with the escaped value.
+          var target;
+          try {
+            target = document.querySelector('[data-section-id="' + CSS.escape(hash) + '"]');
+          } catch (e) {
+            target = document.querySelector('[data-section-id="' + hash + '"]');
+          }
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      }, true);
+
+      // Same fallback for direct hashchange (URL pasted with #anchor,
+      // browser back/forward, programmatic hash assignment). Fires
+      // after Redoc's own hashchange handler has had a tick to run.
+      window.addEventListener("hashchange", function () {
+        setTimeout(function () {
+          var hash = location.hash.replace(/^#/, "");
+          if (!hash) return;
+          var target;
+          try {
+            target = document.querySelector('[data-section-id="' + CSS.escape(hash) + '"]');
+          } catch (e) {
+            target = document.querySelector('[data-section-id="' + hash + '"]');
+          }
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 50);
+      });
     })();
   </script>
 </body>
