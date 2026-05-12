@@ -618,6 +618,16 @@
       visibility: hidden !important;
       transition: opacity 80ms ease-out, visibility 0s linear 80ms !important;
     }
+
+    #primary-nav .nav-group[data-active] .nav-panel {
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+
+    #primary-nav .nav-group[data-active] > button svg {
+      transform: rotate(180deg);
+    }
   </style>
 </head>
 <!-- overflow-x-hidden removed from <body> on 2026-05-12: setting
@@ -664,28 +674,28 @@
 
         <!-- Platform Dropdown -->
         <div class="relative group nav-group" id="platform-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" id="platform-menu-button" aria-haspopup="true" aria-expanded="false" aria-controls="platform-menu">
             Platform
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Platform Mega Menu -->
-          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out" id="platform-menu" aria-labelledby="platform-menu-button">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-0 w-[780px] grid grid-cols-[220px_1fr] overflow-hidden">
               <!-- Left Column - Tab Navigation -->
-              <div class="bg-slate-50 py-4 border-r border-slate-200">
-                <div class="platform-tab active flex items-center justify-between px-5 py-3.5 cursor-pointer text-cyan-700 bg-white border-l-4 border-cyan-500 font-semibold text-sm" data-tab="platform">
+              <div class="bg-slate-50 py-4 border-r border-slate-200" role="tablist" aria-label="Platform menu sections">
+                <div class="platform-tab active flex items-center justify-between px-5 py-3.5 cursor-pointer text-cyan-700 bg-white border-l-4 border-cyan-500 font-semibold text-sm" data-tab="platform" role="tab" tabindex="0" aria-selected="true" aria-controls="platform-content-platform" id="platform-tab-platform">
                   Platform
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
-                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="payments">
+                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="payments" role="tab" tabindex="-1" aria-selected="false" aria-controls="platform-content-payments" id="platform-tab-payments">
                   Payments
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
-                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="routing">
+                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="routing" role="tab" tabindex="-1" aria-selected="false" aria-controls="platform-content-routing" id="platform-tab-routing">
                   Routing
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
-                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="payouts">
+                <div class="platform-tab flex items-center justify-between px-5 py-3.5 cursor-pointer text-slate-600 hover:bg-white hover:text-slate-900 font-medium text-sm transition border-l-4 border-transparent" data-tab="payouts" role="tab" tabindex="-1" aria-selected="false" aria-controls="platform-content-payouts" id="platform-tab-payouts">
                   Payouts
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </div>
@@ -694,7 +704,7 @@
               <!-- Right Column - Dynamic Content -->
               <div class="p-5">
                 <!-- Platform Tab Content -->
-                <div class="platform-content active" data-content="platform">
+                <div class="platform-content active" data-content="platform" role="tabpanel" aria-labelledby="platform-tab-platform" id="platform-content-platform">
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
                     <h3 class="text-white font-bold text-lg mb-2">ChainMore Platform</h3>
                     <p class="text-slate-400 text-sm">End-to-end cross-rail payment orchestration. One unified platform for fiat and stablecoin payments.</p>
@@ -744,7 +754,7 @@
                 </div>
 
                 <!-- Payments Tab Content -->
-                <div class="platform-content hidden" data-content="payments">
+                <div class="platform-content hidden" data-content="payments" role="tabpanel" aria-labelledby="platform-tab-payments" id="platform-content-payments" hidden>
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
                     <h3 class="text-white font-bold text-lg mb-2">ChainMore Payments</h3>
                     <p class="text-slate-400 text-sm">Accept stablecoin payments with the simplicity of card payments. Multi-chain support with automatic currency matching.</p>
@@ -794,7 +804,7 @@
                 </div>
 
                 <!-- Routing Tab Content -->
-                <div class="platform-content hidden" data-content="routing">
+                <div class="platform-content hidden" data-content="routing" role="tabpanel" aria-labelledby="platform-tab-routing" id="platform-content-routing" hidden>
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
                     <h3 class="text-white font-bold text-lg mb-2">ChainMore Routing</h3>
                     <p class="text-slate-400 text-sm">Intelligent cross-rail routing engine. Automatic optimization for cost, speed, and success rate across fiat and stablecoin rails.</p>
@@ -847,7 +857,7 @@
                 </div>
 
                 <!-- Payouts Tab Content -->
-                <div class="platform-content hidden" data-content="payouts">
+                <div class="platform-content hidden" data-content="payouts" role="tabpanel" aria-labelledby="platform-tab-payouts" id="platform-content-payouts" hidden>
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
                     <h3 class="text-white font-bold text-lg mb-2">ChainMore Payouts</h3>
                     <p class="text-slate-400 text-sm">Global payouts via fiat or stablecoin. Real-time or batch processing with automatic FX optimization.</p>
@@ -902,12 +912,12 @@
 
         <!-- Solutions Dropdown -->
         <div class="relative group nav-group" id="solutions-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" id="solutions-menu-button" aria-haspopup="true" aria-expanded="false" aria-controls="solutions-menu">
             Solutions
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Solutions Mega Menu -->
-          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div class="nav-panel absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out" id="solutions-menu" aria-labelledby="solutions-menu-button">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[600px]">
               <!-- Featured Use Case -->
               <div class="bg-slate-900 rounded-xl p-5 mb-5 flex gap-5">
@@ -1005,12 +1015,12 @@
 
         <!-- Developers Dropdown -->
         <div class="relative group nav-group" id="developers-dropdown">
-          <button class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">
+          <button type="button" class="flex items-center gap-1.5 px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium" id="developers-menu-button" aria-haspopup="true" aria-expanded="false" aria-controls="developers-menu">
             Developers
             <svg class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <!-- Developers Mega Menu -->
-          <div class="nav-panel absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out">
+          <div class="nav-panel absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 ease-out" id="developers-menu" aria-labelledby="developers-menu-button">
             <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-[480px]">
               <!-- Coming Soon Banner -->
               <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 mb-5">
@@ -2913,30 +2923,60 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     // ========== PLATFORM DROPDOWN TAB INTERACTION ==========
     const platformTabs = document.querySelectorAll('.platform-tab');
     const platformContents = document.querySelectorAll('.platform-content');
+    const platformTabList = Array.prototype.slice.call(platformTabs);
+
+    function switchPlatformTab(tab, options) {
+      const targetTab = tab.getAttribute('data-tab');
+      const shouldFocus = options && options.focus;
+
+      // Update tab styles
+      platformTabs.forEach(function(t) {
+        t.classList.remove('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
+        t.classList.add('text-slate-600', 'border-transparent', 'font-medium');
+        t.setAttribute('aria-selected', 'false');
+        t.setAttribute('tabindex', '-1');
+      });
+
+      tab.classList.add('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
+      tab.classList.remove('text-slate-600', 'border-transparent', 'font-medium');
+      tab.setAttribute('aria-selected', 'true');
+      tab.setAttribute('tabindex', '0');
+      if (shouldFocus) tab.focus();
+
+      // Update content visibility
+      platformContents.forEach(function(content) {
+        if (content.getAttribute('data-content') === targetTab) {
+          content.classList.remove('hidden');
+          content.classList.add('active');
+          content.removeAttribute('hidden');
+        } else {
+          content.classList.add('hidden');
+          content.classList.remove('active');
+          content.setAttribute('hidden', '');
+        }
+      });
+    }
 
     platformTabs.forEach(function(tab) {
-      tab.addEventListener('mouseenter', function() {
-        const targetTab = this.getAttribute('data-tab');
+      tab.addEventListener('mouseenter', function() { switchPlatformTab(tab); });
+      tab.addEventListener('click', function() { switchPlatformTab(tab); });
+      tab.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          switchPlatformTab(tab);
+          return;
+        }
 
-        // Update tab styles
-        platformTabs.forEach(function(t) {
-          t.classList.remove('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
-          t.classList.add('text-slate-600', 'border-transparent', 'font-medium');
-        });
-
-        this.classList.add('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
-        this.classList.remove('text-slate-600', 'border-transparent', 'font-medium');
-
-        // Update content visibility
-        platformContents.forEach(function(content) {
-          if (content.getAttribute('data-content') === targetTab) {
-            content.classList.remove('hidden');
-            content.classList.add('active');
-          } else {
-            content.classList.add('hidden');
-            content.classList.remove('active');
-          }
-        });
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') {
+          e.preventDefault();
+          const currentIndex = platformTabList.indexOf(tab);
+          let nextIndex = currentIndex;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') nextIndex = (currentIndex + 1) % platformTabList.length;
+          if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + platformTabList.length) % platformTabList.length;
+          if (e.key === 'Home') nextIndex = 0;
+          if (e.key === 'End') nextIndex = platformTabList.length - 1;
+          switchPlatformTab(platformTabList[nextIndex], { focus: true });
+        }
       });
     });
 
@@ -3341,29 +3381,54 @@ console.<span class="text-yellow-300">log</span>(payment.route);
   if (!nav) return;
   var groups = nav.querySelectorAll('.nav-group');
   if (!groups.length) return;
+  var suppressFocusActivation = false;
 
   function activate(group) {
     var key = group.id ? group.id.replace('-dropdown', '') : '';
     nav.setAttribute('data-active-menu', key);
     groups.forEach(function (g) {
-      if (g === group) g.setAttribute('data-active', '');
-      else g.removeAttribute('data-active');
+      var trigger = g.querySelector('button[aria-expanded]');
+      if (g === group) {
+        g.setAttribute('data-active', '');
+        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+      } else {
+        g.removeAttribute('data-active');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
   function deactivate() {
     nav.setAttribute('data-active-menu', '');
-    groups.forEach(function (g) { g.removeAttribute('data-active'); });
+    groups.forEach(function (g) {
+      var trigger = g.querySelector('button[aria-expanded]');
+      g.removeAttribute('data-active');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
   }
 
   groups.forEach(function (group) {
     group.addEventListener('mouseenter', function () { activate(group); });
     // Keyboard parity: focusing the trigger button activates too.
     var trigger = group.querySelector('button');
-    if (trigger) trigger.addEventListener('focus', function () { activate(group); });
+    if (trigger) trigger.addEventListener('focus', function () {
+      if (!suppressFocusActivation) activate(group);
+    });
   });
 
   nav.addEventListener('mouseleave', deactivate);
+  nav.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var active = nav.querySelector('.nav-group[data-active]');
+    if (!active) return;
+    var trigger = active.querySelector('button');
+    deactivate();
+    if (trigger) {
+      suppressFocusActivation = true;
+      trigger.focus();
+      window.setTimeout(function () { suppressFocusActivation = false; }, 0);
+    }
+  });
   nav.addEventListener('focusout', function (e) {
     // focusout fires before focus moves to the new target; if the new
     // target is still inside the nav we keep the state, otherwise
