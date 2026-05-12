@@ -56,6 +56,15 @@
        rebuild. 65 px = header content (32) + py-4 padding (32) + 1 px
        border. */
     .spec-switcher-sticky { position: sticky; top: 65px; z-index: 40; }
+    /* tailwind.css in this repo is hand-curated and does NOT actually
+       include the .sticky utility class (verified: `grep sticky
+       tailwind.css` returns nothing). The <header> with class
+       "sticky top-0 z-50" therefore computed to position:static the
+       whole time, which we only caught after browser-verifying the
+       /docs page at deep scroll. Define both utilities here so the
+       header sticks too. */
+    .sticky { position: sticky; }
+    .top-0  { top: 0; }
     /* Loading skeleton — Redoc bundle is ~940 KB, the YAML is ~128 KB,
        parse takes 2-4 s on cold loads. Without a skeleton the page
        flashes white and users wonder if it's broken. Replaced by Redoc
