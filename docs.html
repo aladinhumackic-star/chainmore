@@ -8,8 +8,10 @@
   <meta name="robots" content="index, follow">
   <!-- Canonical: bare chainmore.io/docs (no www, no .html) — that's the
        deploy path under Netlify pretty-URLs. Previous value pointed at
-       www.chainmore.io/docs.html which is neither canonical nor reachable. -->
+       chainmore.io/docs.html which is neither canonical nor reachable. -->
   <link rel="canonical" href="https://chainmore.io/docs">
+  <link rel="alternate" hreflang="en" href="https://chainmore.io/docs">
+  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/docs">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://chainmore.io/docs">
   <meta property="og:title" content="Developer Documentation | ChainMore">
@@ -77,6 +79,25 @@
     .back-to-top:hover { background: #00a3c4; transform: translateY(-2px); }
     .back-to-top:focus-visible { outline: 3px solid #67e8f9; outline-offset: 2px; }
   </style>
+  <!-- SEO/AIO JSON-LD: docs.html -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "@id": "https://chainmore.io/docs#article",
+  "headline": "ChainMore Developer Documentation",
+  "description": "Merchant-facing API documentation for ChainMore Gateway endpoints, request schemas, and response shapes.",
+  "url": "https://chainmore.io/docs",
+  "author": {
+    "@id": "https://chainmore.io/#organization"
+  },
+  "publisher": {
+    "@id": "https://chainmore.io/#organization"
+  },
+  "dateModified": "2026-05-12",
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body class="bg-white text-slate-700">
 
@@ -101,7 +122,7 @@
            the "Solutions" entry. Removed (#11). -->
       <nav class="hidden md:flex items-center gap-8 text-sm">
         <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
-        <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
+        <a href="/pricing" class="text-slate-300 hover:text-white transition">Pricing</a>
         <a href="/docs.html" class="text-white font-medium">Docs</a>
         <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
         <a href="/status.html" class="text-slate-300 hover:text-white transition">Status</a>
@@ -110,14 +131,10 @@
   </header>
 
   <!-- Spec switcher — sticky just under the header.
-       Treasury API was removed from the public surface 2026-05-12.
-       It was labelled "operator-internal" and exposed Treasury Engine
-       routing/balance/reconciliation routes that have no merchant
-       use case and revealed internal architecture to competitors.
-       Source spec stays in api/openapi/treasury.yaml as canonical
-       for internal tooling, but it is NOT served from the marketing
-       site. If a second public spec is added later, restore the tab
-       layout here. -->
+       Internal operator APIs are intentionally not served from the
+       marketing site. The public docs expose only merchant-facing
+       gateway APIs. If a second public spec is added later, restore
+       the tab layout here. -->
   <div class="bg-white border-b border-slate-200 spec-switcher-sticky">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center gap-1 overflow-x-auto">
@@ -151,7 +168,7 @@
         <div class="flex items-center gap-2 flex-wrap justify-center text-sm">
           <a href="/" class="hover:text-white transition">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing.html" class="hover:text-white transition">Pricing</a>
+          <a href="/pricing" class="hover:text-white transition">Pricing</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition">Docs</a>
           <span class="text-slate-700">·</span>
@@ -183,11 +200,10 @@
   <script src="/assets/redoc.standalone.js"></script>
   <script>
     (function () {
-      // Only one public spec right now (gateway). The treasury spec
-      // was removed from the public surface 2026-05-12 — it's
-      // operator-internal, no merchant use case. ?spec=treasury in
-      // any old deep-link gets silently treated as ?spec=gateway so
-      // we don't 404 anyone who has the URL bookmarked.
+      // Only one public spec right now (gateway). Internal operator
+      // specs are intentionally not served from the marketing site.
+      // Legacy deep-links to non-public specs are treated as gateway
+      // so we don't 404 anyone who has the URL bookmarked.
       var specs = {
         gateway: {
           url: "/api/gateway.yaml?v=20260512b",

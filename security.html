@@ -7,6 +7,8 @@
   <meta name="description" content="ChainMore security contact, responsible-disclosure policy, safe-harbor language for security researchers, scope and reporting guidance.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://chainmore.io/security">
+  <link rel="alternate" hreflang="en" href="https://chainmore.io/security">
+  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/security">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/tailwind.css?v=20260512c">
   <style>
@@ -26,6 +28,24 @@
     .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
     .callout strong { color: #155e75; }
   </style>
+  <!-- SEO/AIO JSON-LD: security.html -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://chainmore.io/security#webpage",
+  "url": "https://chainmore.io/security",
+  "name": "Security & Responsible Disclosure | ChainMore",
+  "description": "ChainMore security contact, responsible-disclosure policy, safe-harbor language, scope, and reporting guidance.",
+  "isPartOf": {
+    "@id": "https://chainmore.io/#website"
+  },
+  "publisher": {
+    "@id": "https://chainmore.io/#organization"
+  },
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body class="bg-white text-slate-700">
 
@@ -90,9 +110,9 @@
       <h2>Scope</h2>
       <h3>In scope</h3>
       <ul>
-        <li><code>chainmore.io</code> and <code>www.chainmore.io</code> (marketing site)</li>
+        <li><code>chainmore.io</code> (marketing site, including canonical host redirects)</li>
         <li><code>app.chainmore.io</code> (Merchant Dashboard)</li>
-        <li><code>treasury.chainmore.io</code> (Treasury Engine Dashboard, operator-internal; in scope for security findings only)</li>
+        <li><code>treasury.chainmore.io</code> (operator dashboard; in scope for security findings only)</li>
         <li><code>api.chainmore.io</code> (Payment Orchestration Gateway API)</li>
         <li><code>auth.chainmore.io</code> (OIDC identity provider)</li>
         <li>Any sub-domain of <code>chainmore.io</code> not explicitly listed as out-of-scope</li>
@@ -147,9 +167,9 @@
         <div class="flex items-center gap-2">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
-          <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
+          <a href="/status" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition text-sm">Docs</a>
           <span class="text-slate-700">·</span>

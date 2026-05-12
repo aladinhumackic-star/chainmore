@@ -6,9 +6,11 @@
   <title>System Status | ChainMore</title>
   <meta name="description" content="ChainMore real-time operational status, active incidents, and 90-day incident history. Hosted independently of the primary production stack.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.chainmore.io/status.html">
+  <link rel="canonical" href="https://chainmore.io/status">
+  <link rel="alternate" hreflang="en" href="https://chainmore.io/status">
+  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/status">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.chainmore.io/status.html">
+  <meta property="og:url" content="https://chainmore.io/status">
   <meta property="og:title" content="System Status | ChainMore">
   <meta property="og:description" content="ChainMore real-time operational status, active incidents, and 90-day incident history.">
   <meta property="og:site_name" content="ChainMore">
@@ -48,6 +50,24 @@
     .timeline { border-left: 2px solid #e2e8f0; padding-left: 1.25rem; margin-left: 0.25rem; }
     .timeline-empty { color: #64748b; font-style: italic; padding: 1.25rem; background: #f8fafc; border-radius: 0.5rem; border: 1px dashed #cbd5e1; }
   </style>
+  <!-- SEO/AIO JSON-LD: status.html -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://chainmore.io/status#webpage",
+  "url": "https://chainmore.io/status",
+  "name": "System Status | ChainMore",
+  "description": "ChainMore operational status and incident history for public surfaces.",
+  "isPartOf": {
+    "@id": "https://chainmore.io/#website"
+  },
+  "publisher": {
+    "@id": "https://chainmore.io/#organization"
+  },
+  "inLanguage": "en"
+}
+  </script>
 </head>
 <body class="bg-white text-slate-700">
 
@@ -69,9 +89,9 @@
       </a>
       <nav class="hidden md:flex items-center gap-8 text-sm">
         <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
-        <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
+        <a href="/pricing" class="text-slate-300 hover:text-white transition">Pricing</a>
         <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
-        <a href="/status.html" class="text-white font-medium">Status</a>
+        <a href="/status" class="text-white font-medium">Status</a>
       </nav>
       <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
     </div>
@@ -216,9 +236,9 @@
         <div class="flex items-center gap-2 flex-wrap justify-center">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
-          <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
+          <a href="/status" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition text-sm">Docs</a>
           <span class="text-slate-700">·</span>

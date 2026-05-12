@@ -6,15 +6,17 @@
   <title>ChainMore | Cross-Rail Payment Orchestration</title>
   <meta name="description" content="Web3 payments, Web2 checkout. Your customer pays like with a card. Cross-rail payment orchestration by Chainmore OÜ, Tallinn, Estonia.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.chainmore.io/">
+  <link rel="canonical" href="https://chainmore.io/">
+  <link rel="alternate" hreflang="en" href="https://chainmore.io/">
+  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.chainmore.io/">
+  <meta property="og:url" content="https://chainmore.io/">
   <meta property="og:title" content="ChainMore | Cross-Rail Payment Orchestration">
   <meta property="og:description" content="Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
-  <meta property="og:image" content="https://www.chainmore.io/assets/og-image.png">
+  <meta property="og:image" content="https://chainmore.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
@@ -23,7 +25,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ChainMore | Cross-Rail Payment Orchestration">
   <meta name="twitter:description" content="Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.">
-  <meta name="twitter:image" content="https://www.chainmore.io/assets/og-image.png">
+  <meta name="twitter:image" content="https://chainmore.io/assets/og-image.png">
   <meta name="twitter:image:alt" content="ChainMore — Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
@@ -33,20 +35,156 @@
     Register entry), keep them in sync if the registered details
     ever change.
   -->
+  <!-- SEO/AIO JSON-LD: Organization WebSite SoftwareApplication Service FAQPage -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with automatic failover.", "foundingDate": "2026", "address": {
-      "@type": "PostalAddress", "streetAddress": "Kotkapoja tn 2a-10", "postalCode": "10615", "addressLocality": "Tallinn", "addressCountry": "EE"
-    }, "identifier": {
-      "@type": "PropertyValue", "propertyID": "Estonian Commercial Register (Registrikood)", "value": "17448638"
-    }, "contactPoint": [
-      {
-        "@type": "ContactPoint", "contactType": "customer support", "email": "support@chainmore.io", "availableLanguage": ["English", "German"]
-      }, {
-        "@type": "ContactPoint", "contactType": "security", "email": "security@chainmore.io", "url": "https://chainmore.io/security"
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://chainmore.io/#organization",
+      "name": "ChainMore",
+      "legalName": "Chainmore OÜ",
+      "url": "https://chainmore.io/",
+      "logo": "https://chainmore.io/favicon.svg",
+      "description": "ChainMore is non-custodial Cross-Rail Payment Orchestration for merchants whose customers need a familiar checkout across card, bank, and stablecoin rails.",
+      "foundingDate": "2026",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Kotkapoja tn 2a-10",
+        "addressLocality": "Tallinn",
+        "postalCode": "10615",
+        "addressCountry": "EE"
+      },
+      "email": "support@chainmore.io",
+      "sameAs": []
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://chainmore.io/#website",
+      "url": "https://chainmore.io/",
+      "name": "ChainMore",
+      "publisher": {
+        "@id": "https://chainmore.io/#organization"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://chainmore.io/#software",
+      "name": "ChainMore",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "url": "https://chainmore.io/",
+      "description": "Cross-Rail Payment Orchestration that turns complex card, bank, and stablecoin payment flows into one familiar checkout and one clean merchant record.",
+      "publisher": {
+        "@id": "https://chainmore.io/#organization"
+      },
+      "featureList": [
+        "Web2 checkout experience for stablecoin and fiat payment flows",
+        "Cross-rail routing across card, bank, and stablecoin rails",
+        "Non-custodial payment orchestration",
+        "Custom merchant receive preferences",
+        "Cleaner reconciliation and payment records",
+        "Discovery-led custom pricing"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "url": "https://chainmore.io/pricing",
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "priceCurrency": "EUR",
+          "description": "Custom pricing per merchant flow. Provider costs are passed through at cost unless agreed otherwise."
+        }
       }
-    ], "areaServed": "EU"
-  }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://chainmore.io/#service",
+      "name": "Cross-Rail Payment Orchestration",
+      "serviceType": "Payment orchestration middleware",
+      "provider": {
+        "@id": "https://chainmore.io/#organization"
+      },
+      "areaServed": "Global",
+      "audience": {
+        "@type": "BusinessAudience",
+        "audienceType": "Merchants with complex payment flows"
+      },
+      "description": "ChainMore makes card, bank, and stablecoin payment complexity feel like one checkout for customers and one clean payment record for merchants."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://chainmore.io/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What does ChainMore do?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ChainMore is Cross-Rail Payment Orchestration. It gives customers a familiar Web2 checkout while routing payments across card, bank, and stablecoin rails according to the merchant's receive preferences and business logic."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What problem does ChainMore solve for customers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ChainMore keeps wallet connection, network choice, gas, and stablecoin complexity out of the checkout experience. The customer sees a familiar payment flow, pays once, and finishes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What problem does ChainMore solve for merchants?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Merchants get one integration for complex payment flows, more completed payment journeys, cleaner reconciliation, and less support work around stuck or unclear payments."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is ChainMore custodial?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. ChainMore is non-custodial payment-orchestration middleware. Merchant funds and customer funds are not held by ChainMore."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does ChainMore replace my acquirer or PSP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. ChainMore is an orchestration layer. It can route to card processors, bank rails, stablecoin providers, and other rails when they are the right path for a given merchant flow."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can customers pay with stablecoins?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. ChainMore is designed to make stablecoin payment feel like a familiar checkout instead of a crypto flow. Supported assets and chains are configured per merchant after discovery and onboarding."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does pricing work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Pricing is custom per merchant flow. ChainMore charges for the platform layer, while provider costs such as PSP fees, banking fees, gas, issuer fees, and other rail costs are passed through at cost unless a signed agreement says otherwise."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do merchants get started?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The next step is a discovery call. ChainMore reviews the merchant's payment methods, regions, settlement preferences, volume, and operating requirements before proposing the right commercial shape."
+          }
+        }
+      ]
+    }
+  ]
+}
   </script>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
   <link rel="stylesheet" href="/tailwind.css?v=20260512c">
@@ -1008,7 +1146,7 @@
         </div>
 
         <!-- Pricing Link -->
-        <a href="/pricing.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Pricing</a>
+        <a href="/pricing" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Pricing</a>
 
         <!-- API Docs Link -->
         <a href="/docs.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Docs</a>
@@ -1098,7 +1236,7 @@
       <div class="flex flex-col gap-2 px-4 py-6">
         <a href="#how-it-works" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Platform</a>
         <a href="#solutions" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Solutions</a>
-        <a href="/pricing.html" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Pricing</a>
+        <a href="/pricing" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Pricing</a>
         <a href="#developers" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Developers</a>
         <a href="/docs.html" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">API Docs</a>
         <a href="#contact" class="bg-[#00D4FF] text-slate-900 px-5 py-3 rounded-full font-semibold text-center mt-4 flex items-center justify-center gap-2">
@@ -2549,7 +2687,7 @@
             <a href="mailto:support@chainmore.io?subject=Custom%20pricing%20inquiry&body=Hi%20ChainMore%2C%0A%0AI%27d%20like%20to%20discuss%20custom%20pricing.%0A%0A-%20Company%3A%20%0A-%20Approximate%20monthly%20volume%3A%20%0A-%20Payment%20methods%20in%20scope%3A%20%0A-%20Settlement%20outcomes%20needed%3A%20%0A-%20Regions%3A%20%0A-%20Timeline%3A%20%0A%0AThanks%21" class="inline-flex items-center justify-center bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-400 transition shadow-lg shadow-cyan-500/30 whitespace-nowrap">
               Talk to us
             </a>
-            <a href="/pricing.html" class="inline-flex items-center justify-center bg-white/10 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/15 transition whitespace-nowrap">
+            <a href="/pricing" class="inline-flex items-center justify-center bg-white/10 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/15 transition whitespace-nowrap">
               How pricing works
             </a>
           </div>
@@ -2833,7 +2971,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
           <div class="space-y-3 text-sm">
             <div><a href="#how-it-works" class="hover:text-white transition">How It Works</a></div>
             <div><a href="#solutions" class="hover:text-white transition">Solutions</a></div>
-            <div><a href="/pricing.html" class="hover:text-white transition">Pricing</a></div>
+            <div><a href="/pricing" class="hover:text-white transition">Pricing</a></div>
             <div><a href="#developers" class="hover:text-white transition">Developers</a></div>
             <div><a href="/docs.html" class="hover:text-white transition">API Docs</a></div>
           </div>

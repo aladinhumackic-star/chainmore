@@ -15,4 +15,4 @@ Disallow: /thank-you-demo.html
 # Internal Edge Function endpoints — not user-facing pages
 Disallow: /api/
 
-Sitemap: https://www.chainmore.io/sitemap.xml
+Sitemap: https://chainmore.io/sitemap.xml

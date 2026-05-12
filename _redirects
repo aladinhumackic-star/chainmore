@@ -12,13 +12,17 @@
 /docs            /docs.html             200
 /cctp-explainer  /cctp-explainer.html   200
 /demo            /demo.html             200
+/pricing         /pricing.html          200
 
-# Treasury OpenAPI spec was pulled from the public surface 2026-05-12.
-# It is operator-internal — no merchant use case, exposed internal
-# architecture. Source of truth remains api/openapi/treasury.yaml in
-# the monorepo for internal tooling. Anyone hitting the public path
-# (cached bookmark, old marketing copy, scraper) gets a 410 Gone so
-# they don't treat it as "temporarily missing".
+# Canonical host. Keep the public surface on the bare domain so every
+# canonical, sitemap, Open Graph URL, and AI-readable file points at one
+# entity.
+https://www.chainmore.io/*  https://chainmore.io/:splat  301!
+
+# A previously exposed non-public API spec was pulled from the public
+# surface 2026-05-12. Anyone hitting the old public path (cached
+# bookmark, old marketing copy, scraper) gets a 410 Gone so they don't
+# treat it as "temporarily missing".
 #
 # Netlify _redirects requires a destination URL even for status-only
 # responses. Send to /404.html with explicit 410 status — the body
