@@ -72,9 +72,9 @@
         </a>
         <div class="ml-auto hidden md:flex items-center gap-3 text-xs text-slate-500 py-3">
           <span>Raw spec:</span>
-          <a id="raw-gateway" href="/api/gateway.yaml" class="text-cyan-600 hover:underline">gateway.yaml</a>
+          <a id="raw-gateway" href="/api/gateway.yaml?v=20260512b" class="text-cyan-600 hover:underline">gateway.yaml</a>
           <span class="text-slate-300">·</span>
-          <a id="raw-treasury" href="/api/treasury.yaml" class="text-cyan-600 hover:underline">treasury.yaml</a>
+          <a id="raw-treasury" href="/api/treasury.yaml?v=20260512b" class="text-cyan-600 hover:underline">treasury.yaml</a>
         </div>
       </div>
     </div>
@@ -121,11 +121,11 @@
       // and let the same query string drive the switcher.
       var specs = {
         gateway: {
-          url: "/api/gateway.yaml",
+          url: "/api/gateway.yaml?v=20260512b",
           tabId: "tab-gateway",
         },
         treasury: {
-          url: "/api/treasury.yaml",
+          url: "/api/treasury.yaml?v=20260512b",
           tabId: "tab-treasury",
         },
       };

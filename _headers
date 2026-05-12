@@ -80,7 +80,7 @@
   # at all; the directive is permissive only where there is nothing
   # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
   # changes.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-OaqrmoQg3cz1NijUm1BPp3G2/v3RV9Kp9S1ckooXyF4=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-NUDKdXvwrlkCCQeLQrzJqaJFr1zx30ZOPCeyg/TqfSQ=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
   # X-Frame-Options DENY — legacy header; modern browsers prefer
@@ -177,11 +177,15 @@
 
 # OpenAPI specs served from /api/*.yaml. Pin Content-Type so Redoc
 # (and any other fetcher) parses them as YAML, not as text/plain or
-# application/octet-stream. Short cache so a spec re-freeze
-# propagates within an hour without a forced reload.
+# application/octet-stream. Cache-Control: 60s + must-revalidate.
+# We learned the hard way (2026-05-12) that 3600s edge-cache makes a
+# bad-YAML release look unfixed for an hour while Netlify keeps serving
+# the broken spec. docs.html cache-busts via ?v=… on the URL anyway,
+# so any short max-age is fine; 60s is a compromise between "broken
+# spec heals fast" and "no per-request load on origin".
 /api/*.yaml
   Content-Type: application/yaml; charset=utf-8
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=60, must-revalidate
 
 # Redoc bundle. Self-hosted at /assets/redoc.standalone.js so the
 # strict CSP (script-src 'self') can render the public docs at /docs
