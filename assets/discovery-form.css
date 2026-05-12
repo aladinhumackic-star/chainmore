@@ -54,11 +54,17 @@
 }
 
 /* ── Header ───────────────────────────────────────────────────────── */
+/* Sticky so the brand-cyan logo + back-to-home affordance stay
+   reachable on the form/thank-you/404 pages. z-50 matches the
+   tailwind sticky-header convention used elsewhere. */
 .df-header {
   background: var(--df-slate-900-a40);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--df-slate-800);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 .df-header__inner {
   max-width: 1200px;
