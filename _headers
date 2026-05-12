@@ -212,5 +212,10 @@
 # When ReDoc ships a CSP-nonce-aware build, this override can be
 # replaced with a nonce-based rule. See:
 #   https://github.com/Redocly/redoc/issues/1408
+#
+# Note: Chrome enforces `style-src-elem` independently of `style-src`
+# even though the spec says fallback should apply. Both `style-src`
+# and `style-src-elem` must include `'unsafe-inline'` for ReDoc's
+# styled-components runtime <style> injection to work.
 /docs.html
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-OaqrmoQg3cz1NijUm1BPp3G2/v3RV9Kp9S1ckooXyF4=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-8yiyZEox8CxR9dO7WBLm4Ra7x3cIgKA5Na6yuUVr6II=' 'sha256-E0ccJZZFWyptV9unZRPYxJMeGyc6oZv/kaISWkLPL+E=' 'sha256-OaqrmoQg3cz1NijUm1BPp3G2/v3RV9Kp9S1ckooXyF4=' 'sha256-W2JUEHZyy3W+V5VfZyTiYdrJrEih05UDo+0kyJchLfM=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0='; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
