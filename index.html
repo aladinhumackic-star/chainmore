@@ -20,13 +20,13 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:alt" content="ChainMore — Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
+  <meta property="og:image:alt" content="ChainMore | Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ChainMore | Cross-Rail Payment Orchestration">
   <meta name="twitter:description" content="Your customer pays like with a card. Stablecoin, networks, and gas stay out of sight. No wrong network. No abandoned crypto flow.">
   <meta name="twitter:image" content="https://chainmore.io/assets/og-image.png">
-  <meta name="twitter:image:alt" content="ChainMore — Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
+  <meta name="twitter:image:alt" content="ChainMore | Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
     knowledge-panel correctly (legal name + jurisdiction + contact)
@@ -769,11 +769,11 @@
 <!-- overflow-x-hidden removed from <body> on 2026-05-12: setting
      overflow-x:hidden implicitly forces overflow-y:auto in the same
      element (CSS spec), making body the scroll container while its
-     height equals scrollHeight — so window.scrollTo, element.scroll-
+     height equals scrollHeight, so window.scrollTo, element.scroll-
      IntoView, and even native anchor href="#contact" links all stayed
      at y=0. Browser-verified live: every CTA on the page (Get started,
      Talk to our team, all nav #anchor jumps) was a dead click. The
-     horizontal-overflow defense it provided is now redundant — every
+     horizontal-overflow defense it provided is now redundant; every
      section that previously needed clipping (#payment-demo, hero
      gradient, phone mockup) already has its own overflow:hidden on
      the section/wrapper. -->
@@ -3177,7 +3177,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     // remains as a tombstone so a future reader does not reintroduce
     // the broken block by accident.
 
-    // Anchor-link scroll. behavior:'instant' is REQUIRED here —
+    // Anchor-link scroll. behavior:'instant' is REQUIRED here:
     // 'smooth' and 'auto' both fail on this page over long distances
     // (~7000 px to #contact) because the page declares
     //   html { scroll-behavior: smooth }
@@ -3729,7 +3729,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
   selectOutput('stablecoin');
 })();
 </script>
-<!-- ChainMore Concierge widget — vanilla JS, same-origin asset. -->
+<!-- ChainMore Concierge widget: vanilla JS, same-origin asset. -->
 <script src="/assets/concierge-widget.js" defer></script>
 </body>
 </html>

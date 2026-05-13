@@ -21,15 +21,15 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:alt" content="ChainMore — Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
+  <meta property="og:image:alt" content="ChainMore | Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Book a Discovery Call | ChainMore">
   <meta name="twitter:description" content="Tell us about your payment flow. We'll review and respond within one business day.">
   <meta name="twitter:image" content="https://chainmore.io/assets/og-image.png">
-  <meta name="twitter:image:alt" content="ChainMore — Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
+  <meta name="twitter:image:alt" content="ChainMore | Cross-Rail Payment Orchestration. Web3 payments, Web2 checkout.">
 
   <!-- Self-contained stylesheet. Lives under /assets/, covered by the
-       CSP style-src 'self' directive — no inline-style hash to maintain.
+       CSP style-src 'self' directive: no inline-style hash to maintain.
        See marketing/site/assets/discovery-form.css for the full rationale. -->
   <link rel="stylesheet" href="/assets/discovery-form.css">
   <!-- SEO/AIO JSON-LD: demo.html -->
@@ -79,17 +79,17 @@
         <span class="df-eyebrow">Discovery Call</span>
         <h1 class="df-title">Tell us about your payment flow</h1>
         <p class="df-subtitle">
-          A 30-minute call where we walk through your specific corridors, rails, and settlement preferences — and confirm whether ChainMore is the right fit before any contract conversation.
+          A 30-minute call where we walk through your specific corridors, rails, and settlement preferences, then confirm whether ChainMore is the right fit before any contract conversation.
         </p>
       </div>
 
       <div class="df-card">
         <!--
           Netlify Forms wiring:
-            - name="discovery-call" — identifier in the Netlify dashboard
-            - data-netlify="true" — opts the form into Netlify form-handling
-            - netlify-honeypot="bot-field" — bots fill it, Netlify drops those
-            - action="/thank-you-demo.html" — branded post-submit page
+            - name="discovery-call" : identifier in the Netlify dashboard
+            - data-netlify="true" : opts the form into Netlify form-handling
+            - netlify-honeypot="bot-field" : bots fill it, Netlify drops those
+            - action="/thank-you-demo.html" : branded post-submit page
           The hidden input form-name is required for some build paths.
         -->
         <form
@@ -134,9 +134,9 @@
               <select class="df-select" id="df-volume" name="monthly_volume" required>
                 <option value="" disabled selected>Select a range</option>
                 <option value="under_250k">Under $250K</option>
-                <option value="250k_1m">$250K – $1M</option>
-                <option value="1m_10m">$1M – $10M</option>
-                <option value="10m_50m">$10M – $50M</option>
+                <option value="250k_1m">$250K - $1M</option>
+                <option value="1m_10m">$1M - $10M</option>
+                <option value="10m_50m">$10M - $50M</option>
                 <option value="over_50m">Over $50M</option>
                 <option value="not_yet">Not live yet</option>
               </select>
@@ -173,7 +173,7 @@
             <div class="df-field df-field--full">
               <label class="df-field__label" for="df-flow">Tell us about your flow</label>
               <textarea class="df-textarea" id="df-flow" name="flow_context" rows="5" maxlength="2000" placeholder="What's driving you to look right now? What's the current stack? Anything we should know before the call?"></textarea>
-              <p class="df-field__help">Optional — but the more context you share, the sharper the call will be.</p>
+              <p class="df-field__help">Optional, but the more context you share, the sharper the call will be.</p>
             </div>
 
           </div>
@@ -189,7 +189,7 @@
       </div>
 
       <div class="df-aside">
-        Have a quick question first? Open the <span class="df-aside__highlight">ChainMore Concierge</span> in the bottom-right — answers about how rails are routed, what's covered, and how integration fits.
+        Have a quick question first? Open the <span class="df-aside__highlight">ChainMore Concierge</span> in the bottom-right. It answers about how rails are routed, what's covered, and how integration fits.
       </div>
 
     </div>

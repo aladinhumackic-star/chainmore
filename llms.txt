@@ -8,13 +8,13 @@ ChainMore is operated by Chainmore OÜ in Tallinn, Estonia. It is non-custodial 
 
 ## Primary Pages
 
-- [Homepage](https://chainmore.io/) — product category, customer outcome, and merchant benefit.
-- [Pricing](https://chainmore.io/pricing) — custom quote posture; no public fixed rate card.
-- [Discovery Call](https://chainmore.io/demo) — merchant intake for payment-flow review.
-- [Developer Docs](https://chainmore.io/docs) — merchant-facing Gateway API reference.
-- [USDC Cross-Chain Explainer](https://chainmore.io/cctp-explainer) — technical trust page for the USDC rail.
-- [Security](https://chainmore.io/security) — responsible disclosure and security contact.
-- [Status](https://chainmore.io/status) — public operational status.
+- [Homepage](https://chainmore.io/): product category, customer outcome, and merchant benefit.
+- [Pricing](https://chainmore.io/pricing): custom quote posture; no public fixed rate card.
+- [Discovery Call](https://chainmore.io/demo): merchant intake for payment-flow review.
+- [Developer Docs](https://chainmore.io/docs): merchant-facing Gateway API reference.
+- [USDC Cross-Chain Explainer](https://chainmore.io/cctp-explainer): technical trust page for the USDC rail.
+- [Security](https://chainmore.io/security): responsible disclosure and security contact.
+- [Status](https://chainmore.io/status): public operational status.
 
 ## What ChainMore Does
 

@@ -6,13 +6,13 @@ Disallow: /DEPLOY.sh
 Disallow: /MARKETING_SITE_FIXES.md
 Disallow: /README.md
 
-# Post-submit confirmation pages — only reached after a form
+# Post-submit confirmation pages: only reached after a form
 # submission, no value indexed. The pages also carry
 # <meta name="robots" content="noindex, follow"> as belt-and-braces.
 Disallow: /thank-you.html
 Disallow: /thank-you-demo.html
 
-# Internal Edge Function endpoints — not user-facing pages
+# Internal Edge Function endpoints: not user-facing pages
 Disallow: /api/
 
 Sitemap: https://chainmore.io/sitemap.xml
