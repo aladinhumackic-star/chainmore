@@ -8,17 +8,20 @@
   <meta name="robots" content="noindex, follow">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <!-- Same self-contained stylesheet that powers /demo and
-       /thank-you-demo. Avoids the Tailwind-purge gap that previously
-       left this page rendering white-on-white. -->
-  <link rel="stylesheet" href="/assets/discovery-form.css">
+  <link rel="stylesheet" href="/tailwind.css">
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); }
+    .grid-dot { background-image: radial-gradient(rgba(0, 217, 255, 0.07) 1px, transparent 1px); background-size: 24px 24px; }
+  </style>
 </head>
-<body class="df-body">
+<body class="text-slate-200 min-h-screen flex flex-col grid-dot">
 
-  <header class="df-header">
-    <div class="df-header__inner">
-      <a href="/" class="df-logo">
-        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Header -->
+  <header class="bg-slate-900/40 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
           <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
           <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
@@ -26,54 +29,62 @@
           <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
           <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
         </svg>
-        <span class="df-logo__text">
-          <span class="df-logo__text--white">Chain</span><span class="df-logo__text--cyan">More</span>
+        <span class="text-lg font-bold tracking-tight">
+          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
         </span>
       </a>
-      <a href="/" class="df-header__back">← Back to homepage</a>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
     </div>
   </header>
 
-  <main class="df-main df-main--centered">
-    <div class="df-container df-container--narrow">
-
-      <span class="df-eyebrow">Routing failed</span>
-      <h1 class="df-title">No route matched this request</h1>
-      <p class="df-subtitle">
+  <!-- Body -->
+  <main class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16">
+    <div class="max-w-xl text-center">
+      <div class="text-[#00D9FF] font-mono text-sm tracking-widest uppercase mb-4">Routing failed</div>
+      <h1 class="text-5xl sm:text-6xl font-bold tracking-tight text-white mb-4">404</h1>
+      <p class="text-xl text-slate-300 mb-3">No route matched this request.</p>
+      <p class="text-slate-400 mb-10">
         The URL you opened doesn't point at a live page. It may have been moved, the link may be stale, or someone may have typo'd a path.
       </p>
 
-      <div class="df-actions df-actions--top">
-        <a href="/" class="df-btn-secondary">Go to homepage</a>
-        <a href="/security" class="df-btn-primary">Report a security issue</a>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+        <a href="/" class="inline-flex items-center justify-center px-5 py-2.5 rounded-md bg-[#00D9FF] text-slate-900 font-medium hover:bg-[#00bfe6] transition">
+          Go to homepage
+        </a>
+        <a href="/security" class="inline-flex items-center justify-center px-5 py-2.5 rounded-md border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition">
+          Report a security issue
+        </a>
       </div>
 
-      <p class="df-followup">
-        If you believe this is a broken link on chainmore.io, please email
-        <a href="mailto:support@chainmore.io?subject=Broken%20link%20on%20chainmore.io">support@chainmore.io</a>
-        with the URL you tried.
-      </p>
+      <div class="text-sm text-slate-500">
+        <p class="mb-2">If you believe this is a broken link on chainmore.io, please email
+          <a href="mailto:support@chainmore.io" class="text-[#00D9FF] hover:text-white transition">support@chainmore.io</a>
+          with the URL you tried.</p>
+      </div>
     </div>
   </main>
 
-  <footer class="df-footer">
-    <div class="df-footer__inner">
-      <div class="df-footer__links">
-        <a href="/">← Home</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/legal/impressum.html">Legal Notice</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/legal/datenschutz.html">Privacy Policy</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/legal/agb.html">Terms</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/legal/sub-processors.html">Sub-Processors</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/legal/dpa.html">DPA</a>
-        <span class="df-footer__sep">·</span>
-        <a href="/security">Security</a>
+  <!-- Footer -->
+  <footer class="bg-slate-950/60 backdrop-blur border-t border-slate-800 text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+          <a href="/" class="hover:text-white transition text-sm">← Home</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/impressum.html" class="hover:text-white transition text-sm">Legal Notice</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/datenschutz.html" class="hover:text-white transition text-sm">Privacy Policy</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/agb.html" class="hover:text-white transition text-sm">Terms</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/sub-processors.html" class="hover:text-white transition text-sm">Sub-Processors</a>
+          <span class="text-slate-700">·</span>
+          <a href="/legal/dpa.html" class="hover:text-white transition text-sm">DPA</a>
+          <span class="text-slate-700">·</span>
+          <a href="/security" class="hover:text-white transition text-sm">Security</a>
+        </div>
+        <div class="text-sm">© 2026 Chainmore OÜ · Patent pending</div>
       </div>
-      <div class="df-footer__copyright">© 2026 Chainmore OÜ · Patent pending</div>
     </div>
   </footer>
 

@@ -4,20 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>System Status | ChainMore</title>
-  <meta name="description" content="ChainMore real-time operational status, active incidents, and 90-day incident history. Hosted independently of the primary production stack.">
+  <meta name="description" content="ChainMore operational status, active incidents, and 90-day incident history. Hosted independently of the primary production stack.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://chainmore.io/status">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/status">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/status">
+  <link rel="canonical" href="https://www.chainmore.io/status.html">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://chainmore.io/status">
+  <meta property="og:url" content="https://www.chainmore.io/status.html">
   <meta property="og:title" content="System Status | ChainMore">
-  <meta property="og:description" content="ChainMore real-time operational status, active incidents, and 90-day incident history.">
+  <meta property="og:description" content="ChainMore operational status, active incidents, and 90-day incident history.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     html { scroll-behavior: smooth; }
@@ -50,24 +48,6 @@
     .timeline { border-left: 2px solid #e2e8f0; padding-left: 1.25rem; margin-left: 0.25rem; }
     .timeline-empty { color: #64748b; font-style: italic; padding: 1.25rem; background: #f8fafc; border-radius: 0.5rem; border: 1px dashed #cbd5e1; }
   </style>
-  <!-- SEO/AIO JSON-LD: status.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://chainmore.io/status#webpage",
-  "url": "https://chainmore.io/status",
-  "name": "System Status | ChainMore",
-  "description": "ChainMore operational status and incident history for public surfaces.",
-  "isPartOf": {
-    "@id": "https://chainmore.io/#website"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
@@ -89,9 +69,9 @@
       </a>
       <nav class="hidden md:flex items-center gap-8 text-sm">
         <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
-        <a href="/pricing" class="text-slate-300 hover:text-white transition">Pricing</a>
+        <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
         <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
-        <a href="/status" class="text-white font-medium">Status</a>
+        <a href="/status.html" class="text-white font-medium">Status</a>
       </nav>
       <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
     </div>
@@ -102,7 +82,7 @@
     <article class="status-prose">
       <div class="text-cyan-500 font-semibold text-sm uppercase tracking-wider mb-2">System status</div>
       <h1>Operational state, in plain sight.</h1>
-      <p class="text-slate-500 mb-8">Real-time service status, active incidents, and 90-day history. Hosted on infrastructure independent of the primary production stack so an outage of the stack does not take this page down with it.</p>
+      <p class="text-slate-500 mb-8">Current service status, active incidents, and 90-day history. Hosted on infrastructure independent of the primary production stack so an outage of the stack does not take this page down with it.</p>
 
       <!-- Overall banner -->
       <!--
@@ -134,7 +114,7 @@
 
       <!-- Service status -->
       <h2>Services</h2>
-      <p>The five customer-touching surfaces and their current state. Pre-launch surfaces are listed so you can see the rollout map at a glance.</p>
+      <p>The public ChainMore surfaces and their current state. Pre-launch surfaces are listed so you can see the rollout map at a glance.</p>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-4">
         <div class="overflow-x-auto">
@@ -158,13 +138,7 @@
                 <td class="svc-name">Merchant dashboard</td>
                 <td class="svc-uri">app.chainmore.io</td>
                 <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
-                <td>Production deploy not yet scheduled. Local stack via <code>make dashboard-up</code>.</td>
-              </tr>
-              <tr>
-                <td class="svc-name">Treasury dashboard</td>
-                <td class="svc-uri">treasury.chainmore.io</td>
-                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
-                <td>Operator-internal surface, deployed alongside merchant dashboard.</td>
+                <td>Production deploy not yet scheduled. Local development runs from the ChainMore app stack.</td>
               </tr>
               <tr>
                 <td class="svc-name">Gateway API</td>
@@ -236,9 +210,9 @@
         <div class="flex items-center gap-2 flex-wrap justify-center">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
-          <a href="/status" class="hover:text-white transition text-sm">Status</a>
+          <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition text-sm">Docs</a>
           <span class="text-slate-700">·</span>

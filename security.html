@@ -7,10 +7,8 @@
   <meta name="description" content="ChainMore security contact, responsible-disclosure policy, safe-harbor language for security researchers, scope and reporting guidance.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://chainmore.io/security">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/security">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/security">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     html { scroll-behavior: smooth; }
@@ -28,29 +26,11 @@
     .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
     .callout strong { color: #155e75; }
   </style>
-  <!-- SEO/AIO JSON-LD: security.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://chainmore.io/security#webpage",
-  "url": "https://chainmore.io/security",
-  "name": "Security & Responsible Disclosure | ChainMore",
-  "description": "ChainMore security contact, responsible-disclosure policy, safe-harbor language, scope, and reporting guidance.",
-  "isPartOf": {
-    "@id": "https://chainmore.io/#website"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
   <!-- Header -->
-  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
+  <header class="bg-slate-900 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -82,7 +62,7 @@
       <h2>Reporting a vulnerability</h2>
       <p>Email <a href="mailto:security@chainmore.io">security@chainmore.io</a> with:</p>
       <ul>
-        <li>A clear description of the issue and the affected ChainMore surface (marketing site, merchant dashboard, treasury dashboard, gateway API, Keycloak realm).</li>
+        <li>A clear description of the issue and the affected ChainMore surface (marketing site, merchant dashboard, gateway API, Keycloak realm).</li>
         <li>Steps to reproduce, including sample requests / screenshots / videos.</li>
         <li>Your assessment of impact (data exposure, privilege escalation, downtime, etc.).</li>
         <li>Whether you've shared this finding with anyone else.</li>
@@ -110,16 +90,16 @@
       <h2>Scope</h2>
       <h3>In scope</h3>
       <ul>
-        <li><code>chainmore.io</code> (marketing site, including canonical host redirects)</li>
+        <li><code>chainmore.io</code> and <code>www.chainmore.io</code> (marketing site)</li>
         <li><code>app.chainmore.io</code> (Merchant Dashboard)</li>
-        <li><code>treasury.chainmore.io</code> (operator dashboard; in scope for security findings only)</li>
         <li><code>api.chainmore.io</code> (Payment Orchestration Gateway API)</li>
         <li><code>auth.chainmore.io</code> (OIDC identity provider)</li>
-        <li>Any sub-domain of <code>chainmore.io</code> not explicitly listed as out-of-scope</li>
+        <li>Any public ChainMore-owned sub-domain of <code>chainmore.io</code> not explicitly listed as out-of-scope</li>
       </ul>
 
       <h3>Out of scope</h3>
       <ul>
+        <li>Internal-only systems and separately governed product surfaces unless ChainMore explicitly invites testing for that surface.</li>
         <li>Third-party services we use (Netlify, Keycloak upstream issues, please report to those vendors directly).</li>
         <li>Clickjacking, missing security-headers, or content-spoofing on pages without sensitive actions or authentication state.</li>
         <li>Self-XSS that requires a victim to paste payload into their own console.</li>
@@ -167,9 +147,9 @@
         <div class="flex items-center gap-2">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
-          <a href="/status" class="hover:text-white transition text-sm">Status</a>
+          <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition text-sm">Docs</a>
           <span class="text-slate-700">·</span>

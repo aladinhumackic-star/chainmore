@@ -4,104 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Developer Documentation | ChainMore</title>
-  <meta name="description" content="ChainMore public API reference. Gateway (merchant-facing) OpenAPI spec rendered with Redoc. Every route, request schema, and response shape in one place.">
+  <meta name="description" content="ChainMore public API reference for the merchant-facing Gateway API. Every route, request schema, and response shape, in one place.">
   <meta name="robots" content="index, follow">
-  <!-- Canonical: bare chainmore.io/docs (no www, no .html): that's the
-       deploy path under Netlify pretty-URLs. Previous value pointed at
-       chainmore.io/docs.html which is neither canonical nor reachable. -->
-  <link rel="canonical" href="https://chainmore.io/docs">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/docs">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/docs">
+  <link rel="canonical" href="https://www.chainmore.io/docs.html">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://chainmore.io/docs">
+  <meta property="og:url" content="https://www.chainmore.io/docs.html">
   <meta property="og:title" content="Developer Documentation | ChainMore">
-  <meta property="og:description" content="Gateway (merchant-facing) OpenAPI spec, every route documented.">
+  <meta property="og:description" content="Merchant-facing Gateway API documentation for ChainMore.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
-    /* scroll-padding-top is what makes browser-native anchor jumps land
-       below the sticky chrome (header 65px + sticky spec-tabs 49px =
-       114px). Without this every #operation anchor lands behind the
-       sticky stack. */
-    html { scroll-behavior: smooth; scroll-padding-top: 114px; }
-    /* Previously: .redoc-host { height: calc(100vh - 184px); min-height: 800px; }
-       That constrained Redoc into a fixed-height container which broke
-       in-page anchor scroll: Redoc's click handler called preventDefault
-       on the nav-item click and then targeted its OWN internal scroll
-       wrapper, which never actually scrolls because overflow:visible.
-       Net effect: hash updates, scrollY stays at 0.
-       Fix: let Redoc render in the document flow, body owns the scroll,
-       browser-native scroll-padding-top handles the sticky-header offset,
-       and the redoc.init scrollYOffset:114 matches it. */
-    #redoc-container { min-height: 70vh; }
-    /* Sidebar sits below the sticky header + sticky spec-tabs stack
-       (65+49=114). Redoc's own sticky top:0 doesn't know about our
-       chrome, so override. */
-    .menu-content { top: 114px !important; max-height: calc(100vh - 114px) !important; }
-    /* Redoc applies overflow:hidden + position:relative to .api-content
-       via styled-components. That makes .api-content the scroll context
-       for scrollIntoView, but it never actually scrolls (its height
-       equals its scrollHeight). Net effect: nav-item clicks update the
-       hash but the page doesn't move. Force overflow:visible so
-       scrollIntoView walks PAST api-content to the body/html scroll
-       context which DOES scroll. */
-    .api-content { overflow-y: visible !important; overflow-x: visible !important; }
-    /* Tailwind's prebuilt stylesheet doesn't include arbitrary-value
-       classes like top-[65px]. position:sticky needs a defined top
-       offset or it silently degrades to static; that's exactly what
-       made the spec-switcher non-sticky on the first deploy. Pin the
-       offset here in plain CSS so we don't depend on Tailwind picking
-       up `top-[65px]` from JIT scanning. 65 px = header content (32) +
-       py-4 padding (32) + 1 px border. */
-    .spec-switcher-sticky { position: sticky; top: 65px; z-index: 40; }
-    /* .sticky + .top-0 used to be redefined inline here because the
-       old hand-curated tailwind.css was missing them. Now ship from
-       the rebuilt tailwind.css (see scripts/build-tailwind.sh), so
-       the inline definitions are gone. */
-    /* Loading skeleton: Redoc bundle is ~940 KB, the YAML is ~128 KB,
-       parse takes 2-4 s on cold loads. Without a skeleton the page
-       flashes white and users wonder if it's broken. Replaced by Redoc
-       on mount. */
-    .redoc-skeleton { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; gap: 1rem; color: #64748b; }
-    .redoc-skeleton-spinner { width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #00bfe6; border-radius: 50%; animation: redoc-spin 0.8s linear infinite; }
-    @keyframes redoc-spin { to { transform: rotate(360deg); } }
+    html { scroll-behavior: smooth; }
+    /* Make Redoc fill the available space below the nav strip. The
+       redoc-container is fixed-height to support its own internal scroll
+       (TOC sidebar plus content pane). */
+    .redoc-host { height: calc(100vh - 184px); min-height: 800px; }
+    .redoc-host > div { height: 100%; }
     .spec-tab { transition: all 0.15s ease; }
     .spec-tab.active { color: #00bfe6; border-color: #00bfe6; }
     .spec-tab:hover { color: #00bfe6; }
-    /* Back-to-top FAB: page is ~77,000 px tall when every response is
-       expanded. Show after 800 px scroll, jump to top via JS. */
-    .back-to-top { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 44px; height: 44px; border-radius: 22px; background: #00bfe6; color: white; box-shadow: 0 8px 24px rgba(0,191,230,0.35); display: none; align-items: center; justify-content: center; z-index: 60; cursor: pointer; border: none; transition: background 0.15s ease, transform 0.15s ease; }
-    .back-to-top.visible { display: flex; }
-    .back-to-top:hover { background: #00a3c4; transform: translateY(-2px); }
-    .back-to-top:focus-visible { outline: 3px solid #67e8f9; outline-offset: 2px; }
   </style>
-  <!-- SEO/AIO JSON-LD: docs.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "@id": "https://chainmore.io/docs#article",
-  "headline": "ChainMore Developer Documentation",
-  "description": "Merchant-facing API documentation for ChainMore Gateway endpoints, request schemas, and response shapes.",
-  "url": "https://chainmore.io/docs",
-  "author": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "dateModified": "2026-05-12",
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
-  <!-- Header: sticky top, 65 px tall (py-4 + content). -->
+  <!-- Header -->
   <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
@@ -117,48 +47,36 @@
           <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
         </span>
       </a>
-      <!-- Single source of nav. Previously had a redundant "← Back to
-           homepage" link on the right that duplicated the logo-click +
-           the "Solutions" entry. Removed (#11). -->
       <nav class="hidden md:flex items-center gap-8 text-sm">
         <a href="/#solutions" class="text-slate-300 hover:text-white transition">Solutions</a>
-        <a href="/pricing" class="text-slate-300 hover:text-white transition">Pricing</a>
+        <a href="/pricing.html" class="text-slate-300 hover:text-white transition">Pricing</a>
         <a href="/docs.html" class="text-white font-medium">Docs</a>
         <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
         <a href="/status.html" class="text-slate-300 hover:text-white transition">Status</a>
       </nav>
+      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
     </div>
   </header>
 
-  <!-- Spec switcher: sticky just under the header.
-       Internal operator APIs are intentionally not served from the
-       marketing site. The public docs expose only merchant-facing
-       gateway APIs. If a second public spec is added later, restore
-       the tab layout here. -->
-  <div class="bg-white border-b border-slate-200 spec-switcher-sticky">
+  <!-- Spec switcher -->
+  <div class="bg-white border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center gap-1 overflow-x-auto">
-        <span id="tab-gateway" class="spec-tab spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap active">
+        <a href="?spec=gateway" id="tab-gateway" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
           Gateway API
           <span class="text-xs font-normal text-slate-500">(merchant-facing)</span>
-        </span>
+        </a>
         <div class="ml-auto hidden md:flex items-center gap-3 text-xs text-slate-500 py-3">
           <span>Raw spec:</span>
-          <a id="raw-gateway" href="/api/gateway.yaml?v=20260512b" class="text-cyan-600 hover:underline">gateway.yaml</a>
+          <a id="raw-gateway" href="/api/gateway.yaml" class="text-cyan-600 hover:underline">gateway.yaml</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Redoc target. Inline skeleton shown until Redoc.init replaces the
-       container content. -->
-  <main>
-    <div id="redoc-container">
-      <div class="redoc-skeleton" role="status" aria-live="polite">
-        <div class="redoc-skeleton-spinner" aria-hidden="true"></div>
-        <div>Loading API reference…</div>
-      </div>
-    </div>
+  <!-- Redoc target -->
+  <main class="redoc-host">
+    <div id="redoc-container"></div>
   </main>
 
   <!-- Footer (compact, the docs page is dense and footer is rarely the focus) -->
@@ -168,7 +86,7 @@
         <div class="flex items-center gap-2 flex-wrap justify-center text-sm">
           <a href="/" class="hover:text-white transition">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition">Pricing</a>
           <span class="text-slate-700">·</span>
           <a href="/docs.html" class="hover:text-white transition">Docs</a>
           <span class="text-slate-700">·</span>
@@ -185,14 +103,6 @@
     </div>
   </footer>
 
-  <!-- Back-to-top FAB (#7). Hidden by default, JS toggles .visible
-       after scrollY > 800. Click → smooth-scroll to top. -->
-  <button id="back-to-top" class="back-to-top" aria-label="Back to top" type="button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 19V5M5 12l7-7 7 7"/>
-    </svg>
-  </button>
-
   <!-- Self-hosted Redoc bundle. Vendor JS is checked in at
        marketing/site/assets/redoc.standalone.js so the page stays
        compatible with our strict CSP (script-src 'self'); no third-
@@ -200,21 +110,21 @@
   <script src="/assets/redoc.standalone.js"></script>
   <script>
     (function () {
-      // Only one public spec right now (gateway). Internal operator
-      // specs are intentionally not served from the marketing site.
-      // Legacy deep-links to non-public specs are treated as gateway
-      // so we don't 404 anyone who has the URL bookmarked.
+      // Resolve which spec to render from ?spec=… (default: gateway).
+      // Public docs expose the merchant-facing Gateway API only.
       var specs = {
         gateway: {
-          url: "/api/gateway.yaml?v=20260512b",
+          url: "/api/gateway.yaml",
           tabId: "tab-gateway",
         },
       };
 
-      var picked = "gateway";
+      var params = new URLSearchParams(window.location.search);
+      var requested = params.get("spec");
+      var picked = specs[requested] ? requested : "gateway";
 
-      // Highlight the active tab (single-spec mode, tab is a span
-      // now, but keep the class hook in case more specs come back).
+      // Highlight the active tab so visitors land where they think
+      // they are.
       var tabEl = document.getElementById(specs[picked].tabId);
       if (tabEl) tabEl.classList.add("active");
 
@@ -222,9 +132,7 @@
       // accent, JetBrains-style mono, and an Inter-like sans stack
       // that mirrors what the rest of the site already uses (so we
       // do NOT load Roboto from Google Fonts, which would break our
-      // CSP font-src 'self'). Right-panel softened from pitch-black
-      // #0f172a to slate-800 #1e293b so the empty intro page no
-      // longer looks like a broken void on the right (#2 / #10).
+      // CSP font-src 'self').
       var theme = {
         colors: {
           primary: { main: "#00bfe6" },
@@ -261,9 +169,8 @@
           width: "280px",
         },
         rightPanel: {
-          backgroundColor: "#1e293b",
+          backgroundColor: "#0f172a",
           textColor: "#f1f5f9",
-          width: "40%",
         },
       };
 
@@ -271,13 +178,11 @@
       // hideDownloadButton:false so visitors get a one-click download
       // of the spec they're looking at; expandResponses:"200,201" so
       // the most-relevant success-response shape is open by default.
-      // scrollYOffset matches the sticky chrome height (header 65 +
-      // tabs 49 = 114) so clicked anchors land below the chrome (#9).
       Redoc.init(
         specs[picked].url,
         {
           theme: theme,
-          scrollYOffset: 114,
+          scrollYOffset: 64,
           hideDownloadButton: false,
           disableSearch: false,
           expandResponses: "200,201",
@@ -293,74 +198,7 @@
         },
         document.getElementById("redoc-container")
       );
-
-      // Back-to-top FAB behaviour. Show after 800 px scroll, hide
-      // below that. Click → smooth-scroll to top.
-      // (Local function intentionally NOT named "on-scroll" / "on*":
-      // the CSP hash-check regex would false-positive on any
-      // assignment whose left-hand side begins with " on" + lowercase
-      // letters + " =". handleScroll dodges that without weakening
-      // the check.)
-      var btnTop = document.getElementById("back-to-top");
-      if (btnTop) {
-        var handleScroll = function () {
-          if (window.scrollY > 800) {
-            btnTop.classList.add("visible");
-          } else {
-            btnTop.classList.remove("visible");
-          }
-        };
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        btnTop.addEventListener("click", function () {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-      }
-
-      // Manual scroll-on-nav-click. Redoc updates location.hash when
-      // a menu item is clicked, but doesn't reliably scroll the page
-      // to the operation block under this layout. Even after we cleared
-      // .api-content overflow:hidden and removed the fixed-height host,
-      // window.scrollY stays at 0 across the click. Browser-verified.
-      // Workaround: capture clicks on [role=menuitem], wait briefly
-      // for Redoc to update the hash, then scrollIntoView ourselves
-      // on the operation block. scroll-padding-top:114px on <html>
-      // handles the sticky-chrome offset, so block:"start" is fine.
-      document.addEventListener("click", function (ev) {
-        var item = ev.target.closest && ev.target.closest('[role="menuitem"]');
-        if (!item) return;
-        setTimeout(function () {
-          var hash = location.hash.replace(/^#/, "");
-          if (!hash) return;
-          // Hash values include slashes ("operation/health"), so use
-          // attribute-selector with the escaped value.
-          var target;
-          try {
-            target = document.querySelector('[data-section-id="' + CSS.escape(hash) + '"]');
-          } catch (e) {
-            target = document.querySelector('[data-section-id="' + hash + '"]');
-          }
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 80);
-      }, true);
-
-      // Same fallback for direct hashchange (URL pasted with #anchor,
-      // browser back/forward, programmatic hash assignment). Fires
-      // after Redoc's own hashchange handler has had a tick to run.
-      window.addEventListener("hashchange", function () {
-        setTimeout(function () {
-          var hash = location.hash.replace(/^#/, "");
-          if (!hash) return;
-          var target;
-          try {
-            target = document.querySelector('[data-section-id="' + CSS.escape(hash) + '"]');
-          } catch (e) {
-            target = document.querySelector('[data-section-id="' + hash + '"]');
-          }
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 50);
-      });
     })();
   </script>
-  <script src="/assets/concierge-widget.js" defer></script>
 </body>
 </html>

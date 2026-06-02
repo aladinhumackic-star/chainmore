@@ -7,10 +7,8 @@
   <meta name="description" content="ChainMore's list of sub-processors that may process customer data, per GDPR Article 28(2). Updated when sub-processors are added or replaced.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://chainmore.io/legal/sub-processors.html">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/legal/sub-processors.html">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/legal/sub-processors.html">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     html { scroll-behavior: smooth; }
@@ -33,29 +31,11 @@
     .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
     .callout strong { color: #155e75; }
   </style>
-  <!-- SEO/AIO JSON-LD: legal/sub-processors.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://chainmore.io/legal/sub-processors.html#webpage",
-  "url": "https://chainmore.io/legal/sub-processors.html",
-  "name": "Sub-Processors | ChainMore",
-  "description": "Sub-processor list for ChainMore under GDPR Article 28.",
-  "isPartOf": {
-    "@id": "https://chainmore.io/#website"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
   <!-- Header -->
-  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
+  <header class="bg-slate-900 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,7 +66,7 @@
 
       <h2>Active sub-processors</h2>
 
-      <p>These are the sub-processors that may currently process customer or merchant data on behalf of Chainmore OÜ. As of the date below, exactly one sub-processor is active.</p>
+      <p>These are the sub-processors that may currently process customer, merchant, or public-site visitor data on behalf of Chainmore OÜ. As of the date below, exactly one sub-processor is active.</p>
 
       <table class="sub-table">
         <thead>
@@ -101,8 +81,8 @@
         <tbody>
           <tr>
             <td class="role">Netlify, Inc.</td>
-            <td>Static hosting and CDN for the public marketing site (<code>chainmore.io</code>) and its public legal pages. No merchant or end-customer personal data is sent to Netlify.</td>
-            <td>Anonymous visitor logs (IP address, user-agent, requested URL).</td>
+            <td>Static hosting and CDN for the public marketing site (<code>chainmore.io</code>), its public legal pages, and the public waitlist form handler. ChainMore does not send production merchant dashboard, gateway, internal-operations, or end-customer payment data to Netlify.</td>
+            <td>Website visitor logs (IP address, user-agent, requested URL) and waitlist form submissions (work email address plus technical form metadata).</td>
             <td class="region">United States</td>
             <td>EU-US Data Privacy Framework where active for the relevant entity, EU SCCs Module 2 as fallback. DPF status verified at each annual review.</td>
           </tr>
@@ -111,7 +91,7 @@
 
       <h2>Categories of sub-processors not yet engaged</h2>
 
-      <p>ChainMore has not yet activated production hosting for the merchant dashboard, treasury dashboard, gateway, or identity provider. As soon as a sub-processor is selected for any of the categories below, the Processor will give merchants 14 calendar days' written notice (with the full vendor row added to the active list) before that sub-processor begins processing personal data.</p>
+      <p>ChainMore has not yet activated production hosting for the merchant dashboard, gateway, or identity provider. As soon as a sub-processor is selected for any of the categories below, the Processor will give merchants 14 calendar days' written notice (with the full vendor row added to the active list) before that sub-processor begins processing personal data.</p>
 
       <p>The categories below are forward-looking statements about the operating model the Processor intends to build. They are not commitments to any specific vendor.</p>
 
@@ -127,7 +107,7 @@
         <tbody>
           <tr>
             <td class="role">Production hosting</td>
-            <td>Compute and managed-service hosting for the merchant dashboard, treasury dashboard, gateway API, and identity provider.</td>
+            <td>Compute and managed-service hosting for the merchant dashboard, gateway API, and identity provider.</td>
             <td class="region">EU preferred (Frankfurt or equivalent)</td>
             <td>At-rest encryption confirmed in the chosen provider's terms, GDPR-compliant DPA executed, SCCs Module 2 attached for any non-EEA fallback.</td>
           </tr>
@@ -174,7 +154,7 @@
       <p>The page footer carries a "Last updated" date. The canonical URL is <code>https://chainmore.io/legal/sub-processors.html</code>. The Processor maintains an internal change-log alongside the source-of-truth annex; controllers receive a copy as part of their DPA pack and are notified of any change before it takes effect.</p>
 
       <hr>
-      <p class="text-sm text-slate-500"><em>Last updated: May 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: April 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>
     </article>
   </main>
 
@@ -185,7 +165,7 @@
         <div class="flex items-center gap-2">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
           <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>

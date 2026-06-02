@@ -1,9 +1,9 @@
-# ChainMore Gateway : Public HTTP Surface
+# ChainMore Gateway - Public HTTP Surface
 #
 # Version:  1.0.0-rc1
 # Frozen:     2026-04-21  (CKO Checkout Session Closure delivery)
 # Re-frozen:  2026-04-26  (post-MerchantAuth-JWT + Merchant-UI cluster
-#                          OpenAPI-Drift-Audit sweep : IdempotencyKey
+#                          OpenAPI-Drift-Audit sweep - IdempotencyKey
 #                          on all 19 mutation endpoints, BadRequest
 #                          response on every Idempotency-required path,
 #                          N3 cross-merchant asymmetry documented in
@@ -23,29 +23,29 @@
 #            checkout-web frontend contract), long-polling streams.
 #
 # Semver contract:
-#   MAJOR : breaking change to path, method, or required field.
-#   MINOR : additive field, new optional query param, new endpoint.
-#   PATCH : bugfix, docs clarification, non-behavioral schema tightening.
+#   MAJOR - breaking change to path, method, or required field.
+#   MINOR - additive field, new optional query param, new endpoint.
+#   PATCH - bugfix, docs clarification, non-behavioral schema tightening.
 #
 # Invariants enforced by this surface (cross-referenced in per-route descriptions):
-#   REC-I1   : Route Engine must be a productive consumer on /v1/routing/plan
-#   PFV-I1   : Pre-Flight Validation must be productive on /v1/validation/validate
-#   DISP-I1  : Dispatcher gate must be productive on /v1/dispatch/decide
-#   EXE-GATE-I1 : /v1/payments/{id}/attempts refuses without a wired gate
-#   CKO-I1   : Session-Is-Truth: hosted checkout routes read/write through
-#              internal/checkout, never directly against treasury rows.
-#   CKO-I2   : Transitions-Are-Guarded: every mutation passes through the
+#   REC-I1   - Route Engine must be a productive consumer on /v1/routing/plan
+#   PFV-I1   - Pre-Flight Validation must be productive on /v1/validation/validate
+#   DISP-I1  - Dispatcher gate must be productive on /v1/dispatch/decide
+#   EXE-GATE-I1 - /v1/payments/{id}/attempts refuses without a wired gate
+#   CKO-I1   - Session-Is-Truth: hosted checkout routes read/write through
+#              internal/checkout, never directly against operator-only rows.
+#   CKO-I2   - Transitions-Are-Guarded: every mutation passes through the
 #              state machine in internal/domain/checkout.go.
-#   CKO-I3   : Call-Matches-State: handlers reject calls whose required
+#   CKO-I3   - Call-Matches-State: handlers reject calls whose required
 #              current state is not met (409 invalid_state).
-#   CKO-I4   : Token-Hash-Indexed: /v1/checkout/sessions/by-token hashes
+#   CKO-I4   - Token-Hash-Indexed: /v1/checkout/sessions/by-token hashes
 #              the raw token server-side; no raw token ever hits storage.
-#   N3       : Cross-merchant asymmetry by bearer kind (deliberately
+#   N3       - Cross-merchant asymmetry by bearer kind (deliberately
 #              accepted): API-key path returns 404, JWT path returns 403
 #              cross_merchant_forbidden. See info.description for the
-#              full statement and ADR_MERCHANT_AUTH_JWT.md §Deliberately
+#              full statement and ADR_MERCHANT_AUTH_JWT.md section Deliberately
 #              Accepted Asymmetry.
-#   N6       : Access tokens only on the JWT path: ID tokens are
+#   N6       - Access tokens only on the JWT path: ID tokens are
 #              rejected via the audience check. See
 #              ADR_MERCHANT_AUTH_JWT.md.
 #
@@ -58,16 +58,16 @@ info:
 
     **Audience:** merchant backends (payment creation, webhook correlation) and
     the hosted-checkout frontend (wallet binding, route selection, submit).
-    The gateway is the ONLY ingress for the core orchestration pipeline
-    (routing → validation → dispatch → execution); treasury operations live
-    under a separate, dashboard-only surface (`api/openapi/treasury.yaml`).
+    The gateway is the ONLY public API ingress for merchant payment flows
+    (routing -> validation -> dispatch -> execution). Internal operator surfaces
+    are not served from the public documentation site.
 
     **Error envelope:** every non-2xx response uses RFC 7807 `application/problem+json`
     with the shape defined by `#/components/schemas/Problem`. The `code` field
     carries a stable machine-readable identifier; new codes are additive.
 
     **Cross-merchant access (N3 asymmetry):** this surface accepts two
-    bearer kinds : server API keys (`cm_test_…` / `cm_live_…`) and OIDC
+    bearer kinds - server API keys (`cm_test_...` / `cm_live_...`) and OIDC
     JWTs (Keycloak access tokens carrying `aud=chainmore-gateway`).
     A request that authenticates successfully but targets a resource
     owned by a *different* merchant is treated differently per bearer
@@ -79,7 +79,7 @@ info:
         distinction would leak the existence of resources owned by
         other tenants.
       - **JWT path:** returns `403 cross_merchant_forbidden`. The
-        merchant-user-in-UI flow benefits from an explicit message :
+        merchant-user-in-UI flow benefits from an explicit message -
         a confused user who clicked into the wrong tenant's bookmarked
         URL gets an actionable response rather than a misleading 404.
 
@@ -90,8 +90,8 @@ info:
 
     **Credential-kind mismatch (`wrong_auth_kind`):** the gateway's
     auth dispatcher rejects requests where the bearer SHAPE doesn't
-    match the route's auth class : an API key (`cm_test_…` /
-    `cm_live_…`) on a control-plane (JWT-only) route, or a JWT on a
+    match the route's auth class - an API key (`cm_test_...` /
+    `cm_live_...`) on a control-plane (JWT-only) route, or a JWT on a
     machine (API-key-only) route. This refusal lands on
     `401 wrong_auth_kind` and is distinct from `jwt_invalid`: the
     latter means "the bearer was presented as a JWT but failed
@@ -101,15 +101,13 @@ info:
     (`POST /v1/webhook_endpoints/{id}/test`) is the single
     dual-auth route that accepts either kind.
 
-    **Idempotency:** routes that declare the `Idempotency-Key` parameter
-    require one key per logical operation. The key scopes server-side
-    deduplication: a retry of the same request with the same key returns
-    the existing resource or cached decision without producing a second
-    side effect. Generate one key per logical operation (e.g. per
-    user-clicked Submit), not per network attempt. Missing keys on those
-    routes return `400 idempotency_required`. Some state-transition routes
-    are deliberately non-idempotency-keyed and instead reject a second
-    call by state (`409 refund_state_conflict`, `409 invalid_state`, etc.).
+    **Idempotency:** every POST, PUT, PATCH, and DELETE request MUST
+    include an `Idempotency-Key` header. The key scopes server-side
+    deduplication: a retry of the same request with the same key
+    returns the cached response without producing a second side
+    effect. Generate one key per logical operation (e.g. per
+    user-clicked Submit), not per network attempt. Missing keys
+    return `400 idempotency_required`.
   contact:
     name: ChainMore
     url: https://github.com/chainmore/chainmore
@@ -117,8 +115,10 @@ info:
     name: Proprietary
 
 servers:
-  - url: https://api.chainmore.io
-    description: Production gateway host for pilot and live merchant integrations.
+  - url: https://api.chainmore.example
+    description: Production URL configured per deployment.
+  - url: http://localhost:8080
+    description: Local development
 
 # ---------------------------------------------------------------------------
 # Security
@@ -137,8 +137,8 @@ components:
         cm_test_<hex>` (test mode) or `Authorization: Bearer
         cm_live_<hex>` (live mode). Required for every route except
         `GET /health`, the public `/checkout*` HTML shell, and the
-        widget JSON route `GET /v1/checkout/widget/session` which
-        uses a short-lived checkout token minted by `POST
+        widget JSON routes under `/v1/checkout/widget/*`, which use
+        a short-lived checkout token minted by `POST
         /v1/checkout/sessions` instead of the merchant key.
 
         IDX-I2: mode (test/live) is derived server-side from the
@@ -163,19 +163,28 @@ components:
       required: false
       description: |
         Idempotency key for mutation endpoints that explicitly declare
-        this parameter. Required on create/plan/decision surfaces such as
-        `/v1/payment-intents`, `/v1/refunds`, `/v1/routing/plan`,
+        this parameter. Required on create/plan/decision surfaces such
+        as `/v1/payment-intents`, `/v1/routing/plan`,
         `/v1/validation/validate`, `/v1/dispatch/decide`, and
         `POST /v1/payments/{id}/attempts` in strict modes; optional on
-        checkout endpoints where the session ID already provides the
-        dedupe boundary.
+        checkout endpoints where the session ID already provides
+        idempotency.
+      schema: { type: string, minLength: 1, maxLength: 128 }
+
+    RequiredIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        Required idempotency key for this mutation. Reuse the same value
+        when retrying the same logical request.
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     PaymentID:
       name: id
       in: path
       required: true
-      description: Payment aggregate identifier (ULID-shaped `pay_…`).
+      description: Payment aggregate identifier (ULID-shaped `pay_...`).
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     PaymentIntentID:
@@ -189,7 +198,7 @@ components:
       name: aid
       in: path
       required: true
-      description: Payment-attempt identifier (ULID-shaped `att_…`).
+      description: Payment-attempt identifier (ULID-shaped `att_...`).
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     CheckoutPaymentID:
@@ -220,14 +229,14 @@ components:
       name: id
       in: path
       required: true
-      description: Merchant API-key identifier (UUID-shaped `ak_…`).
+      description: Merchant API-key identifier (UUID-shaped `ak_...`).
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     WebhookEndpointID:
       name: id
       in: path
       required: true
-      description: Webhook endpoint identifier (UUID-shaped `wh_…`).
+      description: Webhook endpoint identifier (UUID-shaped `wh_...`).
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     DashboardPaymentID:
@@ -243,6 +252,13 @@ components:
       required: true
       description: Checkout session identifier used by the dashboard read plane.
       schema: { type: string, minLength: 1, maxLength: 128 }
+
+    DashboardExportID:
+      name: id
+      in: path
+      required: true
+      description: Async dashboard export job UUID.
+      schema: { type: string, format: uuid }
 
     DashboardCursor:
       name: cursor
@@ -261,6 +277,51 @@ components:
         Maximum rows to return. Server-clamped to the dashboard-tier
         default if absent or out of range.
       schema: { type: integer, minimum: 1, maximum: 200 }
+
+    DashboardPaymentSearch:
+      name: q
+      in: query
+      required: false
+      description: Exact lookup by merchant_order_id or ChainMore payment_id.
+      schema: { type: string, maxLength: 128 }
+
+    DashboardPaymentStatus:
+      name: status
+      in: query
+      required: false
+      description: Merchant-facing payment status filter.
+      schema:
+        type: string
+        enum:
+          - payment_created
+          - checkout_started
+          - authorization_pending
+          - authorized
+          - executing
+          - completed
+          - failed
+          - expired
+
+    DashboardPaymentCreatedFrom:
+      name: created_from
+      in: query
+      required: false
+      description: Inclusive created_at lower bound. Accepts YYYY-MM-DD or RFC3339.
+      schema: { type: string }
+
+    DashboardPaymentCreatedTo:
+      name: created_to
+      in: query
+      required: false
+      description: Exclusive created_at upper bound. YYYY-MM-DD values include that calendar day.
+      schema: { type: string }
+
+    DashboardExportLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum rows to include in the CSV export. Server-clamped to 5000.
+      schema: { type: integer, minimum: 1, maximum: 5000 }
 
   # -------------------------------------------------------------------------
   # Schemas
@@ -344,15 +405,6 @@ components:
             - register_direct_tx_failed
             - replay_delivery_failed
             - replay_of_test_event_forbidden
-            - refund_capacity_exceeded
-            - refund_captured_amount_missing
-            - refund_endpoint_disabled
-            - refund_idempotency_conflict
-            - refund_in_flight_exists
-            - refund_operation_failed
-            - refund_payment_not_refundable
-            - refund_state_conflict
-            - refund_wallet_missing
             - revoke_key_failed
             - rotate_endpoint_secret_failed
             - rotate_key_failed
@@ -387,7 +439,7 @@ components:
           format: uri
           description: |
             Merchant-facing docs URL for this specific refusal code.
-            Stable per `code` value : safe to link to from dashboards
+            Stable per `code` value - safe to link to from dashboards
             or verifiers. Empty when the code is unregistered (which
             the refusalcodes drift-check guards against in CI).
           example: https://docs.chainmore.dev/errors/endpoint-disabled
@@ -451,12 +503,9 @@ components:
     PaymentIntentStatus:
       type: object
       description: |
-        Merchant-facing CCTP payment-intent status. The response is
-        scoped by the authenticated API key's merchant_id and mode.
-        Unknown, cross-merchant, and cross-mode UUIDs all return 404.
-        Test/live mode is derived from the bearer token; callers cannot
-        select or override mode on this route. The raw internal CCTP
-        state is deliberately not exposed.
+        Surface-only CCTP payment-intent status used by browser mutation
+        responses and other minimal status responses. The raw internal
+        CCTP state is deliberately not exposed.
       required: [payment_id, surface_status, updated_at]
       properties:
         payment_id: { type: string, format: uuid }
@@ -465,15 +514,81 @@ components:
           enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
         updated_at: { type: string, format: date-time }
 
+    PaymentIntentReadResponse:
+      type: object
+      description: |
+        Merchant-facing CCTP payment-intent status and evidence. The
+        response is scoped by the authenticated API key's merchant_id and mode.
+        Unknown, cross-merchant, and cross-mode UUIDs all return 404.
+        Test/live mode is derived from the bearer token; callers cannot
+        select or override mode on this route. The raw internal CCTP
+        state is deliberately not exposed.
+      required: [payment_id, surface_status, source_chain, dest_chain, amount_usdc, asset, merchant_wallet, updated_at]
+      properties:
+        payment_id: { type: string, format: uuid }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        source_chain: { type: string }
+        dest_chain: { type: string }
+        amount_usdc: { type: string, description: "USDC atomic units, 6 decimals." }
+        merchant_amount_captured_atomic:
+          type: string
+          description: Merchant-net USDC atomic units, 6 decimals. Present after settlement evidence records the exact captured amount.
+        asset: { type: string, enum: [USDC] }
+        merchant_order_id:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied deposit/order reference for reconciliation.
+        customer_reference:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied pseudonymous customer/player reference. Do not send PII.
+        merchant_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        customer_wallet:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+          description: Present after the customer wallet is bound.
+        return_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Merchant-owned URL returned on a successful hosted checkout.
+        evidence:
+          type: object
+          description: Present after ChainMore has at least source or settlement transaction evidence.
+          required: [settlement_contract, cctp_version, finality_mode]
+          properties:
+            source_tx_hash:
+              type: string
+              pattern: '^0x[a-f0-9]{64}$'
+              description: Source-chain customer transaction claimed and/or verified by ChainMore.
+            settlement_tx_hash:
+              type: string
+              pattern: '^0x[a-f0-9]{64}$'
+              description: Destination-chain settlement transaction hash once available.
+            settlement_contract:
+              type: string
+              pattern: '^0x[a-f0-9]{40}$'
+            cctp_version: { type: integer, enum: [2] }
+            finality_mode: { type: string, enum: [fast, standard] }
+        updated_at: { type: string, format: date-time }
+
     PaymentIntentNeedsReviewList:
       type: object
       description: Merchant-facing CCTP payment intents that need operator review.
-      required: [items, updated_at]
+      required: [items, review_threshold_seconds, updated_at]
       properties:
         items:
           type: array
           items:
             $ref: "#/components/schemas/PaymentIntentNeedsReviewItem"
+        review_threshold_seconds:
+          type: integer
+          minimum: 1
+          description: Seconds an internal stuck state must exceed before it appears in this merchant-facing needs-review queue.
         updated_at: { type: string, format: date-time }
 
     PaymentIntentNeedsReviewItem:
@@ -486,205 +601,33 @@ components:
         - dest_chain
         - refusal_code
         - refusal_title
+        - reason_category
         - estimated_wait
         - entered_review_at
       properties:
         intent_id: { type: string, format: uuid }
         amount_usdc: { type: string }
         asset: { type: string, enum: [USDC] }
+        merchant_order_id:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied deposit/order reference for reconciliation.
+        customer_reference:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied pseudonymous customer/player reference. Do not send PII.
         source_chain: { type: string }
         dest_chain: { type: string }
         refusal_code: { type: string }
         refusal_title: { type: string }
+        reason_category:
+          type: string
+          enum: [provider, settlement, compliance, customer_action, manual_review]
+          description: Bounded operator-facing reason category derived from the refusal code; never a raw internal CCTP state.
         estimated_wait: { type: string }
         entered_review_at: { type: string, format: date-time }
-
-    CreateRefundRequest:
-      type: object
-      description: |
-        Merchant request to open a refund intent against one settled CCTP
-        payment intent. The API key supplies merchant_id and mode; callers
-        cannot choose tenant, mode, refund source wallet, or CCTP route.
-      required: [original_payment_id, amount_atomic, reason_code]
-      properties:
-        original_payment_id: { type: string, format: uuid }
-        amount_atomic:
-          type: string
-          pattern: "^[1-9][0-9]*$"
-          description: USDC atomic units the customer should receive.
-        reason_code:
-          type: string
-          minLength: 1
-          maxLength: 64
-        reason_text:
-          type: string
-          maxLength: 512
-
-    CancelRefundRequest:
-      type: object
-      description: Optional merchant cancellation reason for a pre-money refund intent.
-      properties:
-        reason:
-          type: string
-          maxLength: 512
-
-    RefundBurnAuthorization:
-      type: object
-      description: |
-        Merchant-signed EIP-712 refund authorization. The refund recipient is
-        visible at top level and also bound through hook_data_hash. The
-        gateway derives merchant and mode from authentication; this payload is
-        accepted only with a dashboard render token and route-registry checks.
-      required:
-        - refund_id
-        - original_payment_id
-        - merchant_id_hash
-        - merchant_refund_wallet
-        - refund_recipient
-        - mint_recipient
-        - destination_caller
-        - source_chain_domain
-        - destination_chain_domain
-        - source_token
-        - amount
-        - max_fee
-        - min_finality_threshold
-        - hook_data_hash
-        - deadline
-        - nonce
-      properties:
-        refund_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        original_payment_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        merchant_id_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        merchant_refund_wallet: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
-        refund_recipient: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
-        mint_recipient: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        destination_caller: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        source_chain_domain: { type: integer, format: int32, minimum: 0 }
-        destination_chain_domain: { type: integer, format: int32, minimum: 0 }
-        source_token: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
-        amount:
-          type: string
-          pattern: "^[1-9][0-9]*$"
-        max_fee:
-          type: string
-          pattern: "^[0-9]+$"
-        min_finality_threshold: { type: integer, format: int32, minimum: 0 }
-        hook_data_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        deadline:
-          type: string
-          pattern: "^[1-9][0-9]*$"
-        nonce: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-
-    SubmitRefundSignatureRequest:
-      type: object
-      description: |
-        Submits the merchant wallet's refund EIP-712 signature and the exact
-        V4 hook data that will later be used by the refund burn worker. This
-        endpoint moves only from approved pre-money state to signed_pending_burn;
-        it does not broadcast a chain transaction.
-      required:
-        - authorization
-        - hook_data
-        - signature
-        - chain_id
-        - source_adapter
-        - expected_source_domain
-        - expected_destination_v4
-        - dashboard_render_token_id
-      properties:
-        authorization: { $ref: "#/components/schemas/RefundBurnAuthorization" }
-        hook_data:
-          type: string
-          pattern: '^0x[a-fA-F0-9]*$'
-        signature:
-          type: string
-          pattern: '^0x[a-fA-F0-9]{130}$'
-        chain_id: { type: integer, format: int64, minimum: 1 }
-        source_adapter: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
-        expected_source_domain: { type: integer, format: int32, minimum: 0 }
-        expected_destination_v4: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
-        dashboard_render_token_id:
-          type: string
-          minLength: 32
-          maxLength: 128
-
-    DashboardRefundRenderTokenResponse:
-      type: object
-      description: |
-        One-shot dashboard render token for refund signing. It is scoped to
-        the authenticated merchant, mode, and refund intent, and is redeemed by
-        `POST /v1/refunds/{refundId}/signature` before the service accepts a
-        merchant EIP-712 authorization. The token is not a money signature.
-      required:
-        - dashboard_render_token_id
-        - expires_at
-      properties:
-        dashboard_render_token_id:
-          type: string
-          minLength: 32
-          maxLength: 128
-        expires_at:
-          type: string
-          format: date-time
-
-    RefundIntent:
-      type: object
-      description: |
-        Merchant-visible refund intent. Slice 2 records and controls the
-        pre-money refund lifecycle only: no burn, settlement, or chain
-        broadcast has happened until a later worker slice moves the state
-        past `signed_pending_burn`.
-      required:
-        - refund_id
-        - original_payment_id
-        - amount_atomic
-        - currency
-        - state
-        - reason_code
-        - customer_wallet
-        - customer_chain
-        - merchant_refund_wallet
-        - merchant_refund_chain
-        - cctp_hook_payment_id
-        - expires_at
-        - created_at
-        - updated_at
-      properties:
-        refund_id: { type: string, format: uuid }
-        original_payment_id: { type: string, format: uuid }
-        amount_atomic:
-          type: string
-          pattern: "^[0-9]+$"
-        currency: { type: string, enum: [USDC] }
-        state:
-          type: string
-          enum:
-            - requested
-            - approved
-            - signed_pending_burn
-            - burn_inflight
-            - burned
-            - attestation_pending
-            - settlement_inflight
-            - settled
-            - cancelled
-            - source_compliance_block
-            - destination_compliance_block
-            - recovering
-            - merchant_made_whole
-            - settled_after_make_whole
-            - failed
-        reason_code: { type: string }
-        reason_text: { type: string }
-        customer_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
-        customer_chain: { type: string }
-        merchant_refund_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
-        merchant_refund_chain: { type: string }
-        cctp_hook_payment_id: { type: string, pattern: '^0x[a-f0-9]{64}$' }
-        expires_at: { type: string, format: date-time }
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
 
     CreatePaymentIntentRequest:
       type: object
@@ -712,6 +655,21 @@ components:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
           description: Optional while the hosted checkout is still awaiting wallet connection.
+        merchant_order_id:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied deposit/order reference for reconciliation.
+        customer_reference:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+          description: Merchant-supplied pseudonymous customer/player reference. Do not send PII.
+        return_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Optional merchant-owned URL shown after Hosted Checkout reaches completed.
         fee_bps:
           type: integer
           minimum: 0
@@ -735,7 +693,7 @@ components:
       type: object
       description: |
         Binds the payer wallet after Hosted Checkout wallet connection and
-        returns the signed PaymentSourceBurnAdapterV1 authorization. The
+        returns the signed PaymentSourceBurnAdapter authorization. The
         operation is idempotent for the same customer_wallet while the intent
         is still awaiting deposit. Different-wallet retries or later lifecycle
         states return 409 so one payment never has two live payer-bound
@@ -760,6 +718,46 @@ components:
           type: string
           pattern: '^0x[a-f0-9]{64}$'
 
+    RelayCheckoutSourceBurnRequest:
+      type: object
+      description: |
+        Browser-side relay handoff for the adapter v2 premium path. Hosted
+        Checkout submits the customer's EIP-3009 receiveWithAuthorization
+        signature; ChainMore relays burnWithReceiveAuthorization and returns
+        the source tx hash. The submitted authorization must match the
+        receive_authorization_typed_data previously returned for this checkout
+        token.
+      required: [receive_authorization]
+      properties:
+        receive_authorization:
+          $ref: "#/components/schemas/SourceBurnReceiveAuthorizationSubmission"
+
+    SourceBurnReceiveAuthorizationSubmission:
+      type: object
+      required: [valid_after, valid_before, nonce, v, r, s]
+      properties:
+        valid_after:
+          type: string
+          description: Decimal uint256. Must match typed-data message.validAfter.
+        valid_before:
+          type: string
+          description: Decimal uint256. Must match typed-data message.validBefore.
+        nonce:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: Must equal the adapter authorization digest for this checkout.
+        v:
+          type: integer
+          minimum: 0
+          maximum: 28
+          description: Wallet recovery id; ChainMore accepts 0/1 or 27/28 and normalizes before relay.
+        r:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+        s:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+
     PaymentIntentCreateResponse:
       allOf:
         - $ref: "#/components/schemas/PaymentIntentStatus"
@@ -778,6 +776,7 @@ components:
             - source_burn
             - expires_at
             - created_at
+            - updated_at
           properties:
             checkout_token:
               type: string
@@ -787,6 +786,16 @@ components:
                 only as a SHA-256 hash. Scoped to this payment intent's
                 browser operations until expires_at.
             hook_payment_id: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+            merchant_order_id:
+              type: string
+              maxLength: 128
+              pattern: '^[A-Za-z0-9._:-]+$'
+              description: Merchant-supplied deposit/order reference for reconciliation.
+            customer_reference:
+              type: string
+              maxLength: 128
+              pattern: '^[A-Za-z0-9._:-]+$'
+              description: Merchant-supplied pseudonymous customer/player reference. Do not send PII.
             source_chain: { type: string }
             dest_chain: { type: string }
             mint_recipient:
@@ -796,6 +805,10 @@ components:
             merchant_wallet: { type: string, pattern: '^0x[a-f0-9]{40}$' }
             amount_usdc: { type: string }
             fee_bps: { type: integer, minimum: 0, maximum: 100 }
+            return_url:
+              type: string
+              format: uri
+              maxLength: 2048
             route_hash: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
             cctp_version: { type: integer, enum: [2] }
             finality_mode: { type: string, enum: [fast, standard] }
@@ -803,6 +816,7 @@ components:
               $ref: "#/components/schemas/PatternESourceBurnInstructions"
             expires_at: { type: string, format: date-time }
             created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
 
     SourceBurnAuthorizationResponse:
       type: object
@@ -820,6 +834,23 @@ components:
           $ref: "#/components/schemas/PatternESourceBurnInstructions"
         updated_at: { type: string, format: date-time }
 
+    SourceBurnRelayResponse:
+      type: object
+      description: |
+        Result of a ChainMore-relayed adapter v2 source burn. The returned tx
+        hash is a claim pending on-chain observer verification; the response
+        does not mean the intent is BURNED yet.
+      required: [payment_id, surface_status, source_tx_hash, updated_at]
+      properties:
+        payment_id: { type: string, format: uuid }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        source_tx_hash:
+          type: string
+          pattern: '^0x[a-f0-9]{64}$'
+        updated_at: { type: string, format: date-time }
+
     PaymentIntentCheckoutSessionResponse:
       type: object
       description: |
@@ -827,7 +858,7 @@ components:
         checkout token. This response is intentionally smaller than the
         merchant-machine read surface and never includes merchant API-key
         material or internal CCTP state.
-      required: [payment_id, surface_status, checkout_step, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
+      required: [payment_id, surface_status, checkout_step, checkout_phase, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
       properties:
         payment_id: { type: string, format: uuid }
         surface_status:
@@ -841,6 +872,12 @@ components:
             it only tells Hosted Checkout whether to connect a wallet, confirm
             the source transaction, wait for chain verification, or show a
             terminal screen.
+        checkout_phase:
+          type: string
+          enum: [choose_wallet, ready_to_confirm, wallet_submitted, confirming_payment, updating_merchant, checking_payment, done]
+          description: |
+            Human-readable hosted-checkout progress phase. This is intentionally
+            coarser than internal CCTP state and drives customer-facing copy.
         source_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         amount_usdc: { type: string }
@@ -851,6 +888,11 @@ components:
         source_tx_hash:
           type: string
           description: Present only after the browser has claimed the submitted source-chain tx hash.
+        return_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Optional merchant-owned URL shown on the completed checkout screen.
         expires_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
@@ -875,11 +917,19 @@ components:
         - min_finality_threshold
         - settlement_payload
         - authorization_status
+        - adapter_contract_version
       properties:
         source_burn_adapter:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
           description: Source-chain ChainMore adapter that calls TokenMessengerV2 and becomes the V4 trusted burn sender.
+        adapter_contract_version:
+          type: string
+          enum: [v1, v2]
+          description: |
+            Source adapter contract generation configured by ChainMore.
+            v1 uses the approval-plus-burn transaction path. v2 can also
+            support the EIP-3009 receiveWithAuthorization premium path.
         source_token_messenger:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
@@ -914,12 +964,12 @@ components:
           type: string
           pattern: '^0x[a-fA-F0-9]+$'
           description: |
-            Fully encoded PaymentSourceBurnAdapterV1.burnWithAuthorization
-            calldata. Present only once the source burn authorization is ready.
+            Fully encoded PaymentSourceBurnAdapter burn calldata. Present only
+            once the source burn authorization is ready.
         authorization_status:
           type: string
           enum: [ready, requires_customer_wallet]
-          description: Whether the response includes a signed PaymentSourceBurnAdapterV1 authorization.
+          description: Whether the response includes a signed PaymentSourceBurnAdapter authorization.
         authorization:
           $ref: "#/components/schemas/SourceBurnAuthorization"
         signature:
@@ -929,9 +979,25 @@ components:
         authorizer:
           type: string
           pattern: '^0x[a-f0-9]{40}$'
-          description: Backend authorizer address configured on PaymentSourceBurnAdapterV1.
+          description: Backend authorizer address configured on PaymentSourceBurnAdapter.
         eip712_domain:
           $ref: "#/components/schemas/SourceBurnEIP712Domain"
+        authorization_digest:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+          description: |
+            EIP-712 digest of the ChainMore adapter authorization. For the
+            adapter v2 premium path this exact digest is also used as the
+            Circle-USDC EIP-3009 receiveWithAuthorization nonce, binding the
+            customer's token authorization to one specific ChainMore route.
+        receive_authorization_typed_data:
+          $ref: "#/components/schemas/SourceBurnReceiveAuthorizationTypedData"
+        relay_available:
+          type: boolean
+          description: |
+            True only when ChainMore has an internal source-burn relay
+            configured for the adapter v2 one-confirm path. Checkout must
+            fall back to approval-plus-transaction when this is false.
 
     SourceBurnAuthorization:
       type: object
@@ -968,6 +1034,55 @@ components:
         version: { type: string }
         chain_id: { type: integer, format: int64 }
         verifying_contract: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+
+    SourceBurnReceiveAuthorizationTypedData:
+      type: object
+      description: |
+        Wallet-ready EIP-712 payload for Circle USDC's EIP-3009
+        ReceiveWithAuthorization message. Present only for adapter v2
+        instructions. Hosted Checkout may pass this object directly to
+        eth_signTypedData_v4 so the customer signs one bounded USDC
+        authorization instead of approving an unlimited allowance.
+      required: [types, primaryType, domain, message]
+      properties:
+        types:
+          type: object
+          required: [EIP712Domain, ReceiveWithAuthorization]
+          properties:
+            EIP712Domain:
+              type: array
+              items: { $ref: "#/components/schemas/EIP712TypedDataField" }
+            ReceiveWithAuthorization:
+              type: array
+              items: { $ref: "#/components/schemas/EIP712TypedDataField" }
+        primaryType:
+          type: string
+          enum: [ReceiveWithAuthorization]
+        domain:
+          type: object
+          required: [name, version, chainId, verifyingContract]
+          properties:
+            name: { type: string, enum: [USD Coin] }
+            version: { type: string, enum: ["2"] }
+            chainId: { type: integer, format: int64 }
+            verifyingContract: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+        message:
+          type: object
+          required: [from, to, value, validAfter, validBefore, nonce]
+          properties:
+            from: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+            to: { type: string, pattern: '^0x[a-f0-9]{40}$' }
+            value: { type: string }
+            validAfter: { type: string }
+            validBefore: { type: string }
+            nonce: { type: string, pattern: '^0x[a-fA-F0-9]{64}$' }
+
+    EIP712TypedDataField:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string }
+        type: { type: string }
 
     StartAttemptRequest:
       type: object
@@ -1109,16 +1224,16 @@ components:
         created_at:                 { type: string, format: date-time }
         updated_at:                 { type: string, format: date-time }
 
-    # ── Merchants (placeholder; Phase-1) ────────────────────────────────────
-    MerchantsPlaceholder:
+    # ── Merchants (reserved; Phase-1) ───────────────────────────────────────
+    MerchantsReservedResponse:
       type: object
       description: |
-        Phase-1 placeholder. The merchants surface is frozen as an
-        observable shape so clients can detect when it lights up.
+        Phase-1 reserved response. The merchants surface is frozen as an
+        observable shape so clients can detect when it becomes available.
       properties:
         status:
           type: string
-          enum: [placeholder]
+          enum: [reserved]
 
     # ── Routing (REC) ───────────────────────────────────────────────────────
     PlanRouteRequest:
@@ -1177,6 +1292,17 @@ components:
         id:                { type: string }
         route_candidate_id:{ type: string }
         passed:            { type: boolean }
+        would_deny_if_enforced:
+          type: boolean
+          description: |
+            Rollout projection. True means the route may still pass in
+            the current visible/advisory stage, but at least one failed
+            or unknown check would deny the route once PFV enforcement is
+            enabled.
+        would_deny_codes:
+          type: array
+          items: { type: string }
+          description: Structured check codes behind the would-deny projection.
         checks:
           type: array
           items: { $ref: "#/components/schemas/ValidationCheck" }
@@ -1185,10 +1311,14 @@ components:
 
     ValidationCheck:
       type: object
-      required: [name, passed]
+      required: [type, passed, status]
       properties:
-        name:   { type: string }
+        type:   { type: string }
         passed: { type: boolean }
+        status:
+          type: string
+          enum: [passed, failed, unknown]
+        code:   { type: string }
         detail: { type: string }
 
     # ── Dispatch (DISP) ─────────────────────────────────────────────────────
@@ -1274,14 +1404,14 @@ components:
         expires_at:       { type: string, format: date-time }
         quote_expires_at: { type: string, format: date-time }
 
-    # ── Merchant Dashboard read plane (MDA-I2 : read-only) ───────────────────
+    # ── Merchant Dashboard read plane (MDA-I2 - read-only) ───────────────────
     MerchantIntegrationView:
       type: object
       description: |
         Summary of the merchant's integration posture, scoped to the
         bearer-resolved mode. Mirrors `domain.MerchantDashboardIntegrationView`
         in `internal/domain/dashboard.go`. All fields are redacted
-        projections : no secrets, no api-key plaintext, no webhook
+        projections - no secrets, no api-key plaintext, no webhook
         signing material.
 
         The `mode` field reflects which mode the response was scoped
@@ -1293,6 +1423,8 @@ components:
         - status
         - default_currency
         - mode
+        - account_approval_status
+        - live_mode_enabled
         - active_api_key_count
         - webhook_endpoint_count
         - webhook_endpoint_enabled_count
@@ -1304,18 +1436,151 @@ components:
         status:                         { type: string, description: "merchant account status (e.g. 'active')." }
         default_currency:               { type: string, description: "ISO 4217 fiat code." }
         mode:                           { type: string, enum: [test, live], description: "Bearer-resolved mode this response was scoped to." }
+        account_approval_status:        { type: string, enum: [sandbox, needs_info, live_approved, rejected, not_configured], description: "Server-side account live-access state; not a provider or rail readiness claim." }
+        live_mode_enabled:              { type: boolean, description: "True only after the server-side live access gate is approved." }
+        live_enabled_at:                { type: string, format: date-time, nullable: true, description: "Timestamp when live access was approved, if any." }
         active_api_key_count:           { type: integer, minimum: 0 }
         webhook_endpoint_count:         { type: integer, minimum: 0 }
         webhook_endpoint_enabled_count: { type: integer, minimum: 0 }
         created_at:                     { type: string, format: date-time, description: "Merchant joined-on timestamp." }
         generated_at:                   { type: string, format: date-time, description: "Server snapshot timestamp." }
 
+    MerchantOnboardingProgressView:
+      type: object
+      description: |
+        Read-only merchant setup progress contract. The response is
+        computed from existing account profile, API-key, webhook,
+        test-event, and settled test-payment evidence. It never
+        returns key material, webhook signing material, raw provider
+        payloads, or production credentials, and it never toggles live
+        access.
+      required:
+        - merchant_id
+        - mode
+        - account_approval_status
+        - live_mode_enabled
+        - steps
+        - generated_at
+      properties:
+        merchant_id:             { type: string }
+        mode:                    { type: string, enum: [test, live], description: "Bearer-resolved dashboard mode." }
+        account_approval_status: { type: string, enum: [sandbox, needs_info, live_approved, rejected, not_configured] }
+        live_mode_enabled:       { type: boolean, description: "True only after server-side live access approval." }
+        steps:
+          type: array
+          items: { $ref: "#/components/schemas/MerchantOnboardingStepView" }
+        generated_at:            { type: string, format: date-time }
+
+    MerchantOnboardingStepView:
+      type: object
+      required: [step_id, status, required]
+      properties:
+        step_id:
+          type: string
+          enum:
+            - account_profile
+            - test_api_key
+            - webhook_endpoint
+            - webhook_test_event
+            - first_payment_evidence
+            - live_access
+            - live_api_key
+        status:
+          type: string
+          enum: [complete, missing, blocked, needs_review]
+        required: { type: boolean }
+        completed_at: { type: string, format: date-time, nullable: true }
+        blocking_reason:
+          type: string
+          description: Bounded merchant-facing reason when status is blocked or needs_review.
+
+    SubmitAccountProfileRequest:
+      type: object
+      description: |
+        Merchant-user-submitted business profile that starts ChainMore
+        account/DD review. The merchant_id is not accepted in this body;
+        it is resolved from the authenticated dashboard user.
+      required:
+        - website_url
+        - contact_email
+        - country
+        - business_type
+        - use_case
+      properties:
+        website_url:
+          type: string
+          format: uri
+          description: Public merchant website URL.
+        contact_email:
+          type: string
+          format: email
+          description: Operational contact for account review.
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: ISO-3166 alpha-2 country code.
+        business_type:
+          type: string
+          enum: [registered_business, sole_trader, platform, nonprofit, other]
+        expected_monthly_volume_usd_bucket:
+          type: string
+          enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, unknown]
+          default: unknown
+        use_case:
+          type: string
+          minLength: 20
+          maxLength: 1000
+          description: Bounded free-text description of the intended payment use case.
+
+    SubmitAccountProfileResponse:
+      type: object
+      required: [submission_id, merchant_id, submitted_at]
+      properties:
+        submission_id: { type: string }
+        merchant_id:   { type: string, description: "Authenticated merchant id resolved by the server." }
+        submitted_at:  { type: string, format: date-time }
+
+    AccountProfileReadbackResponse:
+      type: object
+      description: |
+        Current merchant business-profile submission for dashboard readback.
+        It is the merchant-facing version of the DD/KYB intake state and
+        deliberately excludes internal review notes, operator identities,
+        document storage, and live-approval actions.
+      required:
+        - submitted
+        - merchant_id
+        - approval_status
+        - live_mode_enabled
+        - profile_updated_at
+        - destructive_actions
+      properties:
+        submitted:          { type: boolean }
+        submission_id:      { type: string }
+        merchant_id:        { type: string, description: "Authenticated merchant id resolved by the server." }
+        approval_status:    { type: string, enum: [sandbox, needs_info, live_approved, rejected, not_configured] }
+        live_mode_enabled:  { type: boolean }
+        website_url:        { type: string, format: uri }
+        contact_email:      { type: string, format: email }
+        country:            { type: string, minLength: 2, maxLength: 2 }
+        business_type:      { type: string, enum: [registered_business, sole_trader, platform, nonprofit, other] }
+        expected_monthly_volume_usd_bucket:
+          type: string
+          enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, unknown]
+        use_case:           { type: string, minLength: 20, maxLength: 1000 }
+        submitted_at:       { type: string, format: date-time }
+        profile_updated_at: { type: string, format: date-time }
+        destructive_actions:
+          type: string
+          enum: [not_available_on_read_endpoint]
+
     DashboardPaymentView:
       type: object
       description: |
-        Mirrors `domain.MerchantDashboardPaymentView` : the redacted
+        Mirrors `domain.MerchantDashboardPaymentView` - the redacted
         merchant-facing projection of a Payment row. Pipeline-internal
-        fields (rail, route candidate, dispatcher decision, treasury
+        fields (rail, route candidate, dispatcher decision, operator
         wallet) are deliberately absent.
       required:
         - payment_id
@@ -1340,24 +1605,129 @@ components:
         created_at:             { type: string, format: date-time }
         updated_at:             { type: string, format: date-time }
 
+    DashboardRequestedAmountTotal:
+      type: object
+      required: [currency, amount_minor, payment_count]
+      properties:
+        currency:      { type: string, description: "Requested fiat currency. This is not the settlement asset." }
+        amount_minor:  { type: integer, format: int64, description: "Sum of requested fiat minor units for the filtered set." }
+        payment_count: { type: integer, minimum: 0 }
+
+    DashboardPaymentStatusCount:
+      type: object
+      required: [public_status, payment_count]
+      properties:
+        public_status: { type: string, description: "Merchant-facing payment status." }
+        payment_count: { type: integer, minimum: 0 }
+
+    DashboardExceptionStatusCount:
+      type: object
+      required: [surface_status, payment_count]
+      properties:
+        surface_status:
+          type: string
+          enum: [delayed, needs_review, failed_safely, expired]
+          description: Merchant-facing CCTP exception status; raw internal CCTP state is not exposed.
+        payment_count: { type: integer, minimum: 0 }
+        oldest_entered_at:
+          type: string
+          format: date-time
+          description: Oldest state-entered timestamp for this exception group, when present.
+
+    DashboardExceptionSummary:
+      type: object
+      required: [items, total_count, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardExceptionStatusCount" }
+        total_count:
+          type: integer
+          minimum: 0
+          description: Sum of all exception rows for the authenticated merchant and mode.
+        generated_at: { type: string, format: date-time }
+
+    DashboardPaymentsSummary:
+      type: object
+      required: [total_count, requested_amount_totals, status_counts, export_row_limit, filtered]
+      properties:
+        total_count: { type: integer, minimum: 0, description: "Full filtered result count, not just the current cursor page." }
+        requested_amount_totals:
+          type: array
+          description: Requested fiat totals grouped by requested_currency. Settlement assets remain separate; no USD↔USDC conversion is implied.
+          items: { $ref: "#/components/schemas/DashboardRequestedAmountTotal" }
+        status_counts:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardPaymentStatusCount" }
+        export_row_limit:
+          type: integer
+          minimum: 1
+          description: Current synchronous CSV export row cap used by the Gateway.
+        filtered: { type: boolean, description: "True when q/status/date filters narrowed the result set." }
+
     DashboardPaymentsPage:
       type: object
       description: |
         Mirrors `domain.MerchantDashboardPaymentsPage`. Cursor-based
-        pagination via `next_cursor` + `has_more`.
-      required: [items, has_more, generated_at]
+        pagination via `next_cursor` + `has_more`. `summary` describes
+        the full filtered set, not only the current page.
+      required: [items, has_more, summary, generated_at]
       properties:
         items:
           type: array
           items: { $ref: "#/components/schemas/DashboardPaymentView" }
         has_more:     { type: boolean }
         next_cursor:  { type: string }
+        summary:      { $ref: "#/components/schemas/DashboardPaymentsSummary" }
+        generated_at: { type: string, format: date-time }
+
+    DashboardCustomerActivityStatusCount:
+      type: object
+      required: [surface_status, payment_count]
+      properties:
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+          description: Merchant-facing status bucket; raw internal CCTP states are not exposed.
+        payment_count: { type: integer, minimum: 0 }
+
+    DashboardCustomerActivitySummary:
+      type: object
+      required: [payment_count, amount_usdc, status_counts]
+      properties:
+        payment_count: { type: integer, minimum: 0 }
+        amount_usdc:
+          type: string
+          description: Sum of CCTP payment-intent amount_usdc values for this merchant-scoped customer_reference.
+        status_counts:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardCustomerActivityStatusCount" }
+        first_seen_at: { type: string, format: date-time }
+        last_seen_at:  { type: string, format: date-time }
+
+    DashboardCustomerActivityPage:
+      type: object
+      description: |
+        First Customer-360 slice: merchant/mode-scoped CCTP activity for
+        one merchant-supplied customer_reference. The rows use the same
+        stage-based reconciliation vocabulary and never expose raw CCTP
+        states, attestations, route hashes, or private material.
+      required: [customer_reference, summary, items, generated_at]
+      properties:
+        customer_reference:
+          type: string
+          maxLength: 128
+          pattern: '^[A-Za-z0-9._:-]+$'
+        summary: { $ref: "#/components/schemas/DashboardCustomerActivitySummary" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardReconciliationView" }
         generated_at: { type: string, format: date-time }
 
     DashboardSessionView:
       type: object
       description: |
-        Mirrors `domain.MerchantDashboardSessionView` : the merchant-
+        Mirrors `domain.MerchantDashboardSessionView` - the merchant-
         facing redacted projection of a CheckoutSession. Distinct
         from the customer-browser WidgetSessionView: this surface
         carries correlation IDs the merchant already owns.
@@ -1374,7 +1744,7 @@ components:
         next_action:       { type: string, description: "Same widget-side terminal-vs-live classification enum." }
         wallet_address:    { type: string, description: "Set once the user has bound a wallet." }
         chain_id:          { type: string }
-        submitted_tx_hash: { type: string, description: "User-signed tx hash (on-chain public) : never stored secret material." }
+        submitted_tx_hash: { type: string, description: "User-signed tx hash (on-chain public) - never stored secret material." }
         failure_code:      { type: string, description: "Bounded failure-reason code; reuses the widget-view mapping." }
         expires_at:        { type: string, format: date-time }
         quote_expires_at:  { type: string, format: date-time }
@@ -1392,14 +1762,134 @@ components:
         next_cursor:  { type: string }
         generated_at: { type: string, format: date-time }
 
+    DashboardAuditEventView:
+      type: object
+      description: |
+        Merchant-facing account activity row. This is a deliberately
+        redacted projection over merchant_account_audit_events: it never
+        exposes idempotency keys, metadata JSON, raw DD/KYB review
+        reasons, operator notes, or cross-merchant identifiers.
+      required: [event_id, event_type, actor_type, created_at]
+      properties:
+        event_id:   { type: string }
+        event_type:
+          type: string
+          description: Bounded account event name.
+          enum:
+            - merchant.created
+            - merchant.approved
+            - merchant.needs_info
+            - merchant.info_resolved
+            - merchant.profile_submitted
+            - invitation.created
+            - member.bound
+            - role.changed
+            - api_key.created
+            - webhook_endpoint.created
+            - live_mode.enabled
+        actor_type:
+          type: string
+          enum: [operator, system, merchant_user]
+        target_type:
+          type: string
+          description: Optional bounded target type, never raw metadata.
+        target_id:
+          type: string
+          description: Optional target identifier that belongs to the authenticated merchant account.
+        created_at: { type: string, format: date-time }
+
+    DashboardAuditEventsPage:
+      type: object
+      description: |
+        Account-level audit activity for the authenticated merchant. It
+        is merchant-scoped but not test/live-mode-scoped because profile,
+        membership, API-key, webhook, and live-access events are account
+        control-plane activity, not payment ledger rows.
+      required: [items, has_more, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardAuditEventView" }
+        has_more:     { type: boolean }
+        next_cursor:  { type: string }
+        generated_at: { type: string, format: date-time }
+
+    DashboardTeamMemberView:
+      type: object
+      description: |
+        Merchant-facing team member row. This projection never exposes
+        OIDC issuer, OIDC subject, or cross-merchant membership rows.
+      required: [member_id, role, status, created_at, updated_at]
+      properties:
+        member_id:  { type: string }
+        email:
+          type: string
+          format: email
+          description: Email is present only when it can be derived from merchant invitation records.
+        role:
+          type: string
+          enum: [owner, admin, developer, viewer, support]
+        status:
+          type: string
+          enum: [active, revoked]
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time }
+
+    DashboardTeamInvitationView:
+      type: object
+      description: |
+        Merchant-facing team invitation row. It never exposes
+        invitation_token_hash or plaintext invitation tokens.
+      required: [invitation_id, email, role, status, created_at, expires_at]
+      properties:
+        invitation_id: { type: string }
+        email:         { type: string, format: email }
+        role:
+          type: string
+          enum: [owner, admin, developer, viewer, support]
+        status:
+          type: string
+          enum: [pending, accepted, revoked, expired]
+        created_at:  { type: string, format: date-time }
+        expires_at:  { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time }
+        revoked_at:  { type: string, format: date-time }
+
+    DashboardTeamAccessPage:
+      type: object
+      description: |
+        Account-level team access snapshot for the authenticated
+        merchant. Team state is merchant-scoped but not test/live-mode
+        scoped. The response omits identity-provider internals,
+        invitation token material, and operator-only review context.
+      required: [members, invitations, generated_at]
+      properties:
+        members:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardTeamMemberView" }
+        invitations:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
+        generated_at: { type: string, format: date-time }
+
     DashboardWebhookEndpointView:
       type: object
       description: |
-        Mirrors `domain.MerchantDashboardWebhookEndpointView` : the
+        Mirrors `domain.MerchantDashboardWebhookEndpointView` - the
         dashboard-side redacted projection. Differs from the IDX
         WebhookEndpoint shape by surfacing `has_secret` instead of
         any secret material.
-      required: [endpoint_id, url, enabled, has_secret, created_at, updated_at]
+      required:
+        - endpoint_id
+        - url
+        - enabled
+        - has_secret
+        - secret_rotation_due
+        - secret_grace_active
+        - secret_rotation_cadence
+        - created_at
+        - updated_at
       properties:
         endpoint_id: { type: string }
         url:         { type: string, format: uri }
@@ -1409,6 +1899,28 @@ components:
           description: "Subscribed event types; empty array = wildcard."
         enabled:     { type: boolean }
         has_secret:  { type: boolean, description: "True iff a rotatable signing secret is currently on the row (envelope columns populated)." }
+        secret_last_rotated_at:
+          type: string
+          format: date-time
+          description: "Last signing-secret rotation timestamp, omitted for legacy rows where the rotation timestamp is unknown."
+        secret_rotation_due_at:
+          type: string
+          format: date-time
+          description: "Computed quarterly rotation due timestamp when the last rotation timestamp is known."
+        secret_rotation_due:
+          type: boolean
+          description: "True when the endpoint is past the quarterly signing-secret rotation window."
+        secret_grace_until:
+          type: string
+          format: date-time
+          description: "Secondary signing-secret grace-window expiry, if a rotate is in progress."
+        secret_grace_active:
+          type: boolean
+          description: "True while the previous signing secret is still accepted during the rotate grace window."
+        secret_rotation_cadence:
+          type: string
+          enum: [quarterly]
+          description: "Merchant-facing label for the ADR 0050 signing-secret rotation cadence."
         created_at:  { type: string, format: date-time }
         updated_at:  { type: string, format: date-time }
 
@@ -1426,7 +1938,7 @@ components:
       description: |
         Mirrors `domain.MerchantDashboardWebhookDeliveryView`. Hard-
         redacted: signing material, raw body bytes, sig timestamp,
-        signature hex, and merchant_id are all absent : this surface
+        signature hex, and merchant_id are all absent - this surface
         is for correlation + diagnostics, not for replay (replay
         uses the IDX `/replay` endpoint).
       required:
@@ -1465,38 +1977,114 @@ components:
         next_cursor:  { type: string }
         generated_at: { type: string, format: date-time }
 
+    DashboardWebhookHealthWindow:
+      type: object
+      required: [created_from, created_to]
+      properties:
+        created_from: { type: string, format: date-time, description: "Start of the bounded delivery window, inclusive." }
+        created_to:   { type: string, format: date-time, description: "End of the bounded delivery window, exclusive." }
+
+    DashboardWebhookEndpointHealthView:
+      type: object
+      description: |
+        Redacted per-endpoint health projection for the merchant dashboard.
+        It is derived from webhook_endpoints plus bounded webhook_outbox
+        counters. It never returns signing secrets, webhook bodies,
+        signatures, raw response text, or cross-merchant identifiers.
+      required:
+        - endpoint_id
+        - url
+        - enabled
+        - delivery_count
+        - delivered_count
+        - failed_count
+        - pending_count
+      properties:
+        endpoint_id:      { type: string }
+        url:              { type: string, format: uri }
+        enabled:          { type: boolean }
+        delivery_count:   { type: integer, minimum: 0 }
+        delivered_count:  { type: integer, minimum: 0 }
+        failed_count:     { type: integer, minimum: 0 }
+        pending_count:    { type: integer, minimum: 0 }
+        last_state:       { type: string, enum: [pending, delivered, failed] }
+        last_http_status: { type: integer, minimum: 100, maximum: 599 }
+        last_error:       { type: string, description: "Bounded delivery reason code, never raw response text." }
+        last_event_at:    { type: string, format: date-time }
+
+    DashboardWebhookHealthSummary:
+      type: object
+      description: |
+        Real Overview metric contract for webhook delivery health over a
+        bounded 24h window. Merchant and mode are resolved from auth
+        context. This response is intentionally limited to webhook health;
+        it does not claim rail volume, success rate, settlement latency, or
+        chain health.
+      required:
+        - window
+        - total_endpoint_count
+        - enabled_endpoint_count
+        - delivery_count
+        - delivered_count
+        - failed_count
+        - pending_count
+        - endpoints
+        - generated_at
+      properties:
+        window:                 { $ref: "#/components/schemas/DashboardWebhookHealthWindow" }
+        total_endpoint_count:   { type: integer, minimum: 0 }
+        enabled_endpoint_count: { type: integer, minimum: 0 }
+        delivery_count:         { type: integer, minimum: 0 }
+        delivered_count:        { type: integer, minimum: 0 }
+        failed_count:           { type: integer, minimum: 0 }
+        pending_count:          { type: integer, minimum: 0 }
+        last_event_at:          { type: string, format: date-time }
+        endpoints:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardWebhookEndpointHealthView" }
+        generated_at:           { type: string, format: date-time }
+
     DashboardReconciliationView:
       type: object
       description: |
-        Merchant-facing CCTP payment-intent lifecycle row. It exposes
-        product stages, not the internal CCTP state enum: requested,
-        received, routed, settled. Technical hashes, attestation bytes,
-        route hashes, and raw state names are deliberately absent.
+        Mirrors `domain.MerchantDashboardReconciliationView` - a
+        merchant-facing CCTP payment-intent lifecycle row. The shape
+        exposes product-stage timestamps and canonical surface status;
+        raw CCTP state names, proofs, route hashes, attestation bytes,
+        and checkout token hashes are deliberately absent.
       required:
         - intent_id
         - amount_usdc
         - asset
         - source_chain
         - dest_chain
+        - surface_status
         - requested_at
+        - expires_at
         - received_at
         - routed_at
         - settled_at
         - drift_reason
       properties:
-        intent_id:    { type: string }
-        amount_usdc:  { type: string, description: "USDC atomic units as a decimal string." }
-        asset:        { type: string, enum: [USDC] }
-        source_chain: { type: string, enum: [ethereum, arbitrum, base, polygon] }
-        dest_chain:   { type: string, enum: [ethereum, arbitrum, base, polygon] }
-        requested_at: { type: string, format: date-time }
-        received_at:  { type: string, format: date-time, nullable: true }
-        routed_at:    { type: string, format: date-time, nullable: true }
-        settled_at:   { type: string, format: date-time, nullable: true }
+        intent_id:          { type: string, description: "Payment-intent UUID." }
+        merchant_order_id:  { type: string, description: "Merchant-supplied order/deposit reference." }
+        customer_reference: { type: string, description: "Merchant-supplied customer/support reference." }
+        amount_usdc:        { type: string, description: "Atomic USDC units (6 decimals)." }
+        asset:              { type: string, enum: [USDC] }
+        source_chain:       { type: string }
+        dest_chain:         { type: string }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        requested_at:       { type: string, format: date-time }
+        expires_at:         { type: string, format: date-time }
+        received_at:        { type: string, format: date-time, nullable: true }
+        routed_at:          { type: string, format: date-time, nullable: true }
+        settled_at:         { type: string, format: date-time, nullable: true }
         drift_reason:
           type: string
           nullable: true
-          description: "Bounded merchant-facing reason. Null for normal rows."
+          description: "Bounded merchant-facing phrase; null for normal in-progress or settled rows."
 
     DashboardReconciliationPage:
       type: object
@@ -1507,74 +2095,449 @@ components:
           items: { $ref: "#/components/schemas/DashboardReconciliationView" }
         generated_at: { type: string, format: date-time }
 
-    DashboardPolicyView:
+    DashboardReconciliationEvidenceView:
       type: object
       description: |
-        Merchant-facing settlement policy for the authenticated
-        merchant and mode. The mode is resolved from auth; the path
-        parameter must match that resolved mode and cannot switch the
-        caller between test and live.
+        Bounded technical evidence for one reconciliation detail page.
+        It exposes merchant-verifiable transaction references, but
+        never raw attestation bytes, CCTP message bytes, hook_payment_id,
+        route_hash, or internal state names.
       required:
-        - mode
-        - version
-        - default_derived
-        - asset_in
-        - asset_out
-        - preferred_dest_chain
-        - allowed_source_chains
-        - speed
-        - risk_tolerance
-        - provider_outage
-        - allow_manual_review
-        - allow_partial_settlement
-        - updated_at
-        - generated_at
+        - settlement_contract
+        - cctp_version
+        - finality_mode
       properties:
-        mode: { type: string, enum: [test, live] }
-        version: { type: integer, minimum: 0 }
-        default_derived: { type: boolean }
-        asset_in: { type: string, enum: [USDC] }
-        asset_out: { type: string, enum: [USDC] }
-        preferred_dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
-        allowed_source_chains:
-          type: array
-          minItems: 1
-          items: { type: string, enum: [ethereum, base, arbitrum, polygon] }
-        speed: { type: string, enum: [standard] }
-        risk_tolerance: { type: string, enum: [conservative] }
-        provider_outage: { type: string, enum: [freeze] }
-        allow_manual_review: { type: boolean }
-        allow_partial_settlement: { type: boolean }
-        updated_at: { type: string, format: date-time, nullable: true }
-        generated_at: { type: string, format: date-time }
+        source_tx_hash:
+          type: string
+          pattern: '^0x[a-f0-9]{64}$'
+        settlement_tx_hash:
+          type: string
+          pattern: '^0x[a-f0-9]{64}$'
+        settlement_contract:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+        cctp_version: { type: integer, enum: [2] }
+        finality_mode: { type: string, enum: [fast, standard] }
 
-    DashboardPolicyUpdateRequest:
+    DashboardReconciliationDetailView:
+      type: object
+      description: |
+        Click-through reconciliation view for one CCTP payment intent.
+        It keeps the overview's lifecycle language and adds only a
+        bounded evidence object for merchant verification.
+      required:
+        - intent_id
+        - amount_usdc
+        - asset
+        - source_chain
+        - dest_chain
+        - surface_status
+        - requested_at
+        - expires_at
+        - received_at
+        - routed_at
+        - settled_at
+        - drift_reason
+        - updated_at
+      properties:
+        intent_id:          { type: string, description: "Payment-intent UUID." }
+        merchant_order_id:  { type: string, description: "Merchant-supplied order/deposit reference." }
+        customer_reference: { type: string, description: "Merchant-supplied customer/support reference." }
+        amount_usdc:        { type: string, description: "Atomic USDC units (6 decimals)." }
+        asset:              { type: string, enum: [USDC] }
+        source_chain:       { type: string }
+        dest_chain:         { type: string }
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+        requested_at:       { type: string, format: date-time }
+        expires_at:         { type: string, format: date-time }
+        received_at:        { type: string, format: date-time, nullable: true }
+        routed_at:          { type: string, format: date-time, nullable: true }
+        settled_at:         { type: string, format: date-time, nullable: true }
+        drift_reason:
+          type: string
+          nullable: true
+          description: "Bounded merchant-facing phrase; null for normal in-progress or settled rows."
+        evidence:
+          $ref: "#/components/schemas/DashboardReconciliationEvidenceView"
+        updated_at: { type: string, format: date-time }
+
+    DashboardSettlementReconciliationWindow:
+      type: object
+      required: [created_from, created_to]
+      properties:
+        created_from: { type: string, format: date-time }
+        created_to: { type: string, format: date-time }
+        dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        settlement_contract:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+        merchant_wallet:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+
+    DashboardSettlementLedgerSummary:
       type: object
       required:
-        - asset_in
-        - asset_out
-        - preferred_dest_chain
-        - allowed_source_chains
-        - speed
-        - risk_tolerance
-        - provider_outage
+        - payment_count
+        - settled_count
+        - gross_amount_usdc
+        - merchant_amount_captured_atomic
+        - fee_delta_atomic
+        - incomplete_settlement_amount_count
+        - stuck_count
+        - failed_count
+        - expired_count
       properties:
-        asset_in: { type: string, enum: [USDC] }
-        asset_out: { type: string, enum: [USDC] }
-        preferred_dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
-        allowed_source_chains:
+        payment_count:
+          type: integer
+          minimum: 0
+          description: Authenticated merchant/mode payment-intent rows in the bounded created_at window and optional route filters.
+        settled_count:
+          type: integer
+          minimum: 0
+          description: Rows in the window whose status is SETTLED and whose mint_tx_hash is present.
+        gross_amount_usdc:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Gross CCTP USDC atomic units summed from amount_usdc for settled rows only.
+        merchant_amount_captured_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Merchant-net USDC atomic units summed from merchant_amount_captured_atomic for settled rows only.
+        fee_delta_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Derived gross minus merchant-net atomic USDC for settled rows with captured merchant amount.
+        incomplete_settlement_amount_count:
+          type: integer
+          minimum: 0
+          description: Settled rows missing merchant_amount_captured_atomic; non-zero means the ledger total is incomplete.
+        stuck_count: { type: integer, minimum: 0 }
+        failed_count: { type: integer, minimum: 0 }
+        expired_count: { type: integer, minimum: 0 }
+
+    DashboardSettlementOnChainSummary:
+      type: object
+      required:
+        - status
+        - event_count
+        - merchant_amount_atomic
+        - chainmore_fee_atomic
+        - distinct_tx_count
+      properties:
+        status:
+          type: string
+          enum: [matched, ledger_ahead, chain_ahead, partial, unavailable]
+        unavailable_reason:
+          type: string
+          description: Present when route/RPC event evidence is not configured.
+        event_count: { type: integer, minimum: 0 }
+        merchant_amount_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+        chainmore_fee_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+        distinct_tx_count: { type: integer, minimum: 0 }
+        first_scanned_block: { type: integer, minimum: 0 }
+        last_scanned_block: { type: integer, minimum: 0 }
+        scanned_at: { type: string, format: date-time }
+
+    DashboardSettlementReconciliationResult:
+      type: object
+      required: [status, message, next_action]
+      properties:
+        status:
+          type: string
+          enum: [matched, ledger_ahead, chain_ahead, partial, unavailable]
+        message:
+          type: string
+        next_action:
+          type: string
+
+    DashboardSettlementReconciliationSummary:
+      type: object
+      description: |
+        Aggregate Finance reconciliation snapshot for a bounded period.
+        Merchant and mode are resolved from auth context; requested fiat,
+        gross CCTP USDC, and merchant-net settlement amounts remain
+        distinct. On-chain comparison returns unavailable unless bounded
+        settlement-event evidence is configured for the selected route.
+      required: [window, ledger, on_chain, result, generated_at]
+      properties:
+        window: { $ref: "#/components/schemas/DashboardSettlementReconciliationWindow" }
+        ledger: { $ref: "#/components/schemas/DashboardSettlementLedgerSummary" }
+        on_chain: { $ref: "#/components/schemas/DashboardSettlementOnChainSummary" }
+        result: { $ref: "#/components/schemas/DashboardSettlementReconciliationResult" }
+        generated_at: { type: string, format: date-time }
+
+    DashboardRouteLedgerWindow:
+      type: object
+      required: [created_from, created_to]
+      properties:
+        created_from: { type: string, format: date-time }
+        created_to: { type: string, format: date-time }
+
+    DashboardRouteLedgerRow:
+      type: object
+      required:
+        - source_chain
+        - dest_chain
+        - payment_count
+        - settled_count
+        - stuck_count
+        - failed_count
+        - expired_count
+        - requested_amount_usdc
+        - settled_amount_usdc
+        - merchant_amount_captured_atomic
+        - fee_delta_atomic
+      properties:
+        source_chain:
+          type: string
+          description: Source chain recorded on payment_intents for the authenticated merchant and mode.
+        dest_chain:
+          type: string
+          description: Destination chain recorded on payment_intents for the authenticated merchant and mode.
+        payment_count:
+          type: integer
+          minimum: 0
+          description: Payment-intent rows in the bounded created_at window for this route.
+        settled_count:
+          type: integer
+          minimum: 0
+          description: Rows whose status is SETTLED and whose mint_tx_hash is present.
+        stuck_count: { type: integer, minimum: 0 }
+        failed_count: { type: integer, minimum: 0 }
+        expired_count: { type: integer, minimum: 0 }
+        requested_amount_usdc:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Gross USDC atomic units summed from amount_usdc for all rows in this route/window.
+        settled_amount_usdc:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Gross USDC atomic units summed from amount_usdc for settled rows only.
+        merchant_amount_captured_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Merchant-net USDC atomic units summed from merchant_amount_captured_atomic for settled rows only.
+        fee_delta_atomic:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Derived gross minus merchant-net atomic USDC for settled rows with captured merchant amount.
+
+    DashboardRouteLedgerSummary:
+      type: object
+      description: |
+        Route-level ledger aggregate for future Merchant Dashboard rail
+        cards. Merchant and mode are resolved from auth context. This
+        endpoint exposes only source_chain -> dest_chain counts and
+        amount totals already present in payment_intents; it does not
+        claim provider success rates, latency, or route availability.
+      required: [window, items, generated_at]
+      properties:
+        window: { $ref: "#/components/schemas/DashboardRouteLedgerWindow" }
+        items:
           type: array
-          minItems: 1
-          items: { type: string, enum: [ethereum, base, arbitrum, polygon] }
-        speed: { type: string, enum: [standard, fast] }
-        risk_tolerance: { type: string, enum: [conservative, liberal] }
-        provider_outage: { type: string, enum: [freeze, try_alternate] }
+          items: { $ref: "#/components/schemas/DashboardRouteLedgerRow" }
+        generated_at: { type: string, format: date-time }
+
+    DashboardRouteHealthWindow:
+      type: object
+      required: [created_from, created_to]
+      properties:
+        created_from: { type: string, format: date-time }
+        created_to: { type: string, format: date-time }
+
+    DashboardRouteLatencyQuantiles:
+      type: object
+      required: [p50, p95, p99]
+      properties:
+        p50:
+          type: integer
+          minimum: 0
+          description: Median seconds from payment intent creation to SETTLED state-history event.
+        p95:
+          type: integer
+          minimum: 0
+          description: 95th percentile seconds from payment intent creation to SETTLED state-history event.
+        p99:
+          type: integer
+          minimum: 0
+          description: 99th percentile seconds from payment intent creation to SETTLED state-history event.
+
+    DashboardRouteHealthRow:
+      type: object
+      required:
+        - source_chain
+        - dest_chain
+        - payment_count
+        - settled_count
+        - active_count
+        - failed_count
+        - expired_count
+        - needs_attention_count
+        - completion_rate_bps
+        - settlement_latency_sample_count
+      properties:
+        source_chain:
+          type: string
+          description: Source chain recorded on payment_intents for the authenticated merchant and mode.
+        dest_chain:
+          type: string
+          description: Destination chain recorded on payment_intents for the authenticated merchant and mode.
+        payment_count:
+          type: integer
+          minimum: 0
+          description: Payment-intent rows in the bounded created_at window for this route.
+        settled_count:
+          type: integer
+          minimum: 0
+          description: Rows whose status is SETTLED and whose SETTLED state-history timestamp is present.
+        active_count:
+          type: integer
+          minimum: 0
+          description: Non-terminal rows that are neither SETTLED, FAILED, nor EXPIRED.
+        failed_count: { type: integer, minimum: 0 }
+        expired_count: { type: integer, minimum: 0 }
+        needs_attention_count:
+          type: integer
+          minimum: 0
+          description: Rows that are failed, expired, or in a stuck internal state. Raw internal states are not emitted.
+        completion_rate_bps:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          description: Settled rows divided by all rows for this route/window, expressed in basis points.
+        settlement_latency_seconds:
+          $ref: "#/components/schemas/DashboardRouteLatencyQuantiles"
+        settlement_latency_sample_count:
+          type: integer
+          minimum: 0
+          description: Count of settled rows with usable created_at and SETTLED timestamps.
+
+    DashboardRouteHealthSummary:
+      type: object
+      description: |
+        Backend-only route-health projection for Merchant Dashboard route
+        analysis. Merchant and mode are resolved from auth context. Values
+        are computed from payment_intents plus payment_intent_state_history;
+        the response omits provider names, internal route hashes,
+        attestation material, and raw CCTP state.
+      required: [window, items, generated_at]
+      properties:
+        window: { $ref: "#/components/schemas/DashboardRouteHealthWindow" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardRouteHealthRow" }
+        generated_at: { type: string, format: date-time }
+
+    DashboardExportJobPaymentsFilter:
+      type: object
+      description: |
+        Filter for an async payments export. Merchant and mode are never
+        accepted here; they come from auth context. created_from and
+        created_to are required so large exports stay bounded.
+      required: [created_from, created_to]
+      additionalProperties: false
+      properties:
+        q:
+          type: string
+          maxLength: 128
+          description: Exact lookup by merchant_order_id or ChainMore payment_id.
+        status:
+          type: string
+          description: Merchant-facing payment status filter. Refund lifecycle values are reserved for reviewed, non-automatic remediation flows and are not accepted as export filters until the refund backend is implemented.
+          enum:
+            - payment_created
+            - checkout_started
+            - authorization_pending
+            - authorized
+            - executing
+            - completed
+            - failed
+            - expired
+        created_from:
+          type: string
+          description: Inclusive created_at lower bound. Accepts YYYY-MM-DD or RFC3339.
+        created_to:
+          type: string
+          description: Exclusive created_at upper bound. YYYY-MM-DD values include that calendar day.
+
+    DashboardExportJobCreateRequest:
+      type: object
+      required: [export_type, format, filter]
+      additionalProperties: false
+      properties:
+        export_type:
+          type: string
+          enum: [payments]
+        format:
+          type: string
+          enum: [csv, jsonl]
+        filter:
+          $ref: "#/components/schemas/DashboardExportJobPaymentsFilter"
+
+    DashboardExportJobView:
+      type: object
+      description: |
+        Redacted async export job status. It does not expose merchant_id,
+        filter_json, idempotency_key, storage_uri, or raw failure_message.
+      required:
+        - export_id
+        - export_type
+        - format
+        - status
+        - mode
+        - filter_hash
+        - created_at
+        - expires_at
+        - updated_at
+      properties:
+        export_id: { type: string, format: uuid }
+        export_type: { type: string, enum: [payments] }
+        format: { type: string, enum: [csv, jsonl] }
+        status: { type: string, enum: [queued, running, succeeded, failed, expired, cancelled] }
+        mode: { type: string, enum: [test, live] }
+        filter_hash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        row_count: { type: integer, format: int64, minimum: 0 }
+        byte_count: { type: integer, format: int64, minimum: 0 }
+        sha256:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        failure_code:
+          type: string
+          description: Bounded failure code when a worker marks the job failed; raw failure messages are not exposed.
+        created_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    DashboardExportJobsPage:
+      type: object
+      description: |
+        Recent async export jobs for the authenticated merchant and mode.
+        Items use the same redacted job projection as the status endpoint;
+        storage_uri, filter_json, idempotency_key, and raw failure_message
+        remain server-side.
+      required: [items, generated_at]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardExportJobView" }
+        generated_at: { type: string, format: date-time }
 
     # ── Merchant Integration control plane (IDX-M2 / IDX-M4) ─────────────────
     APIKey:
       type: object
       description: |
-        Projection of an `api_keys` row. Never carries the secret :
+        Projection of an `api_keys` row. Never carries the secret -
         that is present only in the one-shot response of create /
         rotate and never re-derivable thereafter.
       required: [id, merchant_id, name, mode, key_prefix, status, created_at]
@@ -1593,7 +2556,7 @@ components:
       type: object
       description: |
         Body for `POST /v1/keys`. IDX-I2: `mode` MUST NOT appear in
-        the body : it is derived from the authenticated key. A `mode`
+        the body - it is derived from the authenticated key. A `mode`
         field, if sent, is silently ignored.
       properties:
         name: { type: string, description: "Human-readable label." }
@@ -1623,12 +2586,22 @@ components:
       required: [api_key, secret, predecessor]
       properties:
         api_key:     { $ref: "#/components/schemas/APIKey" }
-        secret:      { type: string, description: "Plaintext of the new key : returned once." }
+        secret:      { type: string, description: "Plaintext of the new key - returned once." }
         predecessor: { $ref: "#/components/schemas/APIKey" }
 
     WebhookEndpoint:
       type: object
-      required: [id, merchant_id, url, events, enabled, mode, created_at]
+      required:
+        - id
+        - merchant_id
+        - url
+        - events
+        - enabled
+        - mode
+        - secret_rotation_due
+        - secret_grace_active
+        - secret_rotation_cadence
+        - created_at
       properties:
         id:          { type: string }
         merchant_id: { type: string }
@@ -1638,6 +2611,28 @@ components:
           items: { type: string }
         enabled:     { type: boolean }
         mode:        { type: string, enum: [test, live] }
+        secret_last_rotated_at:
+          type: string
+          format: date-time
+          description: "Last signing-secret rotation timestamp, omitted for legacy rows where the rotation timestamp is unknown."
+        secret_rotation_due_at:
+          type: string
+          format: date-time
+          description: "Computed quarterly rotation due timestamp when the last rotation timestamp is known."
+        secret_rotation_due:
+          type: boolean
+          description: "True when the endpoint is past the quarterly signing-secret rotation window."
+        secret_grace_until:
+          type: string
+          format: date-time
+          description: "Secondary signing-secret grace-window expiry, if a rotate is in progress."
+        secret_grace_active:
+          type: boolean
+          description: "True while the previous signing secret is still accepted during the rotate grace window."
+        secret_rotation_cadence:
+          type: string
+          enum: [quarterly]
+          description: "Merchant-facing label for the ADR 0050 signing-secret rotation cadence."
         created_at:  { type: string, format: date-time }
         updated_at:  { type: string, format: date-time }
 
@@ -1675,7 +2670,7 @@ components:
       type: object
       description: |
         Partial update. Any field omitted is left unchanged. `mode`
-        is NOT updatable : rotate a new endpoint instead.
+        is NOT updatable - rotate a new endpoint instead.
       properties:
         url:
           type: string
@@ -1703,11 +2698,11 @@ components:
         webhook endpoint. The body is signed with HMAC-SHA256 over
         the exact raw bytes using the endpoint's `whsec_*` secret;
         the signature is carried in the `X-ChainMore-Signature`
-        header as lowercase hex. See docs/quickstart.md §4 for the
+        header as lowercase hex. See docs/quickstart.md section 4 for the
         verification snippet.
       required: [id, type, created_at, mode, data]
       properties:
-        id:         { type: string, description: "Unique event id : dedupe by this." }
+        id:         { type: string, description: "Unique event id - dedupe by this." }
         type:
           type: string
           description: "Event type, e.g. `payment.settled`, `payment_intent.settled`."
@@ -1716,58 +2711,6 @@ components:
         data:
           type: object
           description: "Event-specific payload. For payment.* events: { payment, checkout_session }."
-
-    PaymentIntentSettledWebhook:
-      type: object
-      description: |
-        Body for the CCTP `payment_intent.settled` webhook. This body
-        uses the public payment-intent vocabulary and deliberately
-        exposes `surface_status`, not the raw CCTP internal state.
-      required:
-        - event_type
-        - event_id
-        - occurred_at
-        - payment_id
-        - merchant_id
-        - mode
-        - surface_status
-        - amount
-        - route
-        - settlement
-      properties:
-        event_type: { type: string, enum: [payment_intent.settled] }
-        event_id:   { type: string, description: "Unique delivery id. Dedupe by this." }
-        occurred_at: { type: string, format: date-time }
-        payment_id: { type: string, format: uuid, description: "The CCTP payment intent id." }
-        merchant_id: { type: string }
-        mode: { type: string, enum: [test, live] }
-        surface_status:
-          type: string
-          enum: [completed]
-        amount:
-          type: object
-          required: [usdc_atomic, asset]
-          properties:
-            usdc_atomic: { type: string, description: "USDC atomic units, 6 decimals." }
-            asset: { type: string, enum: [USDC] }
-        route:
-          type: object
-          required: [source_chain, dest_chain, finality_mode]
-          properties:
-            source_chain: { type: string }
-            dest_chain: { type: string }
-            finality_mode: { type: string, enum: [fast, standard] }
-        settlement:
-          type: object
-          required: [merchant_wallet, settlement_contract]
-          properties:
-            source_tx_hash: { type: string }
-            mint_tx_hash: { type: string }
-            merchant_wallet: { type: string }
-            settlement_contract: { type: string }
-        replayed_from_event_id:
-          type: string
-          description: "Present only when this delivery was merchant-triggered via replay."
 
   responses:
     BadRequest:
@@ -1787,7 +2730,7 @@ components:
           schema: { $ref: "#/components/schemas/Problem" }
     Conflict:
       description: |
-        State/precondition conflict : e.g. CKO state disallows the
+        State/precondition conflict - e.g. CKO state disallows the
         requested transition (CKO-I2/I3), validation precondition
         unmet, or dispatch gate refused.
       content:
@@ -1814,7 +2757,7 @@ components:
 #
 # NOTE: Each top-level path key is indented with exactly two spaces; each
 # method under it is indented with exactly four. The drift-checker parser
-# relies on this formatting : preserve it on edits.
+# relies on this formatting - preserve it on edits.
 # ---------------------------------------------------------------------------
 paths:
   /health:
@@ -1828,6 +2771,64 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/HealthResponse" }
+
+  /internal/providers/paysafe/webhooks:
+    post:
+      summary: Receive Paysafe sandbox webhooks.
+      operationId: receivePaysafeWebhook
+      security: []
+      description: |
+        Provider callback ingress authenticated by Paysafe's `Signature`
+        header, not by a ChainMore merchant bearer. The receiver verifies
+        Base64(HMAC-SHA256(webhook secret, raw JSON body)) before parsing,
+        applies timestamp freshness when configured, and records provider
+        event ids through the persistent idempotency guard before running
+        callback logic.
+
+        Current implementation is sandbox-gated at gateway boot:
+        `PAYSAFE_WEBHOOK_MOUNT=true` refuses unless
+        `PAYSAFE_ENVIRONMENT=sandbox`. Production webhook ingestion requires
+        a separate approval and wiring pass.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: Signature
+          in: header
+          required: true
+          schema: { type: string }
+          description: Paysafe Base64 HMAC-SHA256 signature over the raw JSON request body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '202':
+          description: Webhook accepted or duplicate event already recorded.
+        '400':
+          description: Invalid payload, missing/stale timestamp, or malformed webhook event.
+          content:
+            text/plain:
+              schema: { type: string }
+        '401':
+          description: Invalid webhook signature.
+          content:
+            text/plain:
+              schema: { type: string }
+        '405':
+          description: Method not allowed.
+          content:
+            text/plain:
+              schema: { type: string }
+        '413':
+          description: Webhook body exceeds the receiver limit.
+          content:
+            text/plain:
+              schema: { type: string }
+        '500':
+          description: Receiver not configured or idempotency/business callback failed.
+          content:
+            text/plain:
+              schema: { type: string }
 
   /v1/payment-intents/checkout/session:
     get:
@@ -1866,7 +2867,7 @@ paths:
       description: |
         Browser-facing checkout-token endpoint. It binds the connected payer
         wallet while the intent is still awaiting deposit, returns the signed
-        PaymentSourceBurnAdapterV1 authorization, and includes server-encoded
+        PaymentSourceBurnAdapter authorization, and includes server-encoded
         adapter calldata. The checkout token can only operate on its own
         intent; it does not grant merchant API access. If both Authorization
         Bearer and query token credentials are sent, they must match exactly.
@@ -1888,6 +2889,44 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SourceBurnAuthorizationResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  /v1/payment-intents/checkout/source-burn-relay:
+    post:
+      summary: Relay an adapter v2 source burn from a checkout EIP-3009 signature.
+      operationId: relayPaymentIntentCheckoutSourceBurn
+      security: []
+      description: |
+        Browser-facing checkout-token endpoint for the premium adapter v2 path.
+        Hosted Checkout sends the payer's Circle-USDC receiveWithAuthorization
+        signature. ChainMore validates that it exactly matches the checkout's
+        server-derived typed data, relays burnWithReceiveAuthorization through
+        the configured source-burn relay, and stores the returned source tx
+        hash as a pending browser/server claim. The on-chain observer still
+        owns final BURNED verification.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: token
+          in: query
+          required: false
+          schema: { type: string }
+          description: Checkout token. Authorization Bearer is preferred when available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RelayCheckoutSourceBurnRequest" }
+      responses:
+        '200':
+          description: Source burn relay submitted; intent awaits on-chain confirmation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SourceBurnRelayResponse" }
         '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
@@ -1953,7 +2992,7 @@ paths:
           description: CCTP payment-intent surface status.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PaymentIntentStatus" }
+              schema: { $ref: "#/components/schemas/PaymentIntentReadResponse" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
         '429': { $ref: "#/components/responses/RateLimited" }
@@ -2058,127 +3097,6 @@ paths:
         '429': { $ref: "#/components/responses/RateLimited" }
         '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
-  /v1/refunds:
-    post:
-      summary: Request a refund for a settled CCTP payment intent.
-      operationId: createRefund
-      description: |
-        Creates a merchant-scoped refund intent for an already settled CCTP
-        payment intent. The authenticated API key determines merchant and
-        mode; callers cannot supply tenant or mode. This Slice-2 endpoint
-        records the request and idempotency boundary only. It does not burn,
-        settle, or broadcast any chain transaction.
-      parameters:
-        - $ref: "#/components/parameters/CorrelationID"
-        - $ref: "#/components/parameters/IdempotencyKey"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CreateRefundRequest" }
-      responses:
-        '201':
-          description: Refund intent created.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RefundIntent" }
-        '200':
-          description: Idempotent replay of an existing refund intent.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RefundIntent" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-        '409': { $ref: "#/components/responses/Conflict" }
-        '422': { $ref: "#/components/responses/BadRequest" }
-        '429': { $ref: "#/components/responses/RateLimited" }
-
-  /v1/refunds/{refundId}:
-    get:
-      summary: Read a merchant-scoped refund intent.
-      operationId: getRefund
-      parameters:
-        - name: refundId
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '200':
-          description: Refund intent view.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RefundIntent" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-        '429': { $ref: "#/components/responses/RateLimited" }
-
-  /v1/refunds/{refundId}/cancel:
-    post:
-      summary: Cancel a requested or approved refund intent.
-      operationId: cancelRefund
-      description: |
-        Cancels only pre-money refund states. Signed, burn, settlement,
-        recovery, and terminal states are intentionally not cancellable by
-        this Slice-2 endpoint.
-      parameters:
-        - name: refundId
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: "#/components/parameters/CorrelationID"
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CancelRefundRequest" }
-      responses:
-        '200':
-          description: Refund intent cancelled.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RefundIntent" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-        '409': { $ref: "#/components/responses/Conflict" }
-        '429': { $ref: "#/components/responses/RateLimited" }
-
-  /v1/refunds/{refundId}/signature:
-    post:
-      summary: Submit merchant refund authorization signature.
-      operationId: submitRefundSignature
-      description: |
-        Accepts the merchant refund wallet's EIP-712 signature after operator
-        approval and dashboard render-token redemption. The gateway validates
-        route-bound fields before calling the refund service. Without a wired
-        render-token verifier this endpoint fails closed with
-        `refund_endpoint_disabled`.
-      parameters:
-        - name: refundId
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: "#/components/parameters/CorrelationID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/SubmitRefundSignatureRequest" }
-      responses:
-        '200':
-          description: Refund authorization accepted; refund enters signed_pending_burn.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RefundIntent" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-        '409': { $ref: "#/components/responses/Conflict" }
-        '429': { $ref: "#/components/responses/RateLimited" }
-        '503': { $ref: "#/components/responses/ServerMisconfigured" }
-
   /v1/payments:
     post:
       summary: Create a payment.
@@ -2219,7 +3137,7 @@ paths:
 
   /v1/payments/{id}/attempts:
     post:
-      summary: "Start a payment attempt (EXE-GATE-I1: refuses without wired gate)."
+      summary: Start a payment attempt (EXE-GATE-I1 - refuses without wired gate).
       operationId: startAttempt
       parameters:
         - $ref: "#/components/parameters/PaymentID"
@@ -2387,16 +3305,16 @@ paths:
 
   /v1/merchants:
     get:
-      summary: Phase-1 merchants placeholder.
+      summary: Phase-1 merchants reserved response.
       operationId: merchantsPlaceholder
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
-          description: Placeholder shape; stable until the merchants surface lights up.
+          description: Reserved shape; stable until the merchants surface becomes available.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/MerchantsPlaceholder" }
+              schema: { $ref: "#/components/schemas/MerchantsReservedResponse" }
         '401': { $ref: "#/components/responses/Unauthorized" }
 
   /v1/routing/plan:
@@ -2513,6 +3431,39 @@ paths:
   # -------------------------------------------------------------------------
   # Widget / Hosted Checkout JSON surface (WGT-I1)
   # -------------------------------------------------------------------------
+  /v1/checkout/widget/bind-wallet:
+    post:
+      summary: Bind the end-user wallet using the checkout token.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. The browser never sends or sees a merchant API key or
+        payment_id; the server resolves the payment binding from the token.
+      operationId: bindWidgetWallet
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BindWalletRequest" }
+      responses:
+        '200':
+          description: Session advanced to route_ready.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BindWalletResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+
   /v1/checkout/widget/session:
     get:
       summary: Redacted widget view for the hosted checkout browser page.
@@ -2539,8 +3490,205 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+  /v1/checkout/widget/submit:
+    post:
+      summary: Submit the user-signed transaction using the checkout token.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. The server resolves the payment binding from the token
+        and runs the same dispatch/execution path as the machine endpoint.
+      operationId: submitWidgetExecution
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitExecutionRequest" }
+      responses:
+        '200':
+          description: Session advanced to submitted/executing.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmitExecutionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+
   # -------------------------------------------------------------------------
-  # Merchant Dashboard plane (MDA-I2 : read-mostly, explicit policy write)
+  # Merchant Dashboard async export control plane
+  # -------------------------------------------------------------------------
+  /v1/dashboard/exports:
+    get:
+      summary: List recent async dashboard export jobs.
+      operationId: listDashboardExportJobs
+      description: |
+        Lists recent async export job metadata for the authenticated
+        merchant and mode. Cross-merchant and cross-mode jobs are not
+        visible, and storage/provider internals are never exposed.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Recent export jobs.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardExportJobsPage" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+    post:
+      summary: Queue an async dashboard export job for the authenticated merchant.
+      operationId: createDashboardExportJob
+      description: |
+        Creates export job metadata only. Merchant and mode are resolved
+        from the dashboard auth context; request bodies cannot assert
+        merchant_id or mode. This endpoint does not run a worker, create
+        a downloadable file, expose storage URIs, or move funds.
+      parameters:
+        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardExportJobCreateRequest" }
+      responses:
+        '202':
+          description: Export job accepted or existing matching idempotent job returned.
+          headers:
+            Location:
+              description: Status URL for the queued export job.
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardExportJobView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/exports/{id}:
+    get:
+      summary: Read async dashboard export job status.
+      operationId: getDashboardExportJob
+      description: |
+        Reads export job metadata for the authenticated merchant and
+        mode. Cross-merchant or cross-mode job IDs do not return another
+        merchant's job; storage_uri and raw failure_message are never
+        exposed.
+      parameters:
+        - $ref: "#/components/parameters/DashboardExportID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Export job status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardExportJobView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/exports/{id}/download:
+    get:
+      summary: Download a completed async dashboard export.
+      operationId: downloadDashboardExportJob
+      description: |
+        Streams the generated export artifact for the authenticated
+        merchant and mode. Cross-merchant, cross-mode, missing, queued,
+        running, failed, or cancelled jobs do not expose another export.
+        The response never returns storage_uri, object keys, signed URLs,
+        or storage-provider credentials.
+      parameters:
+        - $ref: "#/components/parameters/DashboardExportID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Export artifact stream.
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: [no-store] }
+            Content-Disposition:
+              description: Deterministic attachment filename.
+              schema: { type: string }
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+            application/x-ndjson:
+              schema: { type: string, format: binary }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  # -------------------------------------------------------------------------
+  # Merchant onboarding control plane
+  # -------------------------------------------------------------------------
+  /v1/onboarding/account-profile:
+    get:
+      summary: Read the authenticated merchant's current business profile submission.
+      operationId: getAccountProfileSubmission
+      description: |
+        Merchant-user readback for the current submitted business profile.
+        The server resolves merchant_id from the authenticated dashboard user.
+        This endpoint is read-only: it does not grant live access, issue keys,
+        create provider handles, or expose DD/KYB decision notes.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Current account profile readback.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountProfileReadbackResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+    post:
+      summary: Submit the authenticated merchant's business profile for account review.
+      operationId: submitAccountProfile
+      description: |
+        Merchant-user control-plane write. The server resolves
+        merchant_id from the authenticated dashboard user; callers must
+        not send tenant identity in the body. This starts DD/KYB review
+        only. It does not grant live access, issue API keys, create
+        provider handles, or trigger payments.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitAccountProfileRequest" }
+      responses:
+        '201':
+          description: Account profile submission accepted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmitAccountProfileResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  # -------------------------------------------------------------------------
+  # Merchant Dashboard read plane (MDA-I2 - GET-only; exports above are
+  # separate control-plane metadata endpoints)
   # -------------------------------------------------------------------------
   /v1/dashboard/integration:
     get:
@@ -2557,6 +3705,118 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+  /v1/dashboard/onboarding/progress:
+    get:
+      summary: Read merchant onboarding setup progress.
+      operationId: getDashboardOnboardingProgress
+      description: |
+        Read-only setup-progress contract for the authenticated
+        merchant. The response is derived from existing account,
+        API-key, webhook, test-event, and settled test-payment rows.
+        It does not issue keys, fire webhooks, trigger payments,
+        create provider handles, or enable live access.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Onboarding setup progress view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MerchantOnboardingProgressView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/audit-events:
+    get:
+      summary: List account audit events for the authenticated merchant.
+      operationId: listDashboardAuditEvents
+      description: |
+        Read-only account activity for the authenticated merchant. The
+        endpoint is merchant-scoped and deliberately redacted: it returns
+        event type, actor type, optional bounded target, and timestamp
+        only. It never returns metadata JSON, idempotency keys, raw
+        DD/KYB review reasons, operator notes, or another merchant's row.
+      parameters:
+        - $ref: "#/components/parameters/DashboardCursor"
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Page of account audit events.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardAuditEventsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/team-access:
+    get:
+      summary: Read team members and invitations for the authenticated merchant.
+      operationId: getDashboardTeamAccess
+      description: |
+        Read-only account-level team access snapshot. The endpoint is
+        merchant-scoped and redacted: it returns member role/status and
+        invitation role/status, but never OIDC issuer/subject,
+        invitation_token_hash, plaintext invitation tokens, or
+        cross-merchant rows.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Redacted team access snapshot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardTeamAccessPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/exceptions/summary:
+    get:
+      summary: Read CCTP exception depth for the authenticated merchant (mode-scoped).
+      operationId: getDashboardExceptionSummary
+      description: |
+        Compact read-only Ops snapshot for delayed, needs_review,
+        failed_safely, and expired CCTP payment intents. Merchant and
+        mode come from the authenticated dashboard context; raw CCTP
+        states such as STUCK_MINT are deliberately not exposed.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Exception-depth summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardExceptionSummary" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/customers/{id}:
+    get:
+      summary: Read Customer-360 activity for one merchant-supplied customer reference.
+      operationId: getDashboardCustomerActivity
+      description: |
+        Returns a merchant- and mode-scoped CCTP activity summary plus
+        recent stage-based payment-intent rows for one pseudonymous
+        customer_reference. The path id is the merchant-supplied
+        customer_reference; merchant and mode come from the
+        authenticated dashboard context.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Merchant-supplied customer_reference.
+          schema:
+            type: string
+            maxLength: 128
+            pattern: '^[A-Za-z0-9._:-]+$'
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Customer activity view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardCustomerActivityPage" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
   /v1/dashboard/payments:
     get:
       summary: List payments for the authenticated merchant (mode-scoped).
@@ -2564,6 +3824,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/DashboardCursor"
         - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/DashboardPaymentSearch"
+        - $ref: "#/components/parameters/DashboardPaymentStatus"
+        - $ref: "#/components/parameters/DashboardPaymentCreatedFrom"
+        - $ref: "#/components/parameters/DashboardPaymentCreatedTo"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
@@ -2571,6 +3835,38 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardPaymentsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/payments/export.csv:
+    get:
+      summary: Export the filtered dashboard payment result set as CSV.
+      operationId: exportDashboardPaymentsCSV
+      parameters:
+        - $ref: "#/components/parameters/DashboardPaymentSearch"
+        - $ref: "#/components/parameters/DashboardPaymentStatus"
+        - $ref: "#/components/parameters/DashboardPaymentCreatedFrom"
+        - $ref: "#/components/parameters/DashboardPaymentCreatedTo"
+        - $ref: "#/components/parameters/DashboardExportLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: CSV export. Requested fiat amount/currency and settlement asset are separate columns.
+          headers:
+            X-ChainMore-Export-Returned-Count:
+              description: Number of rows included in this CSV response.
+              schema: { type: integer, minimum: 0 }
+            X-ChainMore-Export-Row-Limit:
+              description: Server-enforced maximum rows for this CSV response.
+              schema: { type: integer, minimum: 1, maximum: 5000 }
+            X-ChainMore-Export-Total-Count:
+              description: Full filtered result count before the CSV row cap.
+              schema: { type: integer, minimum: 0 }
+            X-ChainMore-Export-Truncated:
+              description: True when the filtered result set is larger than the returned CSV.
+              schema: { type: boolean }
+          content:
+            text/csv:
+              schema: { type: string }
         '401': { $ref: "#/components/responses/Unauthorized" }
 
   /v1/dashboard/payments/{id}:
@@ -2621,6 +3917,185 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+  /v1/dashboard/reconciliation:
+    get:
+      summary: Search CCTP reconciliation rows for the authenticated merchant (mode-scoped).
+      operationId: listDashboardReconciliation
+      description: |
+        Read-only merchant dashboard projection over payment_intents.
+        The required `q` parameter is exact-match support lookup by
+        merchant_order_id, customer_reference, or payment-intent ID.
+        The repository always derives merchant and mode from auth
+        context; `q` never broadens tenant or mode scope.
+      parameters:
+        - $ref: "#/components/parameters/DashboardLimit"
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+          description: "Required exact lookup by merchant_order_id, customer_reference, or payment-intent ID."
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Reconciliation rows.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardReconciliationPage" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/reconciliation/settlement-summary:
+    get:
+      summary: Read aggregate settlement reconciliation for a bounded period.
+      operationId: getDashboardSettlementReconciliationSummary
+      description: |
+        Read-only high-volume Finance summary. Merchant and mode are
+        resolved from auth context; the query only bounds the time
+        window and optional route filters. The endpoint exposes ledger-side
+        totals and returns on_chain.status = unavailable unless bounded
+        settlement-event evidence is configured for the selected route.
+      parameters:
+        - name: created_from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Start of the created_at window, inclusive. YYYY-MM-DD is also accepted by the Gateway.
+        - name: created_to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: End of the created_at window, exclusive. YYYY-MM-DD is accepted and treated as the end of that date.
+        - name: dest_chain
+          in: query
+          schema:
+            type: string
+            enum: [ethereum, base, arbitrum, polygon]
+          description: Optional destination chain filter.
+        - name: settlement_contract
+          in: query
+          schema:
+            type: string
+            pattern: '^0x[a-f0-9]{40}$'
+          description: Optional destination settlement contract filter.
+        - name: merchant_wallet
+          in: query
+          schema:
+            type: string
+            pattern: '^0x[a-f0-9]{40}$'
+          description: Optional merchant wallet filter.
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Aggregate settlement reconciliation summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSettlementReconciliationSummary" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/reconciliation/route-summary:
+    get:
+      summary: Read route-level ledger summary for a bounded period.
+      operationId: getDashboardRouteLedgerSummary
+      description: |
+        Read-only Merchant Dashboard route ledger contract. Merchant and
+        mode are resolved from auth context; query parameters only bound
+        the created_at window. If both created_from and created_to are
+        omitted, the Gateway uses the last 24 hours. The response is a
+        payment_intents ledger aggregate, not a provider health, latency,
+        success-rate, or availability claim.
+      parameters:
+        - name: created_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start of the created_at window, inclusive. YYYY-MM-DD is also accepted by the Gateway. Must be paired with created_to when provided.
+        - name: created_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End of the created_at window, exclusive. YYYY-MM-DD is accepted and treated as the end of that date. Must be paired with created_from when provided.
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Route-level ledger summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardRouteLedgerSummary" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/reconciliation/route-health-summary:
+    get:
+      summary: Read route-level health projection for a bounded period.
+      operationId: getDashboardRouteHealthSummary
+      description: |
+        Backend-only Merchant Dashboard route-health projection. Merchant
+        and mode are resolved from auth context; query parameters only
+        bound the created_at window. If both created_from and created_to
+        are omitted, the Gateway uses the last 24 hours. Values are
+        computed from payment_intents plus payment_intent_state_history
+        and omit provider names, internal route hashes, attestation
+        material, and raw CCTP state.
+      parameters:
+        - name: created_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start of the created_at window, inclusive. YYYY-MM-DD is also accepted by the Gateway. Must be paired with created_to when provided.
+        - name: created_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End of the created_at window, exclusive. YYYY-MM-DD is accepted and treated as the end of that date. Must be paired with created_from when provided.
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Route-level health projection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardRouteHealthSummary" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/reconciliation/{id}:
+    get:
+      summary: Read one CCTP payment-intent reconciliation detail row.
+      operationId: getDashboardReconciliation
+      description: |
+        Read-only merchant dashboard detail for one payment intent.
+        Merchant and mode are resolved from auth context; cross-tenant
+        or cross-mode IDs do not return another merchant's row.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Bounded reconciliation lifecycle detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardReconciliationDetailView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
   /v1/dashboard/webhooks/endpoints:
     get:
       summary: List webhook endpoints for the authenticated merchant (mode-scoped).
@@ -2633,6 +4108,26 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardWebhookEndpointsPage" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/webhooks/summary:
+    get:
+      summary: Read webhook delivery health summary for the authenticated merchant (mode-scoped).
+      operationId: getDashboardWebhookHealthSummary
+      description: |
+        Read-only merchant dashboard metric contract over
+        webhook_endpoints and webhook_outbox for the last 24h. Merchant
+        and mode are resolved from auth context; the response never
+        exposes webhook secrets, signing material, body bytes, raw
+        response text, or cross-merchant identifiers.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Bounded webhook health summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardWebhookHealthSummary" }
         '401': { $ref: "#/components/responses/Unauthorized" }
 
   /v1/dashboard/webhooks/deliveries:
@@ -2651,97 +4146,8 @@ paths:
               schema: { $ref: "#/components/schemas/DashboardWebhookDeliveriesPage" }
         '401': { $ref: "#/components/responses/Unauthorized" }
 
-  /v1/dashboard/reconciliation:
-    get:
-      summary: List CCTP payment-intent lifecycle rows for reconciliation.
-      operationId: listDashboardReconciliation
-      parameters:
-        - $ref: "#/components/parameters/DashboardLimit"
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '200':
-          description: Bounded reconciliation lifecycle list.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/DashboardReconciliationPage" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-
-  /v1/dashboard/refunds/{refundId}/render-token:
-    post:
-      summary: Issue a one-shot dashboard render token for refund signing.
-      operationId: issueDashboardRefundRenderToken
-      description: |
-        JWT-only merchant-dashboard control-plane route. It issues a short
-        lived, one-shot token bound to the authenticated merchant, mode, and
-        refund intent. The token is consumed by
-        `POST /v1/refunds/{refundId}/signature` together with the merchant
-        wallet's EIP-712 signature. This endpoint does not move money and does
-        not broadcast a chain transaction.
-      parameters:
-        - name: refundId
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '201':
-          description: Dashboard render token issued.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/DashboardRefundRenderTokenResponse" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-        '409': { $ref: "#/components/responses/Conflict" }
-        '429': { $ref: "#/components/responses/RateLimited" }
-        '503': { $ref: "#/components/responses/ServerMisconfigured" }
-
-  /v1/dashboard/policy/{mode}:
-    get:
-      summary: Read the authenticated merchant's settlement policy for the resolved mode.
-      operationId: getDashboardPolicy
-      parameters:
-        - name: mode
-          in: path
-          required: true
-          schema: { type: string, enum: [test, live] }
-          description: "Must match the authenticated bearer mode; it cannot switch test/live."
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '200':
-          description: Settlement policy.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/DashboardPolicyView" }
-        '400': { $ref: "#/components/responses/InvalidRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-    put:
-      summary: Save the authenticated merchant's settlement policy for the resolved mode.
-      operationId: putDashboardPolicy
-      parameters:
-        - name: mode
-          in: path
-          required: true
-          schema: { type: string, enum: [test, live] }
-          description: "Must match the authenticated bearer mode; it cannot switch test/live."
-        - $ref: "#/components/parameters/CorrelationID"
-        - $ref: "#/components/parameters/IdempotencyKey"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/DashboardPolicyUpdateRequest" }
-      responses:
-        '200':
-          description: Stored settlement policy.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/DashboardPolicyView" }
-        '400': { $ref: "#/components/responses/InvalidRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-
   # -------------------------------------------------------------------------
-  # Merchant Integration control plane (IDX-I3 : self-service lifecycle)
+  # Merchant Integration control plane (IDX-I3 - self-service lifecycle)
   #
   # All mutations in this section derive (merchant_id, mode) from the
   # authenticated API key. IDX-I2 forbids mode assertion from the caller.
@@ -2772,7 +4178,7 @@ paths:
             schema: { $ref: "#/components/schemas/CreateKeyRequest" }
       responses:
         '201':
-          description: "Key created — plaintext secret returned once."
+          description: Key created - plaintext secret returned once.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CreateKeyResponse" }
@@ -2781,7 +4187,7 @@ paths:
 
   /v1/keys/{id}:
     delete:
-      summary: "Revoke an API key. Idempotent — revoking an already-revoked key is a no-op."
+      summary: Revoke an API key. Idempotent - revoking an already-revoked key is a no-op.
       operationId: revokeKey
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
@@ -2803,7 +4209,7 @@ paths:
 
   /v1/keys/{id}/rotate:
     post:
-      summary: "Rotate an API key — mint a successor, revoke the predecessor, in one transaction."
+      summary: Rotate an API key - mint a successor, revoke the predecessor, in one transaction.
       operationId: rotateKey
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
@@ -2901,16 +4307,30 @@ paths:
 
   /v1/webhook_endpoints/{id}/test:
     post:
-      summary: Send a synthetic `payment.settled` test event to the endpoint.
+      summary: Send a synthetic settlement test event to the endpoint.
       description: |
         IDX-R2b: exercises the real webhook delivery code path without
         real money movement. The resulting outbox row carries
-        `is_test_event = TRUE` and `payment_id IS NULL`; the body
-        carries `test_event: true` and synthetic `payment_id` /
-        `merchant_order_id` / `event_id` on the `pmt_test_*` /
-        `ord_test_*` / `whevt_test_*` shapes. The outbox row's `mode`
-        is stamped from the authenticated bearer; a live-mode key may
-        not test a test-mode endpoint and vice versa.
+        `is_test_event = TRUE` and `payment_id IS NULL`.
+
+        If the endpoint subscribes to `payment_intent.settled` (or has
+        an empty wildcard event list), the stored body mirrors the CCTP
+        payment-intent settlement shape and carries
+        `event_type: payment_intent.settled`, synthetic
+        payment/route/settlement evidence, and `test_event: true`.
+
+        Legacy endpoints subscribed only to `payment.settled` keep the
+        legacy body shape with synthetic `payment_id` / `merchant_order_id`
+        / `event_id` values on the `pmt_test_*` / `ord_test_*` /
+        `whevt_test_*` shapes.
+
+        Endpoints whose event list contains neither settlement event are
+        rejected with `invalid_request`; the test endpoint never sends an
+        event type outside the endpoint subscription.
+
+        The outbox row's `mode` is stamped from the authenticated
+        bearer; a live-mode key may not test a test-mode endpoint and
+        vice versa.
       operationId: sendTestWebhookEvent
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
@@ -2956,14 +4376,14 @@ paths:
         signing secret, envelope-encrypts it, and atomically replaces
         `(secret_hash, secret_ciphertext, secret_kid, updated_at)` on
         the endpoint row. The endpoint's id, url, events, enabled, and
-        mode are intentionally unchanged : same endpoint, new key.
+        mode are intentionally unchanged - same endpoint, new key.
 
         The plaintext is returned exactly once in the response body. At
         rest the row carries only the envelope ciphertext and the
         one-way hash; a lost plaintext means the merchant must call
         this endpoint again.
 
-        Cutover semantics : any payload already signed with the OLD
+        Cutover semantics - any payload already signed with the OLD
         secret that arrives after the rotate commits will fail HMAC
         verification on the merchant side. Operate rotate around a
         verifier-update window; the suggested sequence is (1) call
@@ -2972,7 +4392,7 @@ paths:
         the old secret is dead.
 
         Mode-scoped: a live-mode bearer cannot rotate a test-mode
-        endpoint's secret (and vice versa) : the request returns 404.
+        endpoint's secret (and vice versa) - the request returns 404.
       operationId: rotateWebhookEndpointSecret
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
@@ -3021,14 +4441,14 @@ paths:
         via the `replayed_from_event_id` field on the body. That field
         names the ORIGINAL `event_id` (the whevt-prefixed id the merchant
         already saw, or would have seen if the original delivered). The
-        new delivery's own `event_id` is the FRESH replay id : merchants
+        new delivery's own `event_id` is the FRESH replay id - merchants
         dedupe on event_id on their receiving side; a replay is a
         distinct delivery that happens to reference an earlier one.
 
         Refusals:
           - `replay_of_test_event_forbidden` (400): the delivery id
             references a test event (is_test_event=TRUE). Test events
-            have their own replay path : call `POST /v1/webhook_endpoints/
+            have their own replay path - call `POST /v1/webhook_endpoints/
             {id}/test` again.
           - `delivery_endpoint_mismatch` (400): the delivery id exists
             (merchant- and mode-scoped) but was emitted against a
@@ -3039,10 +4459,10 @@ paths:
             Resolve via rotate-secret, which populates envelope columns.
 
         Mode-scoped: a live-mode bearer cannot replay a test-mode
-        delivery (and vice versa) : the request returns 404 with no
+        delivery (and vice versa) - the request returns 404 with no
         leak of which scope the row actually lives in.
 
-        Delivery itself is asynchronous : the response 202 confirms a
+        Delivery itself is asynchronous - the response 202 confirms a
         new outbox row was written; the merchant observes completion at
         their HTTP endpoint (or via the delivery-history dashboard).
       operationId: replayWebhookDelivery
@@ -3133,22 +4553,6 @@ webhooks:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/WebhookEvent" }
-      responses:
-        '2XX':
-          description: Delivery acknowledged.
-  payment_intent.settled:
-    post:
-      summary: Sent when a CCTP payment intent reaches its settled terminal state.
-      description: |
-        This is the Pattern-E Mini-MVP settlement notification. The body
-        contains the public `payment_id`, the seven-value
-        `surface_status`, amount, route, and settlement references; it
-        does not expose the raw internal CCTP state machine.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/PaymentIntentSettledWebhook" }
       responses:
         '2XX':
           description: Delivery acknowledged.

@@ -7,11 +7,9 @@
   <meta name="description" content="ChainMore's Data Processing Agreement (DPA) under GDPR Article 28. Available on request to merchants and prospective customers.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://chainmore.io/legal/dpa.html">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/legal/dpa.html">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/legal/dpa.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     html { scroll-behavior: smooth; }
@@ -28,29 +26,11 @@
     .callout { border-left: 3px solid #00bfe6; background: #ecfeff; padding: 1rem 1.25rem; margin: 1.25rem 0; border-radius: 0.25rem; color: #155e75; }
     .callout strong { color: #155e75; }
   </style>
-  <!-- SEO/AIO JSON-LD: legal/dpa.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://chainmore.io/legal/dpa.html#webpage",
-  "url": "https://chainmore.io/legal/dpa.html",
-  "name": "Data Processing Agreement | ChainMore",
-  "description": "ChainMore's Data Processing Agreement information under GDPR Article 28.",
-  "isPartOf": {
-    "@id": "https://chainmore.io/#website"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
   <!-- Header -->
-  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
+  <header class="bg-slate-900 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +76,7 @@
       <p>The Technical and Organisational Measures annex is grounded in the actual security work shipped in our codebase. Every measure is traceable to a specific file, ADR, or test, and the underlying evidence pack is shared with controllers and partner-bank diligence teams on request. Highlights:</p>
       <ul>
         <li>HTTPS / TLS 1.2+ on every customer-facing surface, with HSTS, CSP, X-Frame-Options, Permissions-Policy, COOP, CORP, and Cross-Origin-Resource-Policy all enforced</li>
-        <li>Cookie hardening with explicit per-cookie HttpOnly / SameSite / Secure / __Host- prefixes wherever protected product areas use session cookies</li>
+        <li>Cookie hardening with explicit per-cookie HttpOnly / SameSite / Secure / __Host- prefixes</li>
         <li>OIDC-based authentication (Keycloak), role-based authorisation, audience-separated tokens (the gateway accepts only access tokens with <code>aud=chainmore-gateway</code>)</li>
         <li>Hash-chained audit log for all administrative actions</li>
         <li>72-hour personal-data-breach notification commitment to controllers, with regulatory notification windows aligned to DORA Article 19 and GDPR Article 33</li>
@@ -110,14 +90,14 @@
       <p>The current list of sub-processors that may process personal data on your behalf is published at <a href="/legal/sub-processors.html">/legal/sub-processors.html</a>. We give 14 calendar days' written notice before any new sub-processor begins processing your data, with a right to object on reasonable data-protection grounds.</p>
 
       <h2>Status of this template</h2>
-      <p>This DPA template was drafted by Chainmore OÜ in-house with AI-assisted drafting. <strong>It has not yet been reviewed by external legal counsel</strong>. We commit to engaging Estonian fintech-specialist counsel for a review before the first signed execution and notifying merchants of any material change resulting from that review.</p>
+      <p>This DPA template was drafted by Chainmore OÜ in-house. <strong>It has not yet been reviewed by external legal counsel</strong>. We commit to engaging Estonian fintech-specialist counsel for a review before the first signed execution and notifying merchants of any material change resulting from that review.</p>
       <p>Both parties are encouraged to have their own legal counsel review the DPA before execution. The template is a defensible starting point, not an immovable take-it-or-leave-it document, material concerns raised by a merchant's counsel are negotiated in good faith.</p>
 
       <h2>Questions</h2>
       <p>For DPA-specific questions: <a href="mailto:support@chainmore.io?subject=DPA%20question">support@chainmore.io</a> with subject "DPA question". For data-protection-officer escalations: same address with subject "DPO escalation".</p>
 
       <hr>
-      <p class="text-sm text-slate-500"><em>Last updated: May 2026. Canonical version is held by Chainmore OÜ and provided on request.</em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: April 2026. Canonical version is held by Chainmore OÜ and provided on request.</em></p>
     </article>
   </main>
 
@@ -128,7 +108,7 @@
         <div class="flex items-center gap-2 flex-wrap justify-center">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
           <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>

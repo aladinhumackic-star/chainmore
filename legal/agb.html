@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service | ChainMore</title>
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://chainmore.io/legal/agb.html">
-  <link rel="alternate" hreflang="en" href="https://chainmore.io/legal/agb.html">
-  <link rel="alternate" hreflang="x-default" href="https://chainmore.io/legal/agb.html">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css?v=20260512c">
+  <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
     html { scroll-behavior: smooth; }
@@ -24,28 +21,10 @@
     .legal-prose code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 0.25rem; }
     .legal-prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
   </style>
-  <!-- SEO/AIO JSON-LD: legal/agb.html -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": "https://chainmore.io/legal/agb.html#webpage",
-  "url": "https://chainmore.io/legal/agb.html",
-  "name": "Terms of Service | ChainMore",
-  "description": "Terms of service for ChainMore merchant services.",
-  "isPartOf": {
-    "@id": "https://chainmore.io/#website"
-  },
-  "publisher": {
-    "@id": "https://chainmore.io/#organization"
-  },
-  "inLanguage": "en"
-}
-  </script>
 </head>
 <body class="bg-white text-slate-700">
 
-  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
+  <header class="bg-slate-900 text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <svg width="28" height="28" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,7 +46,7 @@
   <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
     <article class="legal-prose">
       <h1>Terms of Service</h1>
-      <p class="text-slate-500"><strong>Last updated:</strong> May 2026 · <strong>Provider:</strong> Chainmore OÜ, Kotkapoja tn 2a-10, 10615 Tallinn, Estonia (Registry code: 17448638)</p>
+      <p class="text-slate-500"><strong>Last updated:</strong> April 2026 · <strong>Provider:</strong> Chainmore OÜ, Kotkapoja tn 2a-10, 10615 Tallinn, Estonia (Registry code: 17448638)</p>
 
       <h2>1. Scope</h2>
       <p>(1) These Terms of Service ("Terms") apply to all contracts between Chainmore OÜ ("ChainMore", "Provider") and its customers ("Merchant", "Customer") concerning the provision and use of the ChainMore payment-orchestration platform and its associated services.</p>
@@ -81,15 +60,15 @@
         <li>Pre-flight validation to ensure feasibility of the chosen paths</li>
         <li>Adapter infrastructure for connecting to third-party providers (Payment Service Providers, on/off-ramps, cross-chain bridges, wallet-connect providers)</li>
         <li>Stablecoin abstraction layer for multi-chain operations</li>
-        <li>Orchestrated execution across integrated providers and smart-contract rails</li>
+        <li>Coordinated execution for cross-rail payment flows</li>
         <li>Merchant dashboard with API key management, transaction monitoring, and webhook configuration</li>
         <li>Stablecoin checkout SDK</li>
       </ul>
-      <p>(2) ChainMore is a <strong>non-custodial</strong> orchestration layer. ChainMore does not operate payment accounts for Merchants or end-customers, does not maintain customer balances, and has no discretionary control over customer funds. Funds move through integrated providers, blockchain protocols, or deterministic smart-contract flows. Where a smart contract receives and forwards tokens within a single technical transaction, this happens without human discretion and without ChainMore operating an account or balance for the customer.</p>
+      <p>(2) ChainMore is a <strong>non-custodial</strong> orchestration layer. Merchant and end-customer funds move through the configured PSP, blockchain, on/off-ramp, or provider rails; ChainMore does not take custody of those funds.</p>
       <p>(3) Specific availability, performance, and support service levels are defined in the Service Level Agreement (SLA) of the chosen pricing plan, which forms an integral part of these Terms.</p>
 
       <h2>3. Conclusion of Contract</h2>
-      <p>(1) The presentation of services on the website chainmore.io does not constitute a binding offer. The Customer makes a binding offer to conclude a contract by registering in the Merchant Dashboard. ChainMore accepts the offer by activating the account or by express confirmation.</p>
+      <p>(1) The presentation of services on the website www.chainmore.io does not constitute a binding offer. The Customer makes a binding offer to conclude a contract by registering in the Merchant Dashboard. ChainMore accepts the offer by activating the account or by express confirmation.</p>
       <p>(2) ChainMore reserves the right to reject requests without giving reasons, in particular if the Customer operates in an industry that is not compatible with the compliance requirements of the third-party providers integrated by ChainMore.</p>
 
       <h2>4. Customer Obligations</h2>
@@ -99,13 +78,13 @@
         <li>Anti-money-laundering (AML / KYC)</li>
         <li>Data protection (GDPR and comparable regulations)</li>
         <li>Sanctions law (in particular EU and US sanctions lists)</li>
-        <li>Industry-specific regulation in the relevant jurisdiction</li>
+        <li>Industry-specific regulation applicable in the relevant jurisdiction</li>
       </ul>
       <p>(3) The Customer is responsible for the security of its API keys and other access credentials. The loss or misuse of access credentials must be reported to ChainMore without delay.</p>
       <p>(4) The Customer shall indemnify ChainMore against all claims by third parties arising from a breach of these obligations or from any unlawful use of the platform.</p>
 
       <h2>5. Fees and Payment Terms</h2>
-      <p>(1) The fees are based on the pricing model in force at the time the contract is concluded, as published on chainmore.io/pricing or as agreed in the individual Master Service Agreement.</p>
+      <p>(1) The fees are based on the pricing model in force at the time the contract is concluded, as published on www.chainmore.io/pricing or as agreed in the individual Master Service Agreement.</p>
       <p>(2) ChainMore charges two types of fees:</p>
       <ul>
         <li><strong>Merchant Orchestration Fee:</strong> charged monthly or per transaction, depending on the plan.</li>
@@ -159,7 +138,7 @@
         <div class="flex items-center gap-2">
           <a href="/" class="hover:text-white transition text-sm">← Home</a>
           <span class="text-slate-700">·</span>
-          <a href="/pricing" class="hover:text-white transition text-sm">Pricing</a>
+          <a href="/pricing.html" class="hover:text-white transition text-sm">Pricing</a>
           <span class="text-slate-700">·</span>
           <a href="/status.html" class="hover:text-white transition text-sm">Status</a>
           <span class="text-slate-700">·</span>

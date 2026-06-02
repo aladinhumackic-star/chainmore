@@ -6,72 +6,75 @@
 # an auditor (DORA / GDPR Art. 32 / PSD2) can read the rationale next
 # to the value.
 #
-# Scope: marketing site only. Dashboards (merchant, treasury) ship
+# Scope: marketing site only. Product dashboards ship
 # their own CSP via next.config.js because their connect-src and
 # frame-src must include the Keycloak + gateway hosts at build time.
 #
 # ─────────────────────────────────────────────────────────────────────
-# STAGED-ROLLOUT POSTURE (per GPT review 2026-04-29)
+# STAGED-ROLLOUT POSTURE (security review 2026-04-29)
 #
-# This file has completed the initial conservative rollout steps:
+# This file ships in CONSERVATIVE FIRST-DEPLOY mode:
 #
-#   - HSTS max-age=15768000 (6 months, NOT 2 years)
+#   - HSTS max-age=300  (5 min commit, NOT 2 years)
 #   - HSTS without `preload` directive
 #   - CSP enforced (marketing site has no auth/cookies → safe to enforce)
 #
-# Historical ramp procedure:
+# Ramp procedure once production is verified stable:
 #
-#   day 0   first deploy:      max-age=300                — verify HTTPS
+#   day 0   (this commit):     max-age=300                 -  verify HTTPS
 #                                                          doesn't break
-#   day 1   after smoke pass:  max-age=86400              — 1-day commit
-#   day 7   after smoke pass:  max-age=2592000            — 30-day commit
-#   current deployed posture:  max-age=15768000           — 6-month commit
-#   future + investor sign-off:
-#                              max-age=63072000; preload  — submit to
+#   day 1   after smoke pass:  max-age=86400               -  1-day commit
+#   day 7   after smoke pass:  max-age=2592000             -  30-day commit
+#   day 14  + investor sign-off:
+#                              max-age=63072000; preload   -  submit to
 #                                                          hstspreload.org
 #
 # When ramping, edit this file in-place and re-deploy. preload is a
-# one-way door — removal from the preload list takes 12+ months.
+# one-way door  -  removal from the preload list takes 12+ months.
 # ─────────────────────────────────────────────────────────────────────
 
 /*
   # ── Transport security ────────────────────────────────────────────
-  # HSTS is now on the 6-month ramp step without preload. See the
-  # historical ramp procedure above. includeSubDomains is on because if
-  # any subdomain (api., auth., app.) is served over http, we want to
-  # know immediately. The preload directive remains off until the
-  # explicit preload sign-off step.
+  # HSTS conservative-first. See ramp procedure above. includeSubDomains
+  # is on from day 0 because if any subdomain (api., auth., app.) is
+  # currently served over http, we want to know IMMEDIATELY (not 30 days
+  # in). 5-minute max-age means the worst case is a 5-minute outage
+  # before browsers stop forcing HTTPS  -  survivable.
   Strict-Transport-Security: max-age=15768000; includeSubDomains
 
   # ── Content Security Policy ───────────────────────────────────────
-  # default-src 'self' — start by allowing only same-origin assets,
+  # default-src 'self'  -  start by allowing only same-origin assets,
   # then explicit per-directive carve-outs.
   #
-  # script-src uses exact SHA-256 hashes for the static inline blocks
-  # that remain in the marketing HTML (JSON-LD, Redoc init, hero/demo
-  # interactions). No inline wildcard, no eval wildcard. Any inline JS
-  # edit must update this header and pass scripts/marketing-csp-hash-check.js.
+  # script-src includes 'unsafe-inline' because index.html ships
+  # ~790 lines of inline animation/carousel JS (hero flow, demo
+  # stepper). Externalising those into /assets/main.js is a planned
+  # follow-up; until then we accept the trade-off because (a) the
+  # site has zero user-data / cookies / auth, (b) all other
+  # mitigations (frame-ancestors, X-Frame-Options, COOP, etc.) are
+  # at maximum, (c) script-src remains scoped to 'self' for any
+  # external script  -  only inline is unsafe. NB: we did NOT add
+  # 'unsafe-eval'; new(Function), eval(), setTimeout(string) are all
+  # still blocked.
   #
-  # style-src follows the same hash discipline for static inline <style>
-  # blocks. Inline style attributes are forbidden by CI; use classes.
+  # style-src includes 'unsafe-inline' for the same pragmatic
+  # reason (Tailwind-compiled utilities inline classes via the HTML
+  # itself, which CSP treats as an inline style attribute when
+  # browsers reflect dynamic state). Same compensating controls.
   #
-  # connect-src 'self' — same-origin only. The Concierge widget on
-  # public marketing pages POSTs to /api/concierge (a Netlify Edge Function
-  # bound by netlify.toml), which is same-origin under chainmore.io
-  # and therefore covered by 'self'. No third-party endpoint is
-  # contacted from the browser; the Edge Function fans out to OpenAI
-  # server-side.
+  # connect-src 'self'  -  the marketing site makes zero fetch() /
+  # XHR / WebSocket calls. Tightest possible.
   #
-  # frame-ancestors 'none' — chainmore.io cannot be put in any iframe
+  # frame-ancestors 'none'  -  chainmore.io cannot be put in any iframe
   # (clickjacking defense; redundant with X-Frame-Options below but
   # frame-ancestors is the modern equivalent + survives in HTTP 3).
   #
-  # form-action 'self' — forms can only submit back to chainmore.io;
+  # form-action 'self'  -  forms can only submit back to chainmore.io;
   # blocks injected forms that exfiltrate to an attacker domain.
   #
-  # upgrade-insecure-requests — auto-rewrite any accidentally http://
+  # upgrade-insecure-requests  -  auto-rewrite any accidentally http://
   # subresource to https://. Belt + braces with HSTS.
-  # worker-src 'self' blob: — Redoc on /docs.html spawns Web Workers
+  # worker-src 'self' blob:  -  Redoc on /docs.html spawns Web Workers
   # for the in-page search index. The workers are created from blob:
   # URLs derived from the self-hosted Redoc bundle (already covered
   # by script-src 'self'). No third-party JS ever spawns a worker on
@@ -80,23 +83,23 @@
   # at all; the directive is permissive only where there is nothing
   # to permit. See ADR_SECURITY_HEADERS.md follow-ups if/when this
   # changes.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-1IlPwFYBIHJDgbPUz1Em5UM1L4AFQeN+jc3sMq0A4P8=' 'sha256-Bc2xDxybnsfbC6/eCw39XBIjVz8CGhmjIs1J3b07Q5g=' 'sha256-DhWxWmTaHaEqIGlTUCstvJvh6W5B0w+T5p/B5IhuGA8=' 'sha256-IbkbN+oAm/ffUNAJlKWrCGed9g77yRr/z0rkNMV5kXk=' 'sha256-IciAsp1llQo/W8LQGakhkZHZb0YXL2uHExuqaN0lpbc=' 'sha256-TM+QoJzl23nqkQvdlijLOZUKBpcrT3JUYgk9ndyLIH0=' 'sha256-XPnLXps2q0vQ3ZMKTxKxkqz7tFIqtcEAqadG7HauIkE=' 'sha256-/N84KAMLT8g0ghu/tgXU6IG2jRL9ZU8STzYA4mNuW5U=' 'sha256-cLCQjm5qYyJToWBav68t4mrDPKvx1pHTJdZMJajSsPk=' 'sha256-eX3XxiWoM7YhWlihhzgFiOXq252IkpU2MXGCnVWvHs0=' 'sha256-grwsyKJPr4saaluB8+rm1VEv1ffEGKMGbZioCeeKSnI=' 'sha256-lbc5vzq1k/AHJMqu2XP5O6XC0zvFkv7kDXPQUUM8X4c=' 'sha256-lmyKP5votawxUnCp6VkuDjK+zqYCozOBmhTWOjg1BIE=' 'sha256-fPdja8SS8F6gaWrDTesgWy5bR2RSiPwu/66J5XtvEn4=' 'sha256-pLEGvm4yhgrtEEw1eifbzeY4MbnNQijpvQyL5Cgr/Dc=' 'sha256-uBFZ2ZEOyu2/Crs7SEszFf5zf87LiOpBgIrxAX74HOA='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests
 
   # ── Frame / clickjacking ──────────────────────────────────────────
-  # X-Frame-Options DENY — legacy header; modern browsers prefer
+  # X-Frame-Options DENY  -  legacy header; modern browsers prefer
   # frame-ancestors above, but X-Frame-Options is still honoured by
   # older browsers and required by some compliance frameworks
   # (DORA Annex II, BSI IT-Grundschutz).
   X-Frame-Options: DENY
 
   # ── MIME-sniffing ─────────────────────────────────────────────────
-  # nosniff — browser must trust our Content-Type header. Without
+  # nosniff  -  browser must trust our Content-Type header. Without
   # this, IE and older Chrome would try to "guess" types and could
   # execute a JSON file as JS if it happened to look like JS.
   X-Content-Type-Options: nosniff
 
   # ── Referrer ──────────────────────────────────────────────────────
-  # strict-origin-when-cross-origin — keeps the full referrer for
+  # strict-origin-when-cross-origin  -  keeps the full referrer for
   # same-origin navigations (useful for analytics); on cross-origin
   # only sends scheme + host + port (no path, no query). Prevents
   # leaking the user's current path to a clicked outbound link.
@@ -108,18 +111,18 @@
   # attacker injects script (despite all mitigations above), they
   # can't pop a getUserMedia prompt or read geolocation. We are a
   # payments service but the Web Payment API is browser-side
-  # ApplePay/GooglePay/PaymentRequest — we don't use it; fully blocked.
+  # ApplePay/GooglePay/PaymentRequest  -  we don't use it; fully blocked.
   # interest-cohort=() opts out of FLoC / Topics API tracking.
   Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), interest-cohort=()
 
   # ── Cross-origin isolation ────────────────────────────────────────
-  # COOP same-origin — when a user opens our page in a new top-level
+  # COOP same-origin  -  when a user opens our page in a new top-level
   # window, that window is its OWN isolated process group. Prevents
   # cross-origin window.opener attacks (tabnabbing) and Spectre-style
   # leaks across processes.
   Cross-Origin-Opener-Policy: same-origin
 
-  # CORP same-origin — our resources can only be loaded by
+  # CORP same-origin  -  our resources can only be loaded by
   # chainmore.io itself, never embedded by another site as <img>,
   # <script>, etc. Makes CDN-style hotlinking impossible.
   Cross-Origin-Resource-Policy: same-origin
@@ -129,45 +132,14 @@
 /tailwind.css
   Cache-Control: public, max-age=31536000, immutable
 
-# ─────────────────────────────────────────────────────────────────────
-# /assets/* cache discipline
-# ─────────────────────────────────────────────────────────────────────
-# None of these files carry a hash in the filename yet, so we cannot
-# use the "max-age=31536000, immutable" pattern (a deploy with a
-# changed widget would not invalidate the user's browser cache).
-# Compromise: 1 hour for code we edit often (widget JS/CSS, form
-# CSS), 1 day for images we rarely change. Far better than no
-# cache header at all (default Netlify is `public, max-age=0,
-# must-revalidate` which forces an end-to-end revalidate every page
-# load).
-#
-# When a deploy needs to invalidate aggressively, drop the file
-# name (the deploy hash in the response ETag is enough for the
-# revalidate-not-modified path) or rev the path itself.
-
-/assets/concierge-widget.js
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/assets/concierge-widget.css
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/assets/discovery-form.css
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/assets/og-image.png
-  Cache-Control: public, max-age=86400, must-revalidate
-
-/assets/og-image.svg
-  Cache-Control: public, max-age=86400, must-revalidate
-
-# robots.txt + sitemap.xml — short cache so updates propagate.
+# robots.txt + sitemap.xml  -  short cache so updates propagate.
 /robots.txt
   Cache-Control: public, max-age=3600
 
 /sitemap.xml
   Cache-Control: public, max-age=3600
 
-# RFC 9116 security.txt — must be served as text/plain. Netlify
+# RFC 9116 security.txt  -  must be served as text/plain. Netlify
 # auto-detects most extensions but not .txt-with-no-charset, so we
 # pin it explicitly. Short cache so a Contact / Expires update
 # propagates within an hour.
@@ -177,15 +149,11 @@
 
 # OpenAPI specs served from /api/*.yaml. Pin Content-Type so Redoc
 # (and any other fetcher) parses them as YAML, not as text/plain or
-# application/octet-stream. Cache-Control: 60s + must-revalidate.
-# We learned the hard way (2026-05-12) that 3600s edge-cache makes a
-# bad-YAML release look unfixed for an hour while Netlify keeps serving
-# the broken spec. docs.html cache-busts via ?v=… on the URL anyway,
-# so any short max-age is fine; 60s is a compromise between "broken
-# spec heals fast" and "no per-request load on origin".
+# application/octet-stream. Short cache so a spec re-freeze
+# propagates within an hour without a forced reload.
 /api/*.yaml
   Content-Type: application/yaml; charset=utf-8
-  Cache-Control: public, max-age=60, must-revalidate
+  Cache-Control: public, max-age=3600
 
 # Redoc bundle. Self-hosted at /assets/redoc.standalone.js so the
 # strict CSP (script-src 'self') can render the public docs at /docs
@@ -194,20 +162,3 @@
 # path-bust.
 /assets/redoc.standalone.js
   Cache-Control: public, max-age=31536000, immutable
-
-# ─────────────────────────────────────────────────────────────────────
-# /docs.html — no path-specific CSP needed
-# ─────────────────────────────────────────────────────────────────────
-# Earlier attempts tried a /docs.html-only CSP relaxation, but
-# Netlify sends both the global /* rule AND the path-specific rule
-# as separate response headers, and Chrome takes the intersection
-# of every CSP header it receives. The global rule still had the
-# strict style-src style hashes, which combined with the local
-# `style-src 'self' 'unsafe-inline'` produced an empty effective
-# style-src and ReDoc couldn't inject styled-components rules.
-#
-# Final fix: relax the GLOBAL style-src to `'self' 'unsafe-inline'`
-# (above). script-src keeps strict hash discipline because that's
-# where XSS risk lives. style-src 'unsafe-inline' is the production
-# default for almost every site that ships React/styled-components
-# anywhere on the site — low marginal risk.
