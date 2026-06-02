@@ -1,6 +1,0 @@
-Contact: support@chainmore.io
-Canonical: https://chainmore.io/
-LLMs: https://chainmore.io/llms.txt
-Full-Reference: https://chainmore.io/llms-full.txt
-Description: ChainMore is Cross-Rail Payment Orchestration for merchants whose customers need a familiar checkout across card, bank, and stablecoin rails.
-Policy: Do not infer fixed public pricing, named customer references, restricted-industry focus, or custody services from this site.
