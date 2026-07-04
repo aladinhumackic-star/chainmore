@@ -20,15 +20,14 @@
   <meta name="twitter:description" content="One platform. Dynamic routing across fiat and stablecoin rails, with fallback-aware routing controls.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
-    knowledge-panel correctly (legal name + jurisdiction + founder)
-    and gives diligence teams a machine-readable handle on who we
-    are. Values mirror /legal/impressum.html (Estonian Commercial
-    Register entry), keep them in sync if the registered details
-    ever change.
+    knowledge-panel correctly (legal name + jurisdiction) and gives
+    diligence teams a machine-readable handle on who we are. Values
+    mirror /legal/impressum.html (Estonian Commercial Register entry),
+    keep them in sync if the registered details ever change.
   -->
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with fallback-aware routing controls.", "foundingDate": "2026", "founder": { "@type": "Person", "name": "Narcis Gecevic" }, "address": {
+    "@context": "https://schema.org", "@type": "Organization", "name": "ChainMore", "legalName": "Chainmore OÜ", "url": "https://www.chainmore.io/", "logo": "https://www.chainmore.io/favicon.svg", "description": "Non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails with fallback-aware routing controls.", "foundingDate": "2026", "address": {
       "@type": "PostalAddress", "streetAddress": "Kotkapoja tn 2a-10", "postalCode": "10615", "addressLocality": "Tallinn", "addressCountry": "EE"
     }, "identifier": {
       "@type": "PropertyValue", "propertyID": "Estonian Commercial Register (Registrikood)", "value": "17448638"
@@ -597,8 +596,8 @@
                 <!-- Payouts Tab Content -->
                 <div class="platform-content hidden" data-content="payouts">
                   <div class="bg-slate-900 rounded-xl p-5 mb-5">
-                    <h3 class="text-white font-bold text-lg mb-2">ChainMore Payouts</h3>
-                    <p class="text-slate-400 text-sm">Payout workflows across fiat and stablecoin rails. Batch-friendly processing with provider-state tracking and settlement evidence.</p>
+                    <h3 class="text-white font-bold text-lg mb-2">ChainMore Payouts <span class="ml-2 px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-xs font-semibold rounded-full align-middle">Roadmap</span></h3>
+                    <p class="text-slate-400 text-sm">Planned payout workflows across fiat and stablecoin rails. Batch-friendly processing with provider-state tracking and settlement evidence.</p>
                   </div>
                   <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                     <span>Explore Features</span>
@@ -1284,16 +1283,16 @@
               <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1.5">
                   <span id="route-metric-cost" class="text-green-400 font-bold">85%</span>
-                  <span class="text-green-300/70 text-xs">Cost Saved</span>
+                  <span class="text-green-300/70 text-xs">Cost Saved (example)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <span id="route-metric-speed" class="text-green-400 font-bold">95%</span>
-                  <span class="text-green-300/70 text-xs">Faster</span>
+                  <span class="text-green-300/70 text-xs">Faster (example)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">0%</span>
-                  <span class="text-green-300/70 text-xs">Chargebacks</span>
+                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">Minutes</span>
+                  <span id="route-metric-risk-label" class="text-green-300/70 text-xs">Finality</span>
                 </div>
               </div>
             </div>
@@ -2216,11 +2215,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
             </svg>
           </div>
-          <h3 class="text-lg font-bold mb-1">Affiliate & Creator Payouts</h3>
-          <p class="text-slate-600 text-sm mb-3">Mass payouts worldwide. Auto-routing based on recipient preference.</p>
+          <h3 class="text-lg font-bold mb-1">Affiliate & Creator Payouts <span class="ml-1 px-2 py-0.5 bg-cyan-100 text-cyan-600 text-xs font-semibold rounded-full align-middle">Roadmap</span></h3>
+          <p class="text-slate-600 text-sm mb-3">Planned payout orchestration for configured rails, with provider-state tracking and settlement evidence.</p>
           <div class="flex items-center gap-2 text-xs">
-            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">EUR → Bank</span>
-            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">EUR → USDC</span>
+            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">EUR → Bank (planned)</span>
+            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">EUR → USDC (planned)</span>
           </div>
         </div>
       </div>
@@ -2463,7 +2462,7 @@
           <div class="p-6 font-mono text-sm overflow-x-auto">
             <pre class="text-slate-300"><span class="text-purple-400">import</span> <span class="text-blue-300">ChainMore</span> <span class="text-purple-400">from</span> <span class="text-cyan-400">'@chainmore/sdk'</span>;
 
-<span class="text-purple-400">const</span> chainmore = <span class="text-purple-400">new</span> <span class="text-blue-300">ChainMore</span>(<span class="text-cyan-400">'sk_live_...'</span>);
+<span class="text-purple-400">const</span> chainmore = <span class="text-purple-400">new</span> <span class="text-blue-300">ChainMore</span>(<span class="text-cyan-400">'sk_test_...'</span>);
 
 <span class="text-slate-500">// Create a cross-rail payment</span>
 <span class="text-purple-400">const</span> payment = <span class="text-purple-400">await</span> chainmore.payments.<span class="text-yellow-300">create</span>({
@@ -3486,6 +3485,7 @@ window.onload = function() {
   var metricCost         = document.getElementById('route-metric-cost');
   var metricSpeed        = document.getElementById('route-metric-speed');
   var metricChargebacks  = document.getElementById('route-metric-chargebacks');
+  var metricRiskLabel    = document.getElementById('route-metric-risk-label');
   if (!routeInputLabel || !routeOutputLabel) return;
 
   // Pretty labels for the input column.
@@ -3511,33 +3511,34 @@ window.onload = function() {
   // calculation. Keep them realistic so the widget reads like a
   // value-prop calculator, not a slot machine.
   //
-  // Schema: routeMetrics[input][output] = { cost, speed, chargebacks }
-  // where cost and speed are "% saved" / "% faster" claims and
-  // chargebacks is the residual chargeback rate for the route.
+  // Schema: routeMetrics[input][output] = { cost, speed, riskValue, riskLabel }
+  // where cost and speed are example "% saved" / "% faster" claims. The
+  // chargeback claim is only valid for stablecoin-input routes; card/APM/fiat
+  // inputs keep cardholder/provider dispute rights regardless of settlement rail.
   var routeMetrics = {
     'card': {
-      'bank':       { cost: '40%', speed: '60%', chargebacks: '0.5%' },
-      'stablecoin': { cost: '85%', speed: '95%', chargebacks: '0%'   },
-      'exchange':   { cost: '70%', speed: '85%', chargebacks: '0%'   },
-      'onchain':    { cost: '90%', speed: '95%', chargebacks: '0%'   },
+      'bank':       { cost: '40%', speed: '60%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'stablecoin': { cost: '85%', speed: '95%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'exchange':   { cost: '70%', speed: '85%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'onchain':    { cost: '90%', speed: '95%', riskValue: 'Minutes', riskLabel: 'Finality' },
     },
     'stablecoin': {
-      'bank':       { cost: '60%', speed: '70%', chargebacks: '0%'   },
-      'stablecoin': { cost: '95%', speed: '99%', chargebacks: '0%'   },
-      'exchange':   { cost: '80%', speed: '90%', chargebacks: '0%'   },
-      'onchain':    { cost: '95%', speed: '99%', chargebacks: '0%'   },
+      'bank':       { cost: '60%', speed: '70%', riskValue: '0%', riskLabel: 'Chargebacks' },
+      'stablecoin': { cost: '95%', speed: '99%', riskValue: '0%', riskLabel: 'Chargebacks' },
+      'exchange':   { cost: '80%', speed: '90%', riskValue: '0%', riskLabel: 'Chargebacks' },
+      'onchain':    { cost: '95%', speed: '99%', riskValue: '0%', riskLabel: 'Chargebacks' },
     },
     'bank-wire': {
-      'bank':       { cost: '20%', speed: '30%', chargebacks: '0%'   },
-      'stablecoin': { cost: '70%', speed: '85%', chargebacks: '0%'   },
-      'exchange':   { cost: '55%', speed: '70%', chargebacks: '0%'   },
-      'onchain':    { cost: '75%', speed: '90%', chargebacks: '0%'   },
+      'bank':       { cost: '20%', speed: '30%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'stablecoin': { cost: '70%', speed: '85%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'exchange':   { cost: '55%', speed: '70%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'onchain':    { cost: '75%', speed: '90%', riskValue: 'Minutes', riskLabel: 'Finality' },
     },
     'apm': {
-      'bank':       { cost: '35%', speed: '55%', chargebacks: '0.3%' },
-      'stablecoin': { cost: '80%', speed: '92%', chargebacks: '0%'   },
-      'exchange':   { cost: '65%', speed: '82%', chargebacks: '0%'   },
-      'onchain':    { cost: '85%', speed: '93%', chargebacks: '0%'   },
+      'bank':       { cost: '35%', speed: '55%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'stablecoin': { cost: '80%', speed: '92%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'exchange':   { cost: '65%', speed: '82%', riskValue: 'Minutes', riskLabel: 'Finality' },
+      'onchain':    { cost: '85%', speed: '93%', riskValue: 'Minutes', riskLabel: 'Finality' },
     },
   };
 
@@ -3594,7 +3595,8 @@ window.onload = function() {
     if (m) {
       if (metricCost)        metricCost.textContent        = m.cost;
       if (metricSpeed)       metricSpeed.textContent       = m.speed;
-      if (metricChargebacks) metricChargebacks.textContent = m.chargebacks;
+      if (metricChargebacks) metricChargebacks.textContent = m.riskValue;
+      if (metricRiskLabel)   metricRiskLabel.textContent   = m.riskLabel;
     }
   }
 

@@ -1,16 +1,12 @@
-<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="ChainMore">
+<svg viewBox="0 0 26 22" xmlns="http://www.w3.org/2000/svg" fill="none" aria-label="ChainMore">
   <defs>
-    <linearGradient id="cm-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#fb923c"/>
-      <stop offset="1" stop-color="#c2410c"/>
+    <linearGradient id="altbv4" x1="3" y1="18" x2="20" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="32" height="32" rx="8" fill="url(#cm-grad)"/>
-  <path d="M14 9.5 H10.5 a4.5 4.5 0 0 0 0 9 H14"
-        stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"
-        transform="translate(0, 4)"/>
-  <path d="M18 14 H21.5 a4.5 4.5 0 0 1 0 9 H18"
-        stroke="white" stroke-width="2.6" stroke-linecap="round" fill="none"
-        transform="translate(0, 4)"/>
-  <circle cx="16" cy="22.5" r="1.1" fill="white" transform="translate(0, -2)"/>
+  <path d="M 3 18 C 7 12 10 8 13 8 C 16 8 18 12 20 14" stroke="url(#altbv4)" stroke-width="1.26" stroke-linecap="round"/>
+  <circle cx="3" cy="18" r="1.5" fill="#2DD4BF"/>
+  <circle cx="13" cy="8" r="1.5" fill="#1FC8B6"/>
+  <circle cx="20" cy="14" r="1.5" fill="#14B8A6"/>
 </svg>

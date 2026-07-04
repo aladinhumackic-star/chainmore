@@ -374,6 +374,7 @@ components:
             - create_key_failed
             - create_payment_failed
             - cross_merchant_forbidden
+            - dashboard_role_forbidden
             - dashboard_operation_failed
             - delivery_endpoint_mismatch
             - disable_endpoint_failed
@@ -1423,6 +1424,7 @@ components:
         - status
         - default_currency
         - mode
+        - dashboard_role
         - account_approval_status
         - live_mode_enabled
         - active_api_key_count
@@ -1436,6 +1438,7 @@ components:
         status:                         { type: string, description: "merchant account status (e.g. 'active')." }
         default_currency:               { type: string, description: "ISO 4217 fiat code." }
         mode:                           { type: string, enum: [test, live], description: "Bearer-resolved mode this response was scoped to." }
+        dashboard_role:                 { type: string, enum: [owner, admin, developer, finance, support, viewer], description: "Server-resolved merchant_members role for this dashboard session. Machine/API-key contexts are projected as viewer." }
         account_approval_status:        { type: string, enum: [sandbox, needs_info, live_approved, rejected, not_configured], description: "Server-side account live-access state; not a provider or rail readiness claim." }
         live_mode_enabled:              { type: boolean, description: "True only after the server-side live access gate is approved." }
         live_enabled_at:                { type: string, format: date-time, nullable: true, description: "Timestamp when live access was approved, if any." }
@@ -1470,6 +1473,41 @@ components:
           type: array
           items: { $ref: "#/components/schemas/MerchantOnboardingStepView" }
         generated_at:            { type: string, format: date-time }
+
+    DashboardModeSelectionRequest:
+      type: object
+      required: [mode]
+      additionalProperties: false
+      properties:
+        mode:
+          type: string
+          enum: [test, live]
+          description: Requested dashboard mode. The server persists and revalidates this selection; arbitrary query/header/body mode hints on other endpoints are ignored.
+
+    DashboardModeSelectionResponse:
+      type: object
+      required: [mode, allowed_modes, live_mode_enabled]
+      properties:
+        mode:
+          type: string
+          enum: [test, live]
+          description: Effective server-resolved dashboard mode for subsequent OIDC dashboard requests.
+        selected_mode:
+          type: string
+          enum: [test, live]
+          description: Persisted server-side selection when the user explicitly chose a mode.
+        allowed_modes:
+          type: array
+          items: { type: string, enum: [test, live] }
+          description: Modes currently allowed by membership and merchant live-access policy.
+        live_mode_enabled:
+          type: boolean
+          description: True only after server-side live access approval.
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the persisted mode selection, if one exists.
 
     MerchantOnboardingStepView:
       type: object
@@ -1782,6 +1820,8 @@ components:
             - merchant.info_resolved
             - merchant.profile_submitted
             - invitation.created
+            - invitation.revoked
+            - policy.change_requested
             - member.bound
             - role.changed
             - api_key.created
@@ -1828,7 +1868,7 @@ components:
           description: Email is present only when it can be derived from merchant invitation records.
         role:
           type: string
-          enum: [owner, admin, developer, viewer, support]
+          enum: [owner, admin, developer, finance, viewer, support]
         status:
           type: string
           enum: [active, revoked]
@@ -1847,7 +1887,7 @@ components:
         email:         { type: string, format: email }
         role:
           type: string
-          enum: [owner, admin, developer, viewer, support]
+          enum: [owner, admin, developer, finance, viewer, support]
         status:
           type: string
           enum: [pending, accepted, revoked, expired]
@@ -1872,6 +1912,164 @@ components:
           type: array
           items: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
         generated_at: { type: string, format: date-time }
+
+    DashboardTeamInvitationInput:
+      type: object
+      description: |
+        Merchant-user request to create a pending dashboard invitation.
+        The gateway resolves merchant_id, actor subject, and idempotency
+        from the authenticated dashboard context. Plaintext invitation
+        tokens are never returned; invited users join by signing in with
+        the same verified email.
+      required: [email, role]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        role:
+          type: string
+          enum: [admin, developer, finance, viewer, support]
+          description: Owner invitations require a separate reviewed ownership-transfer flow.
+
+    DashboardTeamMemberRoleInput:
+      type: object
+      description: |
+        Merchant-user request to change an active non-owner team member's
+        dashboard role. The gateway resolves merchant_id, actor subject,
+        and idempotency from the authenticated dashboard context. Owner
+        role assignment and ownership transfer are deliberately outside
+        this endpoint.
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [admin, developer, finance, viewer, support]
+          description: Owner role changes require a separate reviewed ownership-transfer flow.
+
+    DashboardNotificationPreferencesInput:
+      type: object
+      description: |
+        Merchant-user dashboard notification-routing preferences. This
+        contract stores dashboard signal routing only; it does not
+        configure or claim email, Slack, pager, or provider-side
+        delivery.
+      required:
+        - payment_exceptions_enabled
+        - webhook_failures_enabled
+        - account_review_enabled
+        - minimum_severity
+      properties:
+        payment_exceptions_enabled:
+          type: boolean
+        webhook_failures_enabled:
+          type: boolean
+        account_review_enabled:
+          type: boolean
+        minimum_severity:
+          type: string
+          enum: [watch, action_required]
+
+    DashboardNotificationPreferencesView:
+      type: object
+      description: |
+        Saved dashboard notification-routing preferences for the
+        authenticated merchant and mode. `source=default` means no
+        merchant-saved preference row exists yet.
+      required:
+        - mode
+        - payment_exceptions_enabled
+        - webhook_failures_enabled
+        - account_review_enabled
+        - minimum_severity
+        - source
+        - generated_at
+      properties:
+        mode:
+          type: string
+          enum: [test, live]
+        payment_exceptions_enabled:
+          type: boolean
+        webhook_failures_enabled:
+          type: boolean
+        account_review_enabled:
+          type: boolean
+        minimum_severity:
+          type: string
+          enum: [watch, action_required]
+        source:
+          type: string
+          enum: [default, merchant]
+        updated_at:
+          type: string
+          format: date-time
+        generated_at:
+          type: string
+          format: date-time
+
+    DashboardPolicyChangeRequestInput:
+      type: object
+      description: |
+        Merchant-user settlement-policy change request. The gateway
+        resolves merchant_id, mode, dashboard role, actor subject, and
+        idempotency from the authenticated dashboard context; callers
+        cannot apply policy by submitting this body.
+      required:
+        - asset_in
+        - preferred_dest_chain
+        - speed
+        - risk_tolerance
+        - provider_outage
+      properties:
+        asset_in:
+          type: string
+          enum: [USDC]
+        preferred_dest_chain:
+          type: string
+          enum: [ethereum, base, arbitrum, polygon]
+        speed:
+          type: string
+          enum: [standard, fast]
+        risk_tolerance:
+          type: string
+          enum: [conservative, liberal]
+        provider_outage:
+          type: string
+          enum: [freeze, try_alternate]
+        note:
+          type: string
+          maxLength: 1000
+          description: Optional support-review note. Do not send secrets, customer personal data, or provider credentials.
+
+    DashboardPolicyChangeRequestView:
+      type: object
+      description: |
+        Redacted evidence that a settlement-policy change request was
+        submitted for review. This is not the active merchant policy and
+        does not imply any routing or live-settlement change.
+      required:
+        - request_id
+        - mode
+        - status
+        - asset_in
+        - preferred_dest_chain
+        - speed
+        - risk_tolerance
+        - provider_outage
+        - created_at
+        - updated_at
+      properties:
+        request_id: { type: string }
+        mode: { type: string, enum: [test, live] }
+        status: { type: string, enum: [submitted, approved, rejected, cancelled] }
+        asset_in: { type: string, enum: [USDC] }
+        preferred_dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        speed: { type: string, enum: [standard, fast] }
+        risk_tolerance: { type: string, enum: [conservative, liberal] }
+        provider_outage: { type: string, enum: [freeze, try_alternate] }
+        note: { type: string, maxLength: 1000 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     DashboardWebhookEndpointView:
       type: object
@@ -2723,6 +2921,11 @@ components:
       content:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
+    Forbidden:
+      description: Authenticated principal is not allowed to perform this action.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
     NotFound:
       description: Resource not found.
       content:
@@ -3526,6 +3729,55 @@ paths:
   # -------------------------------------------------------------------------
   # Merchant Dashboard async export control plane
   # -------------------------------------------------------------------------
+  /v1/dashboard/mode-selection:
+    get:
+      summary: Read the server-resolved dashboard test/live mode state.
+      operationId: getDashboardModeSelection
+      description: |
+        Returns the effective dashboard mode for the authenticated OIDC
+        merchant-user session. The mode is derived from server-owned
+        membership, live-access policy, and persisted D3 selection state;
+        arbitrary query parameters, browser-local flags, and caller-supplied
+        mode headers are not mode authority.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Current dashboard mode state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardModeSelectionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
+    post:
+      summary: Persist a server-authoritative dashboard test/live mode selection.
+      operationId: setDashboardModeSelection
+      description: |
+        Requests a dashboard mode switch for the authenticated OIDC
+        merchant-user session. The server verifies membership and live-access
+        policy before persisting the selection. Selecting live is refused until
+        the merchant's live-mode gate is approved; selecting test never enables
+        live money movement, live webhooks, live provider credentials, or host
+        environment changes.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardModeSelectionRequest" }
+      responses:
+        '200':
+          description: Persisted dashboard mode state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardModeSelectionResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
   /v1/dashboard/exports:
     get:
       summary: List recent async dashboard export jobs.
@@ -3768,6 +4020,189 @@ paths:
               schema: { $ref: "#/components/schemas/DashboardTeamAccessPage" }
         '401': { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/dashboard/notifications/preferences:
+    get:
+      summary: Read dashboard notification-routing preferences.
+      operationId: getDashboardNotificationPreferences
+      description: |
+        Merchant- and mode-scoped saved dashboard notification
+        preferences. This endpoint returns dashboard signal-routing
+        preferences only. It does not claim that email, Slack, pager,
+        or provider-side delivery is configured.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Dashboard notification-routing preferences.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardNotificationPreferencesView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+    put:
+      summary: Save dashboard notification-routing preferences.
+      operationId: updateDashboardNotificationPreferences
+      description: |
+        Merchant-scoped control-plane action. The caller must be an
+        owner/admin dashboard user. The endpoint persists dashboard
+        signal-routing preferences and writes account audit evidence,
+        but it does not configure email, Slack, pager, provider-side
+        delivery, or hidden operator routing.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardNotificationPreferencesInput" }
+      responses:
+        '200':
+          description: Saved dashboard notification-routing preferences.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardNotificationPreferencesView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
+  /v1/dashboard/team-access/invitations:
+    post:
+      summary: Create a pending team invitation for the authenticated merchant.
+      operationId: createDashboardTeamInvitation
+      description: |
+        Merchant-scoped team access control action. The caller must be
+        an owner/admin dashboard user. The endpoint records a pending
+        invitation and returns only the redacted invitation projection:
+        no invitation_token_hash, plaintext invitation token, OIDC
+        issuer, or subject is exposed. The invited person joins by
+        signing in with the same verified email.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardTeamInvitationInput" }
+      responses:
+        '202':
+          description: Pending invitation projection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/dashboard/team-access/invitations/{id}/revoke:
+    post:
+      summary: Revoke a pending team invitation for the authenticated merchant.
+      operationId: revokeDashboardTeamInvitation
+      description: |
+        Merchant-scoped team access control action. The caller must be
+        an owner/admin dashboard user. The endpoint only revokes pending
+        invitations, never accepted membership, and never exposes
+        invitation_token_hash or plaintext invitation tokens.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Revoked invitation projection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/dashboard/team-access/members/{id}/role:
+    post:
+      summary: Change an active non-owner team member's dashboard role.
+      operationId: updateDashboardTeamMemberRole
+      description: |
+        Merchant-scoped team access control action. The caller must be
+        an owner/admin dashboard user. The endpoint changes only active
+        non-owner members and never performs ownership transfer, self-role
+        changes, or cross-merchant membership edits. The response is a
+        redacted member projection and never exposes OIDC issuer/subject.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardTeamMemberRoleInput" }
+      responses:
+        '200':
+          description: Updated team member projection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardTeamMemberView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/dashboard/team-access/members/{id}/revoke:
+    post:
+      summary: Remove an active non-owner team member's dashboard access.
+      operationId: revokeDashboardTeamMember
+      description: |
+        Merchant-scoped team access control action. The caller must be
+        an owner/admin dashboard user. The endpoint revokes active
+        non-owner membership without deleting the audit row; owner
+        removal and self-removal require a separate reviewed process.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Revoked team member projection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardTeamMemberView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+
+  /v1/dashboard/settings/policy/change-requests:
+    post:
+      summary: Submit a settlement-policy change request for review.
+      operationId: createDashboardPolicyChangeRequest
+      description: |
+        Merchant-scoped control-plane action. The caller must be an
+        owner/admin dashboard user. The request is persisted as review
+        evidence and audited, but it does not mutate merchant_policies,
+        routing, or live settlement behavior.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardPolicyChangeRequestInput" }
+      responses:
+        '202':
+          description: Submitted policy change request.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardPolicyChangeRequestView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
   /v1/dashboard/exceptions/summary:
     get:
       summary: Read CCTP exception depth for the authenticated merchant (mode-scoped).
@@ -3940,6 +4375,28 @@ paths:
       responses:
         '200':
           description: Reconciliation rows.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardReconciliationPage" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/reconciliation/recent:
+    get:
+      summary: List recent CCTP payment-intent evidence for the authenticated merchant.
+      operationId: listRecentDashboardReconciliation
+      description: |
+        Read-only merchant dashboard projection over the most recent
+        payment_intents rows. Merchant and mode are resolved from auth
+        context; the endpoint is bounded by DashboardLimit and never
+        exposes raw CCTP states, proofs, route hashes, attestation bytes,
+        checkout token hashes, or cross-tenant rows.
+      parameters:
+        - $ref: "#/components/parameters/DashboardLimit"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Recent reconciliation rows.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardReconciliationPage" }
