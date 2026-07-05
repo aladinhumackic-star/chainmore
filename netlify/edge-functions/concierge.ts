@@ -29,6 +29,7 @@ import {
 import { guardReply } from "../lib/concierge-guard.ts";
 import { CONCIERGE_KNOWLEDGE } from "../lib/concierge-knowledge.ts";
 import { buildConciergeResponsesPayload } from "../lib/concierge-openai.ts";
+import { deterministicConciergeReply } from "../lib/concierge-sales.ts";
 
 const MAX_MESSAGES = 20;
 const MAX_USER_CHARS = 2_000;
@@ -265,6 +266,13 @@ export default async (req: Request, ctx: Context) => {
   }
   const messages = sanitize(body.body.messages);
   if (!messages) return sse([{ type: "error", message: "Bad request." }], 400);
+
+  const deterministicReply = deterministicConciergeReply(messages);
+  if (deterministicReply) {
+    const guarded = guardReply(deterministicReply);
+    if (!guarded.ok) console.warn("[concierge] guard blocked deterministic reply", guarded.hits);
+    return sse([{ type: "delta", text: guarded.text }, { type: "done" }]);
+  }
 
   const input = [
     { role: "system", content: [{ type: "input_text", text: SYSTEM_PROMPT }] },
