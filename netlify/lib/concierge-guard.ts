@@ -43,7 +43,7 @@ const FORBIDDEN: Array<{ name: string; re: RegExp }> = [
 export const FALLBACK_TEXT =
   "That touches on details I'd rather not state imprecisely. " +
   "You'll find pricing on chainmore.io/pricing and platform facts on chainmore.io/security and /status. " +
-  "For anything specific, email support@chainmore.io — a human replies within two business days.";
+  "For anything specific, email support@chainmore.io. A human replies within two business days.";
 
 export function guardReply(raw: string): GuardResult {
   const text = String(raw ?? "").trim();
