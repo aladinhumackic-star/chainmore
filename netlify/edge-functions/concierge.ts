@@ -14,19 +14,25 @@
 //      (the pricing page owns numbers), no counterparties.
 //
 // Privacy: no user content is logged or stored by this function. The
-// only persistence is an in-memory per-IP rate-limit bucket.
+// only persistence is an in-memory request-admission bucket.
 
 import type { Context } from "https://edge.netlify.com";
+import {
+  CONCIERGE_MAX_REQUEST_BYTES,
+  CONCIERGE_SESSION_HEADER,
+  IP_RATE_RULES,
+  SESSION_RATE_RULES,
+  consumeRateLimit,
+  rateLimitKey,
+  verifyConciergeSessionToken,
+} from "../lib/concierge-abuse.ts";
 import { guardReply } from "../lib/concierge-guard.ts";
 import { CONCIERGE_KNOWLEDGE } from "../lib/concierge-knowledge.ts";
+import { buildConciergeResponsesPayload } from "../lib/concierge-openai.ts";
 
-const MODEL = "gpt-4o-mini";
 const MAX_MESSAGES = 20;
 const MAX_USER_CHARS = 2_000;
 const MAX_HISTORY_CHARS = 20_000;
-const MAX_OUTPUT_TOKENS = 500;
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
-const RATE_LIMIT_MAX = 20; // messages per IP per hour
 const ALLOWED_HOSTS = ["chainmore.io", "www.chainmore.io", "localhost:8888", "localhost"];
 
 const SYSTEM_PROMPT = `You are the ChainMore Concierge on chainmore.io, a calm,
@@ -107,20 +113,9 @@ ${CONCIERGE_KNOWLEDGE}`;
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-const buckets = new Map<string, { count: number; resetAt: number }>();
+const buckets = new Map<string, Map<string, { count: number; resetAt: number }>>();
 
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const b = buckets.get(ip);
-  if (!b || now > b.resetAt) {
-    buckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return false;
-  }
-  b.count += 1;
-  return b.count > RATE_LIMIT_MAX;
-}
-
-function sse(events: Array<Record<string, unknown>>, status = 200): Response {
+function sse(events: Array<Record<string, unknown>>, status = 200, extraHeaders: Record<string, string> = {}): Response {
   const body = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
   return new Response(body, {
     status,
@@ -128,8 +123,76 @@ function sse(events: Array<Record<string, unknown>>, status = 200): Response {
       "content-type": "text/event-stream; charset=utf-8",
       "cache-control": "no-store",
       "x-robots-tag": "noindex",
+      ...extraHeaders,
     },
   });
+}
+
+function clientBinding(req: Request, ctx: Context) {
+  return {
+    ip: ctx.ip || req.headers.get("x-nf-client-connection-ip") || "unknown",
+    userAgent: req.headers.get("user-agent") || "unknown",
+  };
+}
+
+function allowedUrlHost(value: string | null): boolean {
+  if (!value) return false;
+  try {
+    return ALLOWED_HOSTS.includes(new URL(value).host);
+  } catch {
+    return false;
+  }
+}
+
+function hasAllowedBrowserSource(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  if (origin) return allowedUrlHost(origin);
+  return allowedUrlHost(req.headers.get("referer"));
+}
+
+function rateLimitSSE(retryAfterSeconds: number): Response {
+  return sse(
+    [{ type: "error", message: "Too many messages right now. Please try again later." }],
+    429,
+    { "retry-after": String(retryAfterSeconds) },
+  );
+}
+
+async function readJsonBody(req: Request): Promise<{ ok: true; body: { messages?: unknown } } | { ok: false; status: number; message: string }> {
+  const contentLength = Number(req.headers.get("content-length") || "0");
+  if (contentLength > CONCIERGE_MAX_REQUEST_BYTES) {
+    return { ok: false, status: 413, message: "Request too large." };
+  }
+
+  if (!req.body) return { ok: false, status: 400, message: "Bad request." };
+
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > CONCIERGE_MAX_REQUEST_BYTES) {
+      await reader.cancel();
+      return { ok: false, status: 413, message: "Request too large." };
+    }
+    chunks.push(value);
+  }
+
+  const all = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    all.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    return { ok: true, body: JSON.parse(new TextDecoder().decode(all)) };
+  } catch {
+    return { ok: false, status: 400, message: "Bad request." };
+  }
 }
 
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
@@ -158,20 +221,24 @@ export default async (req: Request, ctx: Context) => {
     return sse([{ type: "error", message: "Method not allowed." }], 405);
   }
 
-  const origin = req.headers.get("origin");
-  if (origin) {
-    let host = "";
-    try {
-      host = new URL(origin).host;
-    } catch {
-      // malformed origin header -> falls through to the reject below
-    }
-    if (!ALLOWED_HOSTS.includes(host)) {
-      return sse([{ type: "error", message: "Origin not allowed." }], 403);
-    }
+  if (!hasAllowedBrowserSource(req)) {
+    return sse([{ type: "error", message: "Request not allowed." }], 403);
+  }
+
+  const contentType = req.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return sse([{ type: "error", message: "Unsupported content type." }], 415);
   }
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
+  const abuseSecret = Deno.env.get("CONCIERGE_ABUSE_SECRET") || "";
+  if (!abuseSecret) {
+    console.error("[concierge] Missing CONCIERGE_ABUSE_SECRET");
+    return sse(
+      [{ type: "error", message: "The Concierge is offline right now. Email support@chainmore.io instead." }],
+      503,
+    );
+  }
   if (!apiKey) {
     console.error("[concierge] Missing OPENAI_API_KEY");
     return sse(
@@ -180,18 +247,23 @@ export default async (req: Request, ctx: Context) => {
     );
   }
 
-  const ip = ctx.ip || req.headers.get("x-nf-client-connection-ip") || "unknown";
-  if (rateLimited(ip)) {
-    return sse([{ type: "error", message: "Too many messages right now. Please try again later." }], 429);
+  const binding = clientBinding(req, ctx);
+  const session = await verifyConciergeSessionToken(req.headers.get(CONCIERGE_SESSION_HEADER), abuseSecret, binding);
+  if (!session.ok || !session.payload) {
+    return sse([{ type: "error", message: "Session expired. Please refresh this page and try again." }], 403);
   }
 
-  let body: { messages?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return sse([{ type: "error", message: "Bad request." }], 400);
+  const ipLimit = consumeRateLimit(buckets, rateLimitKey("ip", binding.ip), IP_RATE_RULES);
+  if (!ipLimit.ok) return rateLimitSSE(ipLimit.retryAfterSeconds);
+
+  const sessionLimit = consumeRateLimit(buckets, rateLimitKey("session", session.payload.nonce), SESSION_RATE_RULES);
+  if (!sessionLimit.ok) return rateLimitSSE(sessionLimit.retryAfterSeconds);
+
+  const body = await readJsonBody(req);
+  if (!body.ok) {
+    return sse([{ type: "error", message: body.message }], body.status);
   }
-  const messages = sanitize(body.messages);
+  const messages = sanitize(body.body.messages);
   if (!messages) return sse([{ type: "error", message: "Bad request." }], 400);
 
   const input = [
@@ -207,13 +279,7 @@ export default async (req: Request, ctx: Context) => {
     const upstream = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: MODEL,
-        input,
-        stream: false,
-        temperature: 0.3,
-        max_output_tokens: MAX_OUTPUT_TOKENS,
-      }),
+      body: JSON.stringify(buildConciergeResponsesPayload(input)),
     });
     if (!upstream.ok) {
       console.error("[concierge] upstream status", upstream.status);

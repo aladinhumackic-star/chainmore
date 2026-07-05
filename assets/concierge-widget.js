@@ -25,6 +25,8 @@
 
   // Configuration
   var API_ENDPOINT     = '/api/concierge';
+  var HEALTH_ENDPOINT  = '/api/concierge/health';
+  var SESSION_HEADER   = 'x-chainmore-concierge-session';
   var MAX_HISTORY      = 20;          // user + assistant turns
   var MAX_INPUT_CHARS  = 2000;        // matches server-side cap
   var CSS_HREF         = '/assets/concierge-widget.css';
@@ -358,6 +360,49 @@
     scrollToBottom();
   }
 
+  function clearSessionToken() {
+    window.__chainmoreConciergeSessionToken = '';
+  }
+
+  function refreshSessionToken(forceRefresh) {
+    if (forceRefresh) clearSessionToken();
+    if (!forceRefresh && window.__chainmoreConciergeSessionToken) {
+      return Promise.resolve(window.__chainmoreConciergeSessionToken);
+    }
+    return fetch(HEALTH_ENDPOINT, { credentials: 'omit' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || j.ok !== true || !j.sessionToken) {
+          throw new Error('session unavailable');
+        }
+        window.__chainmoreConciergeSessionToken = j.sessionToken;
+        return j.sessionToken;
+      });
+  }
+
+  function postConciergeMessages(messages, forceSessionRefresh) {
+    return refreshSessionToken(forceSessionRefresh).then(function (sessionToken) {
+      var headers = { 'content-type': 'application/json' };
+      headers[SESSION_HEADER] = sessionToken;
+      return fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ messages: messages }),
+      });
+    });
+  }
+
+  function postConciergeWithSessionRetry(messages) {
+    return postConciergeMessages(messages, false).then(function (res) {
+      if (res.status !== 403) return res;
+      // The admission token is short-lived by design. If it expires during
+      // a long-lived browser tab, recover once by fetching a fresh token.
+      // Do not loop: repeated 403 still means the server is authoritative.
+      clearSessionToken();
+      return postConciergeMessages(messages, true);
+    });
+  }
+
   function scrollToBottom() {
     els.messages.scrollTop = els.messages.scrollHeight;
   }
@@ -396,11 +441,7 @@
     setBusy(true);
     var ref = appendAssistantMessage('');
 
-    fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ messages: historyToSend }),
-    }).then(function (res) {
+    postConciergeWithSessionRetry(historyToSend).then(function (res) {
       if (res.status === 429) {
         finalizeAssistantMessage(ref);
         // Remove the empty placeholder bubble.
@@ -408,6 +449,13 @@
         // Pop the failed assistant turn from history.
         state.messages.pop();
         showError('Too many messages right now. Please try again in a few minutes, or email support@chainmore.io.');
+        return null;
+      }
+      if (res.status === 403) {
+        finalizeAssistantMessage(ref);
+        if (ref.wrap && ref.wrap.parentNode) ref.wrap.parentNode.removeChild(ref.wrap);
+        state.messages.pop();
+        showError('This chat session expired. Please refresh the page and try again, or email support@chainmore.io.');
         return null;
       }
       if (!res.ok || !res.body) {
@@ -518,6 +566,14 @@
 
   function bootstrap() {
     ensureStylesheet(mount);
+  }
+
+  // Test-only seam: inert in production because the property does not exist
+  // unless the Node harness pre-seeds it before loading this script.
+  if (window.__chainmoreConciergeTestHooks) {
+    window.__chainmoreConciergeTestHooks.clearSessionToken = clearSessionToken;
+    window.__chainmoreConciergeTestHooks.refreshSessionToken = refreshSessionToken;
+    window.__chainmoreConciergeTestHooks.postConciergeWithSessionRetry = postConciergeWithSessionRetry;
   }
 
   if (document.readyState === 'loading') {
