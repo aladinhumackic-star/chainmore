@@ -21,7 +21,13 @@ const FORBIDDEN: Array<{ name: string; re: RegExp }> = [
   // Guarantees / risk promises.
   { name: "guarantee", re: /\b(guarantee[ds]?|risk[\s-]?free|zero\s+risk|100%\s+(safe|secure))\b/i },
   // Blanket chargeback claims (rail-dependent truth; site demo is rail-aware).
-  { name: "chargeback-claim", re: /\b0\s?%\s?chargebacks?\b|\bno\s+chargebacks?\b/i },
+  // Scoped stablecoin-rail nuance is allowed; blanket "no chargebacks" is not.
+  {
+    name: "chargeback-claim",
+    re: /\b(?:0\s?%|zero|no)\s+chargebacks?\b(?![^.\n]{0,80}\b(?:mechanism|rail|stablecoin|on-chain|card|dispute)\b)/i,
+  },
+  // The filing is patent-pending. Never upgrade that to granted-patent wording.
+  { name: "patent-overclaim", re: /\bpatented\b|\bpatentiert\w*\b|\bpatent\s+(?:granted|issued|approved)\b/i },
   // Concrete prices: percentages and currency amounts. Pricing is
   // quoted only by the pricing page, never improvised by a bot.
   { name: "percent-figure", re: /\b\d+(?:[.,]\d+)?\s?(%|bps|basis\s?points)/i },

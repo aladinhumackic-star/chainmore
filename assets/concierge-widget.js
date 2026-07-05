@@ -1,4 +1,4 @@
-/*! ChainMore Concierge Widget — vanilla JS, no dependencies.
+/*! ChainMore Concierge Widget, vanilla JS, no dependencies.
  *
  *  Responsibilities:
  *    - Render a floating button bottom-right.
@@ -11,45 +11,44 @@
  *      No localStorage. Privacy by default; nothing to leak to a future
  *      visitor who shares the same device.
  *    - All DOM is created in JS so the widget can be dropped onto any
- *      page by including this script — no markup edits required beyond
+ *      page by including this script. No markup edits required beyond
  *      the script tag.
  *    - CSS is a sibling file (assets/concierge-widget.css). The widget
  *      script loads it after DOM-ready so the below-the-fold Concierge
  *      UI does not block the page's first paint.
- *    - Endpoint is hard-pinned to /api/concierge — same-origin, the
+ *    - Endpoint is hard-pinned to /api/concierge. Same-origin, the
  *      CSP connect-src 'self' covers it.
  */
 
 (function () {
   'use strict';
 
-  // ─── Configuration ──────────────────────────────────────────────────
+  // Configuration
   var API_ENDPOINT     = '/api/concierge';
   var MAX_HISTORY      = 20;          // user + assistant turns
   var MAX_INPUT_CHARS  = 2000;        // matches server-side cap
   var CSS_HREF         = '/assets/concierge-widget.css';
 
-  // ─── Welcome / placeholder copy ─────────────────────────────────────
-  // Voice mirrors the system prompt: outcome language, no superlatives,
-  // no exclamation marks, no emoji.
+  // Welcome / placeholder copy
+  // Voice mirrors the system prompt: conversational, concrete, no hype.
   var WELCOME_TEXT =
-    'I answer questions about ChainMore — Cross-Rail Payment ' +
-    'Orchestration. Ask about how it works, what rails are covered, ' +
-    'how integration fits, or how to start a discovery call.';
+    'Hi, I can help with ChainMore. Ask me how it works, ' +
+    'which payment rails we cover, how it could fit your checkout, ' +
+    'or how to start a discovery call.';
 
-  var INPUT_PLACEHOLDER = 'Ask about ChainMore…';
+  var INPUT_PLACEHOLDER = 'Ask me about ChainMore';
 
-  // ─── State ──────────────────────────────────────────────────────────
+  // State
   var state = {
     open: false,
     sending: false,
     messages: [],        // {role: 'user'|'assistant', content: string}
   };
 
-  // ─── DOM refs (set after mount) ─────────────────────────────────────
+  // DOM refs (set after mount)
   var els = {};
 
-  // ─── Helpers ────────────────────────────────────────────────────────
+  // Helpers
 
   function el(tag, attrs, children) {
     var node = document.createElement(tag);
@@ -135,7 +134,7 @@
     return joined;
   }
 
-  // ─── Mount ──────────────────────────────────────────────────────────
+  // Mount
 
   function ensureStylesheet(done) {
     var existing = document.querySelector('link[data-cm-concierge-css="true"], link[href="' + CSS_HREF + '"]');
@@ -167,7 +166,7 @@
   }
 
   function mount() {
-    // Container — fixed position, sits above page content.
+    // Container, fixed position and above page content.
     var root = el('div', { id: 'cm-concierge-root', role: 'region', 'aria-label': 'ChainMore Concierge' });
 
     // Floating button.
@@ -179,7 +178,7 @@
       onclick: togglePanel,
     }, [
       el('span', { class: 'cm-concierge-fab__icon', 'aria-hidden': 'true', html:
-        // Inline SVG — speech-bubble glyph in ChainMore cyan.
+        // Inline SVG, speech-bubble glyph in ChainMore cyan.
         '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
           '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>' +
         '</svg>'
@@ -296,7 +295,7 @@
     });
     header.addEventListener('click', function (e) {
       // Skip if the click landed on the reset button (or its children
-      // via event bubbling) — reset has its own handler.
+      // via event bubbling). Reset has its own handler.
       var t = e.target;
       while (t && t !== header) {
         if (t.getAttribute && t.getAttribute('aria-label') === 'Reset conversation') return;
@@ -308,7 +307,7 @@
     renderWelcome();
   }
 
-  // ─── Rendering ──────────────────────────────────────────────────────
+  // Rendering
 
   function renderWelcome() {
     els.messages.innerHTML = '';
@@ -363,7 +362,7 @@
     els.messages.scrollTop = els.messages.scrollHeight;
   }
 
-  // ─── Input handling ─────────────────────────────────────────────────
+  // Input handling
 
   function onInputKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -378,7 +377,7 @@
     ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
   }
 
-  // ─── Network ────────────────────────────────────────────────────────
+  // Network
 
   function send() {
     if (state.sending) return;
@@ -479,7 +478,7 @@
     return step();
   }
 
-  // ─── Panel open/close ───────────────────────────────────────────────
+  // Panel open/close
 
   function togglePanel() {
     if (state.open) closePanel();
@@ -515,7 +514,7 @@
     els.root.classList.toggle('cm-concierge--busy', busy);
   }
 
-  // ─── Bootstrap ──────────────────────────────────────────────────────
+  // Bootstrap
 
   function bootstrap() {
     ensureStylesheet(mount);
