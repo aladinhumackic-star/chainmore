@@ -61,12 +61,12 @@
       <p class="text-slate-500">List of third parties that may process customer or merchant data on behalf of Chainmore OÜ. Maintained pursuant to GDPR Article 28(2). Updated when a sub-processor is added or replaced; merchants may subscribe to change notifications via <a href="mailto:support@chainmore.io">support@chainmore.io</a>.</p>
 
       <div class="callout">
-        <strong>Pre-launch posture:</strong> ChainMore is currently in product-readiness mode and does not yet onboard production merchants. The list below reflects the sub-processors used for our public-facing infrastructure today. The list will expand as we add merchant-data-processing services for production. Merchants will be notified before any new sub-processor begins processing their data, with a 14-day window to object before the change takes effect.
+        <strong>Limited early-access posture:</strong> ChainMore operates the public marketing site and limited early-access product surfaces. The list below reflects the sub-processors used for public-facing infrastructure and the optional website Concierge. The list will expand as production merchant-data-processing services are added. Merchants will be notified before any new sub-processor begins processing their data, with a 14-day window to object before the change takes effect.
       </div>
 
       <h2>Active sub-processors</h2>
 
-      <p>These are the sub-processors that may currently process customer, merchant, or public-site visitor data on behalf of Chainmore OÜ. As of the date below, exactly one sub-processor is active.</p>
+      <p>These are the sub-processors that may currently process customer, merchant, or public-site visitor data on behalf of Chainmore OÜ. The Concierge processor below processes data only when the Concierge is enabled and a visitor chooses to use it.</p>
 
       <table class="sub-table">
         <thead>
@@ -86,12 +86,19 @@
             <td class="region">United States</td>
             <td>EU-US Data Privacy Framework where active for the relevant entity, EU SCCs Module 2 as fallback. DPF status verified at each annual review.</td>
           </tr>
+          <tr>
+            <td class="role">OpenAI, L.L.C.</td>
+            <td>Generation of responses for the optional ChainMore Concierge on the public website. The Concierge is not used for account support, confidential documents, credentials, private keys, or payment secrets.</td>
+            <td>Visitor-entered chat text for Concierge questions. ChainMore does not store Concierge chat transcripts or link them to merchant accounts.</td>
+            <td class="region">United States</td>
+            <td>EU Standard Contractual Clauses under the applicable data-processing terms.</td>
+          </tr>
         </tbody>
       </table>
 
-      <h2>Categories of sub-processors not yet engaged</h2>
+      <h2>Additional processor categories for merchant product surfaces</h2>
 
-      <p>ChainMore has not yet activated production hosting for the merchant dashboard, gateway, or identity provider. As soon as a sub-processor is selected for any of the categories below, the Processor will give merchants 14 calendar days' written notice (with the full vendor row added to the active list) before that sub-processor begins processing personal data.</p>
+      <p>As merchant product surfaces move through early-access and production processing, ChainMore discloses selected sub-processors through the merchant DPA process and this public list. Before a new sub-processor begins processing production merchant personal data, the Processor will give merchants 14 calendar days' written notice with the full vendor row added to the active list.</p>
 
       <p>The categories below are forward-looking statements about the operating model the Processor intends to build. They are not commitments to any specific vendor.</p>
 
@@ -138,7 +145,7 @@
         <li>Behavioural advertising or retargeting trackers (Google Ads, Meta Pixel, etc.).</li>
         <li>Third-party web-analytics tools that use tracking cookies (Google Analytics, Adobe Analytics, etc.). If we add analytics later, it will be a privacy-preserving option (Plausible, Fathom, or similar) and will appear on this list.</li>
         <li>Customer-data brokers, data-enrichment services, or lead-scoring vendors.</li>
-        <li>Chat widgets that load third-party scripts on the marketing site.</li>
+        <li>Chat widgets that load third-party scripts on the marketing site. The optional ChainMore Concierge uses first-party site code and the server-side sub-processor listed above.</li>
       </ul>
 
       <h2>Sub-processor change notification</h2>
@@ -154,7 +161,7 @@
       <p>The page footer carries a "Last updated" date. The canonical URL is <code>https://chainmore.io/legal/sub-processors.html</code>. The Processor maintains an internal change-log alongside the source-of-truth annex; controllers receive a copy as part of their DPA pack and are notified of any change before it takes effect.</p>
 
       <hr>
-      <p class="text-sm text-slate-500"><em>Last updated: April 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: July 2026 · Questions: <a href="mailto:support@chainmore.io">support@chainmore.io</a></em></p>
     </article>
   </main>
 

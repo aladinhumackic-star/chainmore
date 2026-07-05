@@ -62,8 +62,10 @@
   # itself, which CSP treats as an inline style attribute when
   # browsers reflect dynamic state). Same compensating controls.
   #
-  # connect-src 'self'  -  the marketing site makes zero fetch() /
-  # XHR / WebSocket calls. Tightest possible.
+  # connect-src 'self'  -  public client fetches stay same-origin.
+  # The optional Concierge boot check and chat endpoint call only
+  # /api/concierge* on chainmore.io; third-party AI calls happen
+  # server-side inside the Netlify Edge Function, never from the browser.
   #
   # frame-ancestors 'none'  -  chainmore.io cannot be put in any iframe
   # (clickjacking defense; redundant with X-Frame-Options below but

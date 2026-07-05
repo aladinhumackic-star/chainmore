@@ -1,2 +1,10 @@
 [build]
   publish = "."
+
+[[edge_functions]]
+  path = "/api/concierge"
+  function = "concierge"
+
+[[edge_functions]]
+  path = "/api/concierge/health"
+  function = "concierge-health"
