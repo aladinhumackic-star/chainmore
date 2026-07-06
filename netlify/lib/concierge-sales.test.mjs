@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { guardReply } from "./concierge-guard.ts";
 import {
+  CHARGEBACK_NUANCE_REPLY_DE,
   CHARGEBACK_NUANCE_REPLY,
   deterministicConciergeReply,
 } from "./concierge-sales.ts";
@@ -25,7 +26,12 @@ test("answers German reversal wording with the same safe nuance", () => {
     { role: "user", content: "Heißt das keine Rückbuchungen für Händler?" },
   ]);
 
-  assert.equal(reply, CHARGEBACK_NUANCE_REPLY);
+  assert.equal(reply, CHARGEBACK_NUANCE_REPLY_DE);
+  assert.match(reply, /Stablecoin-Zahlungen/);
+  assert.match(reply, /Rückbuchungsmechanismus/);
+  assert.match(reply, /Kartenzahlungen/);
+  assert.match(reply, /Streitfallregeln/);
+  assert.equal(/—|–/.test(reply), false);
   assert.equal(guardReply(reply).ok, true);
 });
 
