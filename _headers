@@ -13,9 +13,9 @@
 # ─────────────────────────────────────────────────────────────────────
 # STAGED-ROLLOUT POSTURE (security review 2026-04-29)
 #
-# This file ships in CONSERVATIVE FIRST-DEPLOY mode:
+# This file has moved past conservative first-deploy mode:
 #
-#   - HSTS max-age=300  (5 min commit, NOT 2 years)
+#   - HSTS max-age=15552000  (180 days, NOT preload)
 #   - HSTS without `preload` directive
 #   - CSP enforced (marketing site has no auth/cookies → safe to enforce)
 #
@@ -25,7 +25,9 @@
 #                                                          doesn't break
 #   day 1   after smoke pass:  max-age=86400               -  1-day commit
 #   day 7   after smoke pass:  max-age=2592000             -  30-day commit
-#   day 14  + investor sign-off:
+#   post burn-in:
+#                              max-age=15552000          -  180-day commit
+#   preload + investor sign-off:
 #                              max-age=63072000; preload   -  submit to
 #                                                          hstspreload.org
 #
@@ -35,12 +37,10 @@
 
 /*
   # ── Transport security ────────────────────────────────────────────
-  # HSTS conservative-first. See ramp procedure above. includeSubDomains
-  # is on from day 0 because if any subdomain (api., auth., app.) is
-  # currently served over http, we want to know IMMEDIATELY (not 30 days
-  # in). 5-minute max-age means the worst case is a 5-minute outage
-  # before browsers stop forcing HTTPS  -  survivable.
-  Strict-Transport-Security: max-age=15768000; includeSubDomains
+  # HSTS post burn-in. See ramp procedure above. includeSubDomains
+  # is on because every production subdomain in scope is expected to be
+  # HTTPS-only before this header ships.
+  Strict-Transport-Security: max-age=15552000; includeSubDomains
 
   # ── Content Security Policy ───────────────────────────────────────
   # default-src 'self'  -  start by allowing only same-origin assets,
