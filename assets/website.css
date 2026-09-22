@@ -1,0 +1,90 @@
+/* Small, brand-preserving additions to the existing ChainMore site. */
+:root { --site-navy: #0f172a; --site-cyan: #00d4ff; }
+html { scroll-padding-top: 96px; }
+body { margin: 0; }
+section { scroll-margin-top: 80px; }
+button, a, [role="button"], summary { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible, summary:focus-visible { outline: 3px solid #00bfe6; outline-offset: 4px; }
+button:disabled { cursor: default; opacity: .45; }
+.site-skip { position: fixed; left: 16px; top: -80px; z-index: 100; background: white; color: #0f172a; padding: 12px 18px; border: 2px solid #00d4ff; border-radius: 8px; }
+.site-skip:focus { top: 16px; }
+.nav-group[data-active] > .nav-panel { opacity: 1; visibility: visible; }
+#hero { padding-top: 128px; }
+.hero-extra { display: flex; align-items: center; justify-content: center; gap: 24px; margin: 22px auto 0; }
+.hero-tour-link { color: #0087a3; font-weight: 650; }
+.motion-toggle { border: 1px solid #cbd5e1; border-radius: 100px; padding: 8px 14px; color: #475569; background: white; font-size: 12px; }
+.flow-card { width: 100%; text-align: left; }
+#flow-inputs, #flow-outputs { width: 100%; }
+.flow-benefit { color: #cbd5e1; font-size: 14px; text-align: center; width: 100%; margin: 4px 0 0; line-height: 1.65; }
+.brand-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; padding: 24px 0; }
+.benefit-stack { background: #0f172a; border-radius: 20px; padding: 12px 30px; box-shadow: 0 20px 35px -25px #0f172a80; }
+.benefit-stack > div { position: relative; padding: 28px 0 28px 52px; border-bottom: 1px solid #ffffff18; }
+.benefit-stack > div:last-child { border: 0; }
+.benefit-number { position: absolute; top: 29px; left: 0; color: #00d4ff; font-size: 14px; font-weight: 700; }
+.benefit-stack h3 { color: white; font-size: 19px; font-weight: 650; margin-bottom: 8px; }
+.benefit-stack p { color: #b8c5d8; font-size: 15px; line-height: 1.65; }
+.checkout-showcase { background: #0f172a; padding: 74px 24px 54px; }
+.showcase-heading { display: flex; align-items: end; justify-content: space-between; gap: 48px; margin-bottom: 32px; }
+.eyebrow { color: #00d4ff; font-size: 13px; letter-spacing: .1em; font-weight: 650; text-transform: uppercase; }
+.showcase-heading h2 { font-size: clamp(32px, 3.7vw, 48px); font-weight: 750; color: white; line-height: 1.13; margin-top: 14px; letter-spacing: -.025em; }
+.showcase-heading h2 span { color: #00d4ff; }
+.showcase-heading > p { max-width: 380px; color: #b8c5d8; font-size: 17px; line-height: 1.7; padding-bottom: 3px; }
+.checkout-tour { border: 1px solid #334155; border-radius: 22px; background: #172238; overflow: hidden; }
+.tour-toolbar { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #334155; }
+.preview-label { color: #dce7f5; font-size: 13px; display: flex; align-items: center; gap: 9px; }
+.preview-label i { width: 7px; height: 7px; background: #00d4ff; border-radius: 50%; display: inline-block; }
+.viewport-buttons { display: flex; padding: 4px; background: #0f172a; border-radius: 8px; }
+.viewport-buttons button { color: #94a3b8; font-size: 12px; padding: 6px 12px; border-radius: 5px; }
+.viewport-buttons button[aria-pressed="true"] { background: #334155; color: white; }
+.tour-steps { display: flex; justify-content: center; gap: 6px; padding: 20px 12px; flex-wrap: wrap; }
+.tour-steps button { border-radius: 8px; padding: 9px 12px; font-size: 13px; font-weight: 600; color: #b8c5d8; display: flex; gap: 7px; align-items: center; }
+.tour-steps button span { font-size: 11px; color: #8298b5; }
+.tour-steps button[aria-pressed="true"] { background: #00d4ff; color: #0f172a; }
+.tour-steps button[aria-pressed="true"] span { color: #0f172a; }
+.checkout-stage { padding: 8px 18px 18px; display: flex; align-items: start; justify-content: center; min-height: 360px; background: radial-gradient(ellipse at 50% 70%, #00d4ff10, transparent 70%); }
+#checkout-preview { display: block; width: 100%; max-width: 840px; border: 0; background: transparent; color-scheme: light; }
+#checkout-preview img { width: 100%; height: auto; display: block; border-radius: 22px; box-shadow: 0 12px 32px #0002; }
+.checkout-stage[data-size="mobile"] #checkout-preview { max-width: 390px; }
+.tour-caption { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 24px; border-top: 1px solid #334155; }
+.tour-caption p { max-width: 730px; color: #cbd5e1; font-size: 14px; line-height: 1.65; }
+.tour-controls { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tour-controls button { background: #25334a; border: 1px solid #455570; border-radius: 8px; color: #e2e8f0; padding: 9px 13px; font-size: 13px; }
+.tour-controls button:last-child { background: #00d4ff; color: #0f172a; border-color: #00d4ff; font-weight: 650; }
+.tour-other { border-top: 1px solid #334155; padding: 14px 24px; font-size: 12px; color: #94a3b8; }
+.tour-other summary { cursor: pointer; }
+.tour-other > div { display: flex; gap: 12px; padding: 14px 0 0; }
+.tour-other button { border: 1px solid #475569; color: #cbd5e1; padding: 8px 12px; border-radius: 8px; }
+.tour-other button[aria-pressed="true"] { border-color: #00d4ff; color: #00d4ff; }
+.tour-disclosure { margin-top: 18px; color: #94a3b8; font-size: 12px; line-height: 1.65; text-align: center; }
+.motion-paused *, .motion-paused *::before, .motion-paused *::after { animation-play-state: paused !important; }
+@media (max-width: 1023px) {
+  #how-it-works > div > div > .flex.flex-col > div { width: 100%; }
+  .brand-benefits { gap: 36px; }
+}
+@media (max-width: 767px) {
+  #hero { padding-top: 100px; }
+  .hero-extra { gap: 14px; flex-wrap: wrap; }
+  .hero-tour-link { font-size: 14px; }
+  .brand-benefits { grid-template-columns: 1fr; gap: 32px; }
+  .brand-benefits h2 { font-size: 34px; }
+  .brand-benefits p { font-size: 16px; }
+  .benefit-stack { padding: 6px 22px; }
+  .showcase-heading { display: block; }
+  .showcase-heading > p { margin-top: 22px; font-size: 16px; }
+  .checkout-showcase { padding: 50px 12px 36px; }
+  .checkout-tour { border-radius: 14px; }
+  .tour-toolbar { padding: 14px 12px; gap: 8px; }
+  .preview-label { font-size: 11px; }
+  .viewport-buttons button { padding: 5px 7px; font-size: 11px; }
+  .tour-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 14px 8px; }
+  .tour-steps button { padding: 9px 6px; font-size: 12px; justify-content: center; gap: 5px; }
+  .checkout-stage { padding: 0 8px 12px; }
+  .tour-caption { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+  .tour-controls { justify-content: flex-end; }
+  .tour-other { padding: 14px 16px; }
+  .tour-disclosure { font-size: 11px; padding: 0 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition-duration: 0s !important; }
+}

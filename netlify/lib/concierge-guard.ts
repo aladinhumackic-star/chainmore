@@ -29,7 +29,7 @@ const FORBIDDEN: Array<{ name: string; re: RegExp }> = [
   // The filing is patent-pending. Never upgrade that to granted-patent wording.
   { name: "patent-overclaim", re: /\bpatented\b|\bpatentiert\w*\b|\bpatent\s+(?:granted|issued|approved)\b/i },
   // Concrete prices: percentages and currency amounts. Pricing is
-  // quoted only by the pricing page, never improvised by a bot.
+  // discussed with the team, never improvised by a bot.
   { name: "percent-figure", re: /\b\d+(?:[.,]\d+)?\s?(%|bps|basis\s?points)/i },
   { name: "currency-figure", re: /[€$£]\s?\d[\d.,]*/ },
   // Counterparties and pilot customers are not public knowledge.
@@ -42,7 +42,7 @@ const FORBIDDEN: Array<{ name: string; re: RegExp }> = [
 
 export const FALLBACK_TEXT =
   "That touches on details I'd rather not state imprecisely. " +
-  "You'll find pricing on chainmore.io/pricing and platform facts on chainmore.io/security and /status. " +
+  "For a tailored quote, contact the team at chainmore.io/#contact. Platform facts are on chainmore.io/security and /status. " +
   "For anything specific, email support@chainmore.io. A human replies within two business days.";
 
 export function guardReply(raw: string): GuardResult {

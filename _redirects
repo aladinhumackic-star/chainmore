@@ -10,4 +10,12 @@
 /security        /security.html         200
 /status          /status.html           200
 /docs            /docs.html             200
-/cctp-explainer  /cctp-explainer.html   200
+
+
+# Retired public pages: no rates or implementation explainer remain.
+/pricing             /#contact             301!
+/pricing/            /#contact             301!
+/pricing.html        /#contact             301!
+/cctp-explainer      /#the-difference      301!
+/cctp-explainer/     /#the-difference      301!
+/cctp-explainer.html /#the-difference      301!

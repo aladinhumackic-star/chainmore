@@ -1,0 +1,108 @@
+{
+  "renderer": "internal/hostedcheckout/assets",
+  "fixture": "scripts/preview-hostedcheckout-design.mjs",
+  "presentationFixture": "tools/checkout-marketing-fixture.mjs",
+  "presentationFixtureSha256": "8afb9a9fff3f72ae52fe5329acf993cf6f70c515c238a886e6d87f6eab2a13b5",
+  "presentation": "Proposed unified Stablecoin entry; synthetic merchant offers all displayed methods. Not a change to production availability or asset selection.",
+  "checks": [
+    {
+      "state": "wallet",
+      "unavailableMethods": 0,
+      "methods": [
+        "Stablecoin",
+        "Card",
+        "Apple Pay",
+        "Google Pay"
+      ],
+      "stablecoinEntries": 1,
+      "stablecoinTokens": [
+        "USDC",
+        "USDT"
+      ]
+    },
+    {
+      "state": "qr",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "approve",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "payment_review",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "confirming",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "completed",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "failed",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    },
+    {
+      "state": "expired",
+      "unavailableMethods": 0,
+      "methods": [],
+      "stablecoinEntries": 0,
+      "stablecoinTokens": []
+    }
+  ],
+  "sourceSha256": {
+    "checkout.html": "aba409c1dd49418230edb843f4ea89b0a226e53ed652ef371ac2aa7d4f580d95",
+    "checkout.js": "8b5b0dc31ef43b325f3dcaff331ff4184b02ddf379e29c77e4465d67f7d481dc",
+    "checkout.css": "f02731e32faa37dfe3ed924148a75e9491d364e5580452e7cfb82fc8166e6b88",
+    "checkout-tokens.css": "5d53be7317826bc539853a49d463e5b1a15614052030a8b02097699349c20e98"
+  },
+  "imageSha256": {
+    "wallet-desktop.png": "20da07f268606445a0d489fb9bf78c1a604f07a0c5e36d41defafd9dd6bb04c7",
+    "wallet-mobile.png": "fcc4de1a8542741d632e3b4d3406ad20cedb08bda7f4d11a413be80a3584a1c2",
+    "qr-desktop.png": "177d59accc67a6f73b620821fb1b0f6007c060deceb64f3fa1b31c2f9eb8b57c",
+    "qr-mobile.png": "268bac11704bfee6e2cac32793e1823e68c09ce719066a1c9c456ce2ef77a861",
+    "approve-desktop.png": "72f25bf12c08fd75cc32f2ddcfb358bfd4b1b50b00b7d2e39d732723e816e64e",
+    "approve-mobile.png": "a7633af2b8a1064fe874d30e90bed7aa1a1e7f3639d6d0426a04866eda33ab99",
+    "payment_review-desktop.png": "c7d20ba9248fde79212b3885a5269a673654e9ce6090ae75e6ca67f2e99cd2f1",
+    "payment_review-mobile.png": "9785fbcb7fc277701102ea69322369d61f08d44213cfcd08f7be69e8149bf19d",
+    "confirming-desktop.png": "025ab765ea5aadd8edb2f37275d03f90db1372b83f2ce28e3de895bf4c6d49f0",
+    "confirming-mobile.png": "8a524bf27376e9ff4f39e23e161d1a94c90593d9e0709649ffaa16be26d874d7",
+    "completed-desktop.png": "618e3c4a985dcc339a487f6eb34334f0204e7b0490c6cc96884d0f4bfad7c460",
+    "completed-mobile.png": "473e1d5a883967561fadf96c1ea0b14259c6bc90fc0b56e7df52dbfeb7d5aa47",
+    "failed-desktop.png": "785ddad79f9507df347b0ddcebfc73e45b4c4e5694dcbe0b765004d4258ec637",
+    "failed-mobile.png": "27d40cccf26b805023481fd6773e9af99ac2e0aebdebddad3645220f52667d0e",
+    "expired-desktop.png": "c12a134a42e17f58d82d9054d8d4d57dae809730a64c376894a5ca36153ec111",
+    "expired-mobile.png": "27d40cccf26b805023481fd6773e9af99ac2e0aebdebddad3645220f52667d0e"
+  },
+  "states": [
+    "wallet",
+    "qr",
+    "approve",
+    "payment_review",
+    "confirming",
+    "completed",
+    "failed",
+    "expired"
+  ],
+  "safety": "Rendered snapshots. No checkout JavaScript, wallet access or payment requests shipped. Existing frame-src none policy retained."
+}

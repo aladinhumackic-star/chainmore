@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChainMore | Cross-Rail Payment Orchestration</title>
-  <meta name="description" content="ChainMore is a non-custodial payment-orchestration middleware. One API, dynamic routing across fiat and stablecoin rails, with fallback-aware routing controls. Operated by Chainmore OÜ, Tallinn, Estonia.">
+  <meta name="description" content="ChainMore connects familiar payments and digital money in one simpler experience for businesses and their customers. Operated by Chainmore OÜ, Tallinn, Estonia.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.chainmore.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.chainmore.io/">
   <meta property="og:title" content="ChainMore | Cross-Rail Payment Orchestration">
-  <meta property="og:description" content="One platform. Dynamic routing across fiat and stablecoin rails, with fallback-aware routing controls.">
+  <meta property="og:description" content="Customers pay their way. Businesses receive their way. One platform takes the complexity out of cards, bank payments and digital money.">
   <meta property="og:site_name" content="ChainMore">
   <meta property="og:locale" content="en_US">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="ChainMore | Cross-Rail Payment Orchestration">
-  <meta name="twitter:description" content="One platform. Dynamic routing across fiat and stablecoin rails, with fallback-aware routing controls.">
+  <meta name="twitter:description" content="Customers pay their way. Businesses receive their way. One platform takes the complexity out of cards, bank payments and digital money.">
   <!--
     JSON-LD Organization schema. Helps search engines display the
     knowledge-panel correctly (legal name + jurisdiction) and gives
@@ -40,7 +40,8 @@
     ], "areaServed": "EU"
   }
   </script>
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfpDA0PHDuWJSZyAAADLUlEQVRYw+2W329TVRzAP/d2vbe0vSuJbiBdf62sttBlgyCpuKBLVIyCCaLEBxOyzJ8xvvg/GJ/EN950U2NQfNAYJDE8SIDMsulS1+6HI25At+q2joV12Pbe3nt8QAkTEkvdBg/7vJ3k5Hw/+f4450hCCME9RL6XwdcF1gXuT4FSqUQ+P49pmmsiUHfrolwu8977H3Lu/AX27eskvi2Kz+cl4G9i40YPkiStrkChsMTZcz8yPDLO5KUryLKEoij4fF72diTY/9zTtMZj2O32FROQbr0JLcvi25PfMzAwSEdHAssSjI2Nk7zwM0NDw8h1Ms8+8yTdXa8Qi7asSEakaq7iP4tF0plRvjzxNd+dOo2muXnjtSO8fPggmub+fwbiLtB1Q5w52ycOvdQlAs07RFf3OyKdGbmbI26jqgz8m6tXF+j99Dgfffw5TpeTt9/q5sUXDuB2u27uMU2Tsq5jmiY2Wx1JS+GrJRDAYQ2ecMrI1ZbgTpiWRV9fPx8cPUZqKMPje/fw5utHCIUCZLM5slM5rl1bxKxUuLw5QE9LAr/DBsB0BXo3Q6dTrl3gH/L5eXo/+4KenuNYlkUkEiYQ8BMOBwkGfGxwODiqBSlsCfCNVyAh8fy0oF2FY5vk5WNYCy6Xiz2J3SwsLJJOjzAxeYnUUAZfk5dYNILmdjKx8ykavUHuNDM1Z0AIwZXsNH3JAWZm5ggG/bS3xSksFvjhzHn6BwbJZnOUikXqHutk4tV3CTntIG6U4JOHbvRBTQLFYpHULxkGU2nsdoXdu9qJxSKoinJzT1nXWSpcRzcMVFUhZdc4cV0C8XcTumpoQsuyyE5Nk+wfJJf7g1DQz6OJR9jU+GDNJaxKwDAqzM7NkRke5dfxCVRVZdfONuLbo6iqUk2c6gSEEIyOjXPxt0m2NodQFDtz+Xmmpn5nZnYWWZbZGm5mR3srDQ0PsBJP07IpKJVKnDx1mmT/TzR5txAOBbHZbNTXa7TGt/FwJExjYwM2eeW+EcsEFEUhvj2KYRi0tcVpCTfj8Wh4PPU4VHVVnuPbeqBSMdENnQ0Ox6oE/E+Bteb++xOuC6wLrDV/Ael0sbj8I0ONAAAAAElFTkSuQmCC">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/tailwind.css">
   <style>
     * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
@@ -377,32 +378,21 @@
       transition: opacity 80ms ease-out, visibility 0s linear 80ms !important;
     }
   </style>
+  <link rel="stylesheet" href="/assets/website.css">
 </head>
-<body class="bg-white text-slate-900 overflow-x-hidden">
+<body class="bg-white text-slate-900">
+<a class="site-skip" href="#main-content">Skip to content</a>
 
   <!-- Navigation - Enterprise Grade with Dropdowns -->
   <nav class="fixed top-0 w-full bg-slate-900 z-50">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
       <!-- ChainMore Logo -->
       <a href="/" class="flex items-center gap-2.5" aria-label="ChainMore, back to homepage">
-        <!-- Logo Icon SVG - Dual flow converging -->
-        <svg width="36" height="36" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Upper path (Fiat) - smooth curve -->
-          <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" 
-                stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <!-- Lower path (Stablecoin) - mirror curve -->
-          <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" 
-                stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <!-- Unified endpoint - the orchestration point -->
-          <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
-          <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
-          <!-- Start indicators -->
-          <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
-          <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
-        </svg>
+        <!-- Canonical ChainMore mark, matching the approved investor presentation -->
+        <img src="/assets/chainmore-mark.svg" width="36" height="30" alt="" aria-hidden="true">
         <!-- Logo Text -->
         <span class="text-xl font-bold tracking-tight">
-          <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+          <span class="text-white">ChainMore</span>
         </span>
       </a>
       
@@ -745,7 +735,7 @@
         </div>
         
         <!-- Pricing Link -->
-        <a href="/pricing.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Pricing</a>
+        <a href="#contact" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Contact</a>
 
         <!-- API Docs Link -->
         <a href="/docs.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Docs</a>
@@ -828,7 +818,7 @@
       </a>
       
       <!-- Mobile Menu Button -->
-      <button class="lg:hidden p-2 text-white" id="mobile-menu-btn">
+      <button class="lg:hidden p-2 text-white" id="mobile-menu-btn" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -839,7 +829,7 @@
       <div class="flex flex-col gap-2 px-4 py-6">
         <a href="#how-it-works" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Platform</a>
         <a href="#solutions" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Solutions</a>
-        <a href="/pricing.html" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Pricing</a>
+        <a href="#contact" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Contact</a>
         <a href="#developers" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Developers</a>
         <a href="/docs.html" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">API Docs</a>
         <a href="https://app.chainmore.io" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Sign in</a>
@@ -851,8 +841,10 @@
     </div>
   </nav>
 
+  <main id="main-content">
   <!-- Hero Section with Animated Scenarios -->
-  <section class="pt-24 md:pt-28 pb-6 md:pb-10 px-4 md:px-6">
+  <div id="business"></div>
+  <section id="hero" class="pt-24 md:pt-28 pb-6 md:pb-10 px-4 md:px-6">
     <div class="max-w-7xl mx-auto">
       <!-- Headline -->
       <div class="text-center mb-6">
@@ -865,7 +857,7 @@
           <span class="gradient-text">Orchestration</span>
         </h1>
         <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-6">
-          One platform. Dynamic routing across fiat and stablecoin rails, with fallback-aware routing controls.
+          Customers pay their way. Businesses receive their way. One platform takes the complexity out of cards, bank payments and digital money.
         </p>
         
         <!-- Stats Bar - Integrated into Hero -->
@@ -980,10 +972,8 @@
                 <div class="absolute -inset-3 bg-cyan-400/30 rounded-2xl blur-xl"></div>
                 <div class="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl px-8 py-5 border border-cyan-500/40 shadow-2xl">
                   <div class="flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    <span class="text-cyan-400 font-bold text-lg tracking-wide">CHAINMORE</span>
+                    <img src="/assets/chainmore-mark.svg" width="32" height="27" alt="" aria-hidden="true">
+                    <span class="text-white font-bold text-lg tracking-tight">ChainMore</span>
                   </div>
                 </div>
               </div>
@@ -1031,7 +1021,7 @@
                   </div>
                   <div>
                     <div class="font-bold text-slate-900">USDC</div>
-                    <div class="text-slate-500 text-sm">Any Chain</div>
+                    <div class="text-slate-500 text-sm">Supported networks</div>
                   </div>
                 </div>
                 <div class="hero-output-card absolute inset-0 flex items-center gap-3 p-4 rounded-xl border-2 border-green-500 bg-gradient-to-br from-green-50 to-white shadow-lg transition-all duration-500 opacity-0 pointer-events-none" data-value="exchange">
@@ -1079,6 +1069,7 @@
           </div>
         </div>
       </div>
+  <div class="hero-extra"><a href="#payment-demo" class="hero-tour-link">See the actual checkout <span aria-hidden="true">→</span></a><button type="button" class="motion-toggle" aria-pressed="false">Pause animation</button></div>
   </section>
 
   <!-- Platform Metrics -->
@@ -1090,12 +1081,12 @@
         
         <div class="grid grid-cols-3 gap-3 sm:gap-6 md:gap-12 text-center">
           <div>
-            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">100%</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">rail-agnostic</div>
+            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">Choice</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">for your customers</div>
           </div>
           <div>
-            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">Live</div>
-            <div class="text-slate-400 text-xs sm:text-sm md:text-base">route monitoring</div>
+            <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">Clarity</div>
+            <div class="text-slate-400 text-xs sm:text-sm md:text-base">for your business</div>
           </div>
           <div>
             <div class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 sm:mb-2">1 API</div>
@@ -1115,7 +1106,7 @@
       <div class="text-center mb-8">
         <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2 block">How It Works</span>
         <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Build Your Payment Flow</h2>
-        <p class="text-slate-600 text-base max-w-2xl mx-auto">Define your business logic, ChainMore finds the optimal route across all rails.</p>
+        <p class="text-slate-600 text-base max-w-2xl mx-auto">Choose how your customer pays and how your business receives. ChainMore connects the two.</p>
       </div>
       
       <!-- Interactive Flow Builder -->
@@ -1126,11 +1117,11 @@
           <div>
             <div class="flex items-center gap-2 mb-4">
               <span class="bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded">1</span>
-              <span class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Merchant Accepts</span>
+              <span class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Customer Pays</span>
             </div>
             <div class="space-y-2" id="flow-inputs">
               <!-- Card Payment - default selected -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer transition" data-flow-input="card" data-selected="true">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer transition" data-flow-input="card" data-selected="true" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -1143,7 +1134,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- Stablecoin -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="stablecoin">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="stablecoin" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
                     <span class="text-cyan-600 font-bold">$</span>
@@ -1156,7 +1147,7 @@
                 <span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
               </div>
               <!-- Bank Wire -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="bank-wire">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="bank-wire" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -1169,7 +1160,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- APMs -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="apm">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="apm" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -1194,10 +1185,8 @@
             <!-- Main Box -->
             <div class="bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-700 text-center">
               <div class="flex items-center justify-center gap-2 mb-2">
-                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-                <span class="font-bold text-white text-sm tracking-wide">CHAINMORE</span>
+                <img src="/assets/chainmore-mark.svg" width="26" height="22" alt="" aria-hidden="true">
+                <span class="font-bold text-white text-sm tracking-tight">ChainMore</span>
               </div>
               <div class="text-cyan-400 text-sm font-medium">Selects optimal route</div>
             </div>
@@ -1216,7 +1205,7 @@
             </div>
             <div class="space-y-2" id="flow-outputs">
               <!-- Bank Account -->
-              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="bank">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="bank" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -1229,7 +1218,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- Stablecoin - default selected -->
-              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer transition" data-flow-output="stablecoin" data-selected="true">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer transition" data-flow-output="stablecoin" data-selected="true" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold">$</span>
@@ -1242,7 +1231,7 @@
                 <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">STABLE</span>
               </div>
               <!-- Exchange -->
-              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="exchange">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="exchange" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
@@ -1255,7 +1244,7 @@
                 <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded">CEX</span>
               </div>
               <!-- On-chain -->
-              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="onchain">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-output="onchain" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
@@ -1279,27 +1268,12 @@
               <!-- Route Info -->
               <div class="flex items-center gap-3 flex-wrap">
                 <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span class="text-green-400 font-semibold text-sm uppercase tracking-wider">Optimal Route:</span>
-                <span class="text-xl font-bold"><span id="route-input-label">Card</span> <span class="text-green-400">→</span> <span id="route-output-label">USDC/Polygon</span></span>
-                <span class="text-slate-400 text-sm">(<span id="route-types-label">Fiat to Stablecoin</span>)</span>
+                <span class="text-green-400 font-semibold text-sm uppercase tracking-wider">Example route:</span>
+                <span class="text-xl font-bold"><span id="route-input-label">Card</span> <span class="text-green-400">→</span> <span id="route-output-label">USDC / Polygon</span></span>
+                <span class="text-slate-400 text-sm">(<span id="route-types-label">Fiat to Stable</span>)</span>
               </div>
 
-              <!-- Metrics - Inline -->
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1.5">
-                  <span id="route-metric-cost" class="text-green-400 font-bold">85%</span>
-                  <span class="text-green-300/70 text-xs">Cost Saved (example)</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span id="route-metric-speed" class="text-green-400 font-bold">95%</span>
-                  <span class="text-green-300/70 text-xs">Faster (example)</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  <span id="route-metric-chargebacks" class="text-green-400 font-bold">Minutes</span>
-                  <span id="route-metric-risk-label" class="text-green-300/70 text-xs">Finality</span>
-                </div>
-              </div>
+              <p class="flow-benefit" id="flow-benefit">Your customer pays by card. You receive USDC on Polygon. No separate conversion to arrange.</p>
             </div>
           </div>
         </div>
@@ -1307,183 +1281,25 @@
       </div>
       
       
-      <!-- DYNAMIC ROUTING SECTION -->
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-20">
-        
-        <!-- Left: Text Content -->
+      <!-- Customer and merchant value, without disclosing implementation -->
+      <div class="brand-benefits" id="the-difference">
         <div>
-          <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-4 block">Cross-Rail Routing Engine</span>
-          
-          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">
-            Route payments to<br>
-            <span class="text-cyan-500">maximize</span><br>
-            efficiency
-          </h2>
-          
-          <p class="text-lg text-slate-600 leading-relaxed mb-8">
-            Our rail-agnostic routing engine adapts to your specific business needs, ensuring that each transaction is processed via the most efficient route, whether fiat or stablecoin.
-          </p>
-          
-          <!-- Checkmarks -->
-          <div class="space-y-4">
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <div>
-                <div class="font-semibold text-slate-900">Configure your business logic</div>
-                <div class="text-slate-500 text-sm">Set priorities: cost, speed, or success rate</div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <div>
-                <div class="font-semibold text-slate-900">Rail-agnostic optimization</div>
-                <div class="text-slate-500 text-sm">We find the best route, fiat or stablecoin</div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <div>
-                <div class="font-semibold text-slate-900">Fallback controls</div>
-                <div class="text-slate-500 text-sm">Reviewed fallback paths when a rail degrades</div>
-              </div>
-            </div>
-          </div>
-          
-          <a href="#contact" class="inline-flex items-center gap-2 bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold mt-8 hover:bg-cyan-600 transition shadow-lg shadow-cyan-500/20">
-            Talk to our team
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </a>
+          <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider">The ChainMore difference</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mt-4 mb-6">The purchase is simple.<br><span class="text-cyan-500">Paying should be too.</span></h2>
+          <p class="text-lg text-slate-600 leading-relaxed">Your customer came to buy something. Not to study networks, move money between apps or buy another token just to pay a network fee.</p>
+          <p class="text-lg text-slate-600 leading-relaxed mt-4">ChainMore brings those moving parts into one payment experience. Less to figure out for the customer. Less to piece together for your business.</p>
+          <a href="#payment-demo" class="inline-flex items-center gap-2 bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold mt-8 hover:bg-cyan-600 transition">Explore the checkout <span aria-hidden="true">→</span></a>
         </div>
-        
-        <!-- Right: Visual Routing Diagram -->
-        <div class="bg-slate-900 rounded-2xl p-4 sm:p-6 md:p-8 relative overflow-hidden">
-          <!-- Decorative connection line - hidden on mobile -->
-          <div class="absolute top-0 left-1/2 w-px h-16 bg-gradient-to-b from-transparent via-slate-600 to-slate-600 hidden sm:block"></div>
-          <div class="absolute top-16 left-1/2 w-3 h-3 bg-yellow-400 rounded-full -translate-x-1/2 hidden sm:block"></div>
-          
-          <!-- Savings Badge - Responsive positioning -->
-          <div class="relative sm:absolute sm:top-4 sm:right-4 bg-white rounded-full px-3 sm:px-4 py-2 shadow-lg flex items-center justify-center gap-2 z-20 mb-4 sm:mb-0">
-            <span class="bg-green-100 text-green-700 font-bold text-xs sm:text-sm px-2 py-0.5 rounded">85%</span>
-            <span class="text-slate-700 text-xs sm:text-sm font-medium">Lower cross-border fees</span>
-          </div>
-          
-          <div class="relative z-10 space-y-4 sm:space-y-5 sm:mt-12">
-            
-            <!-- Rule 1: Fiat → Fiat PSP -->
-            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-              <div class="bg-slate-800 rounded-xl p-4 w-full sm:flex-1 border border-slate-700">
-                <div class="flex items-center gap-2 mb-3">
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                  <span class="text-slate-400 text-xs font-semibold">Fiat</span>
-                  <span class="text-slate-500 text-xs ml-auto">Routing configuration</span>
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">IF</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Payment = Card</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">AND</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Region = EU</span>
-                  </div>
-                </div>
-              </div>
-              <!-- Arrow: down on mobile, right on desktop -->
-              <svg class="w-6 h-6 sm:w-8 sm:h-8 text-cyan-500 flex-shrink-0 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              <div class="bg-slate-700 rounded-xl p-3 sm:p-4 w-full sm:w-auto sm:min-w-[160px]">
-                <div class="text-slate-400 text-xs font-semibold mb-2">Authorize via</div>
-                <div class="bg-white text-slate-900 px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                  <div class="w-5 h-5 bg-indigo-600 rounded flex items-center justify-center">
-                    <span class="text-white text-xs font-bold">S</span>
-                  </div>
-                  Stripe
-                </div>
-              </div>
-            </div>
-            
-            <!-- Rule 2: Stablecoin → Stablecoin Provider -->
-            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-              <div class="bg-slate-800 rounded-xl p-4 w-full sm:flex-1 border border-slate-700">
-                <div class="flex items-center gap-2 mb-3">
-                  <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  <span class="text-cyan-400 text-xs font-semibold">Stablecoin</span>
-                  <span class="text-slate-500 text-xs ml-auto">Routing configuration</span>
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">IF</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Priority = Cost</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">AND</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Currency = USD</span>
-                  </div>
-                </div>
-              </div>
-              <!-- Arrow: down on mobile, right on desktop -->
-              <svg class="w-6 h-6 sm:w-8 sm:h-8 text-cyan-500 flex-shrink-0 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              <div class="bg-slate-700 rounded-xl p-3 sm:p-4 w-full sm:w-auto sm:min-w-[160px]">
-                <div class="text-slate-400 text-xs font-semibold mb-2">Authorize via</div>
-                <div class="bg-cyan-500 text-white px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                  <div class="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                    <span class="text-cyan-500 text-xs font-bold">$</span>
-                  </div>
-                  Circle USDC
-                </div>
-              </div>
-            </div>
-            
-            <!-- Rule 3: Cross-Rail Optimization -->
-            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-              <div class="bg-slate-800 rounded-xl p-4 w-full sm:flex-1 border border-cyan-500/30 bg-gradient-to-r from-slate-800 to-cyan-900/20">
-                <div class="flex items-center gap-2 mb-3">
-                  <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                  <span class="text-cyan-400 text-xs font-semibold">Cross-Rail</span>
-                  <span class="text-slate-500 text-xs ml-auto">Routing configuration</span>
-                </div>
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">IF</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Gas fees &gt; $5</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-500 text-xs font-mono w-8">AND</span>
-                    <span class="bg-white text-slate-900 px-2.5 py-1 rounded text-xs font-medium">Amount &lt; $500</span>
-                  </div>
-                </div>
-              </div>
-              <!-- Arrow: down on mobile, right on desktop -->
-              <svg class="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400 flex-shrink-0 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              <div class="bg-slate-700 rounded-xl p-3 sm:p-4 w-full sm:w-auto sm:min-w-[160px]">
-                <div class="text-slate-400 text-xs font-semibold mb-2">Authorize via</div>
-                <div class="bg-purple-500 text-white px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                  <div class="w-5 h-5 bg-white rounded flex items-center justify-center">
-                    <svg class="w-3 h-3 text-purple-500" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 22,12 12,22 2,12"/></svg>
-                  </div>
-                  Polygon
-                </div>
-              </div>
-            </div>
-            
-          </div>
-          
-          <!-- Bottom decoration -->
-          <div class="absolute bottom-6 left-1/2 w-3 h-3 bg-cyan-400 rounded-full -translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-1/2 w-px h-6 bg-gradient-to-t from-transparent to-slate-600"></div>
+        <div class="benefit-stack">
+          <div><span class="benefit-number">01</span><h3>No network guesswork</h3><p>A clear path through the payment, without a technical checklist.</p></div>
+          <div><span class="benefit-number">02</span><h3>No detour for fee tokens</h3><p>Built to remove the separate top-ups that make digital payments feel complicated.</p></div>
+          <div><span class="benefit-number">03</span><h3>No guessing what happened</h3><p>Clear progress for the customer. A payment record your team can follow.</p></div>
         </div>
       </div>
-      
-      
       <!-- KEY BENEFITS - Eigenständiges Design -->
       <div class="mt-20 pt-16 border-t border-slate-200">
         <div class="text-center mb-12">
-          <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Improve key payment metrics</h3>
+          <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Better for the person paying.<br>Better for the business getting paid.</h3>
         </div>
         
         <div class="grid md:grid-cols-3 gap-8">
@@ -1493,9 +1309,9 @@
               <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Cross-rail routing doubles your available payment paths. If fiat rails are congested or unavailable, stablecoin rails step in, and vice versa.
+              Give customers a familiar way to pay, even when the technology behind the payment is new to them.
             </p>
-            <p class="font-bold text-slate-900 text-lg mt-auto">Increase payment success by up to 25%</p>
+            <p class="font-bold text-slate-900 text-lg mt-auto">Fewer obstacles at checkout</p>
           </div>
           
           <!-- Benefit 2: Cost Reduction -->
@@ -1504,9 +1320,9 @@
               <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Intelligent routing across fiat and stablecoin rails finds the most cost-effective path for every transaction automatically.
+              Connect how customers want to pay with how your business wants to receive, through one integration.
             </p>
-            <p class="font-bold text-slate-900 text-lg mt-auto">Lower processing costs by up to 85%</p>
+            <p class="font-bold text-slate-900 text-lg mt-auto">More choice. One connection.</p>
           </div>
           
           <!-- Benefit 3: Business Continuity -->
@@ -1515,9 +1331,9 @@
               <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             </div>
             <p class="text-slate-600 mb-4 flex-grow">
-              Routing controls keep eligible fallback paths visible and help operators move traffic away from unhealthy routes when a reviewed alternative is available.
+              Bring payment progress and records into one place, so your team does not have to reconstruct what happened across disconnected systems.
             </p>
-            <p class="font-bold text-slate-900 text-lg mt-auto">Reduce disruption when routes degrade</p>
+            <p class="font-bold text-slate-900 text-lg mt-auto">One clear view of your payments</p>
           </div>
         </div>
       </div>
@@ -1527,560 +1343,34 @@
 
 
 
-  <!-- PAYMENT EXPERIENCE DEMO - iPhone Mockup -->
-  <section id="payment-demo" class="py-10 md:py-14 px-4 md:px-6 bg-slate-900 overflow-hidden">
-    <div class="max-w-6xl mx-auto">
-      
-      <!-- Header Content -->
-      <div class="text-center mb-6">
-        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
-          A unique <span class="text-cyan-400">Stablecoin Payment Experience</span>
-        </h2>
-        <p class="text-slate-400 text-base mb-4">ChainMore enables stablecoin payments to become a global payment method.</p>
-        
-        <div class="flex flex-wrap justify-center gap-3 mb-4">
-          <div class="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5">
-            <span class="w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center">
-              <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-            </span>
-            <span class="text-white font-semibold text-xs">100% Stablecoin agnostic</span>
-          </div>
-          <div class="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5">
-            <span class="w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center">
-              <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-            </span>
-            <span class="text-white font-semibold text-xs">100% Chain agnostic</span>
-          </div>
-          <div class="flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-4 py-1.5">
-            <span class="w-4 h-4 bg-cyan-400 rounded-full flex items-center justify-center">
-              <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-            </span>
-            <span class="text-white font-semibold text-xs">100% Simplified UX</span>
-          </div>
-        </div>
+  <!-- Checkout product preview: actual renderer, isolated marketing fixture -->
+  <span id="demo"></span>
+  <section id="payment-demo" class="checkout-showcase">
+    <div class="max-w-7xl mx-auto">
+      <div class="showcase-heading">
+        <div><span class="eyebrow">The customer experience</span><h2>Your checkout.<br><span>A lot less to think about.</span></h2></div>
+        <p>One Stablecoin button. Familiar USDC and USDT. A simpler start, with clear payment details before you confirm.</p>
       </div>
-
-      <!-- Demo Container -->
-      <div class="flex flex-col items-center">
-        
-        <!-- Step Navigation -->
-        <div class="flex flex-wrap justify-center gap-2 mb-4" id="demo-steps">
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-cyan-400 text-white" data-step="0">Checkout</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="1">Method</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="2">Wallet</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="3">Verify</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="4">Confirm</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="5">Sign</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="6">Process</button>
-          <button class="demo-step-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white/10 text-white/60" data-step="7">Done</button>
+      <div class="checkout-tour">
+        <div class="tour-toolbar"><span class="preview-label"><i aria-hidden="true"></i> Interactive product tour</span><div class="viewport-buttons" aria-label="Checkout preview size"><button type="button" data-checkout-size="desktop" aria-pressed="true">Desktop</button><button type="button" data-checkout-size="mobile" aria-pressed="false">Mobile</button></div></div>
+        <div class="tour-steps" aria-label="Checkout preview steps">
+          <button type="button" data-checkout-state="wallet" aria-pressed="true"><span>1</span>Choose</button>
+          <button type="button" data-checkout-state="qr" aria-pressed="false"><span>2</span>Connect</button>
+          <button type="button" data-checkout-state="approve" aria-pressed="false"><span>3</span>Approve</button>
+          <button type="button" data-checkout-state="payment_review" aria-pressed="false"><span>4</span>Review</button>
+          <button type="button" data-checkout-state="confirming" aria-pressed="false"><span>5</span>Confirming</button>
+          <button type="button" data-checkout-state="completed" aria-pressed="false"><span>6</span>Complete</button>
         </div>
-
-        <!-- Auto-play Toggle -->
-        <button id="autoplay-toggle" class="mb-4 px-3 py-1.5 rounded-lg border border-white/20 bg-cyan-500/20 text-white/70 text-xs flex items-center gap-2 hover:bg-cyan-500/30 transition">
-          <span id="autoplay-icon">⏸</span>
-          <span id="autoplay-text">Pause</span>
-        </button>
-
-        <!-- iPhone Frame - Responsive -->
-        <div class="relative w-[260px] h-[540px] sm:w-[280px] sm:h-[580px]" style="background: #1a1a1a; border-radius: 46px; padding: 10px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 0 2px #2a2a2a;">
-          <div class="w-full h-full bg-white rounded-[38px] overflow-hidden relative">
-            
-            <!-- Dynamic Island -->
-            <div class="absolute top-2.5 left-1/2 -translate-x-1/2 w-[80px] sm:w-[90px] h-[24px] sm:h-[26px] bg-black rounded-[18px] z-50"></div>
-            
-            <!-- Status Bar -->
-            <div class="absolute top-3 left-4 right-4 flex justify-between z-40 text-[11px] sm:text-[12px] font-semibold text-black">
-              <span>9:41</span>
-              <div class="flex gap-1.5 items-center">
-                <svg width="17" height="12" viewBox="0 0 17 12" fill="black"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="3" height="12" rx="0.5"/></svg>
-                <svg width="16" height="12" viewBox="0 0 16 12" fill="black"><path d="M8 2.4c2.5 0 4.8 1 6.5 2.6l-1.3 1.3c-1.4-1.3-3.2-2-5.2-2s-3.8.7-5.2 2L1.5 5c1.7-1.6 4-2.6 6.5-2.6zm0 3.2c1.7 0 3.2.6 4.3 1.7l-1.3 1.3c-.8-.8-1.9-1.2-3-1.2s-2.2.4-3 1.2L3.7 7.3c1.1-1.1 2.6-1.7 4.3-1.7zm0 3.2c.8 0 1.6.3 2.2.9L8 12l-2.2-2.3c.6-.6 1.4-.9 2.2-.9z"/></svg>
-                <svg width="25" height="12" viewBox="0 0 25 12" fill="black"><rect x="0" y="1" width="21" height="10" rx="2.5" stroke="black" stroke-width="1" fill="none"/><rect x="2" y="3" width="17" height="6" rx="1" fill="black"/><path d="M22.5 4v4a2 2 0 000-4z" fill="black" opacity="0.4"/></svg>
-              </div>
-            </div>
-
-            <!-- Screen Content Container -->
-            <div id="phone-content" class="absolute top-[50px] left-0 right-0 bottom-[30px] overflow-y-auto overflow-x-hidden scrollbar-thin">
-              
-              <!-- Screen 1: Checkout -->
-              <div class="phone-screen active" data-screen="0">
-                <div class="bg-slate-50 min-h-full">
-                  <div class="bg-white p-4 border-b border-slate-200">
-                    <div class="flex items-center gap-3">
-                      <div class="w-11 h-11 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">N</div>
-                      <div>
-                        <div class="font-bold text-slate-900">Nexora Cloud</div>
-                        <div class="text-xs text-slate-500">nexora.io/checkout</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="p-5">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Order Summary</div>
-                    <div class="bg-white rounded-2xl p-4 mb-4">
-                      <div class="flex justify-between mb-4">
-                        <div>
-                          <div class="font-semibold text-slate-900">Pro Plan, Annual</div>
-                          <div class="text-xs text-slate-500">12 months subscription</div>
-                        </div>
-                        <div class="font-bold text-slate-900">€468.00</div>
-                      </div>
-                      <div class="flex justify-between mb-4">
-                        <div>
-                          <div class="font-semibold text-slate-900">Cloud Storage 500GB</div>
-                          <div class="text-xs text-slate-500">Monthly add-on</div>
-                        </div>
-                        <div class="font-bold text-slate-900">€9.99</div>
-                      </div>
-                      <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
-                        <span class="text-lg font-bold text-slate-900">Total</span>
-                        <span class="text-2xl font-bold text-slate-900">€477.99</span>
-                      </div>
-                    </div>
-                    <div class="bg-white rounded-2xl p-4 mb-5">
-                      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Customer</div>
-                      <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-slate-500">Email</span>
-                        <span class="text-slate-900 font-medium">max.mueller@example.com</span>
-                      </div>
-                      <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">Country</span>
-                        <span class="text-slate-900 font-medium">Germany 🇩🇪</span>
-                      </div>
-                    </div>
-                    <button class="w-full py-4 bg-purple-600 text-white font-semibold rounded-2xl">Proceed to Payment</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 2: Payment Method -->
-              <div class="phone-screen" data-screen="1">
-                <div class="min-h-full flex flex-col">
-                  <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                      <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">N</div>
-                      <span class="font-medium text-slate-600 text-sm">Nexora Cloud</span>
-                    </div>
-                    <span class="font-bold text-slate-900 text-lg">€477.99</span>
-                  </div>
-                  <div class="p-5 flex-1 flex flex-col">
-                    <div class="text-xl font-bold text-slate-900 mb-1">Payment Method</div>
-                    <div class="text-slate-500 text-sm mb-5">Choose how you want to pay</div>
-                    <div class="space-y-3 flex-1">
-                      <div class="border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                          <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-bold text-slate-900">Card</div>
-                          <div class="text-xs text-slate-500">Visa, Mastercard, Amex</div>
-                        </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
-                      </div>
-                      <div class="border-2 border-cyan-400 rounded-2xl p-4 flex items-center gap-4 bg-cyan-50/50">
-                        <div class="w-12 h-12 bg-cyan-400 rounded-xl flex items-center justify-center">
-                          <div class="w-7 h-7 bg-white rounded-full flex items-center justify-center">
-                            <span class="text-cyan-400 font-bold">$</span>
-                          </div>
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-bold text-slate-900 text-lg">Stablecoin</div>
-                          <div class="text-xs text-slate-500">USDC, EURC, USDT</div>
-                        </div>
-                        <div class="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
-                          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <span class="text-blue-600 font-bold text-xs">SEPA</span>
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-bold text-slate-900">SEPA Direct Debit</div>
-                          <div class="text-xs text-slate-500">EU Bank Transfer</div>
-                        </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
-                      </div>
-                    </div>
-                    <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl mt-5">Proceed</button>
-                    <div class="text-center text-xs text-slate-400 mt-3">Powered by ChainMore</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 3: Wallet Selection -->
-              <div class="phone-screen" data-screen="2">
-                <div class="min-h-full flex flex-col">
-                  <div class="bg-slate-50 p-3 border-b border-slate-200 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                      <div class="w-8 h-8 bg-cyan-400 rounded-lg flex items-center justify-center">
-                        <div class="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                          <span class="text-cyan-400 font-bold text-[10px]">$</span>
-                        </div>
-                      </div>
-                      <span class="font-medium text-slate-600 text-sm">Stablecoin</span>
-                    </div>
-                    <span class="font-bold text-slate-900 text-lg">€477.99</span>
-                  </div>
-                  <div class="p-5 flex-1 flex flex-col">
-                    <div class="text-xl font-bold text-slate-900 mb-1">Connect Wallet</div>
-                    <div class="text-slate-500 text-sm mb-5">Select your wallet to continue</div>
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                      <div class="border-2 border-cyan-400 rounded-2xl p-4 text-center bg-cyan-50/50">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">🦊</div>
-                        <div class="font-semibold text-sm text-slate-900">MetaMask</div>
-                        <div class="w-4 h-4 mx-auto mt-2 bg-cyan-400 rounded-full flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">🔵</div>
-                        <div class="font-semibold text-sm text-slate-900">Coinbase</div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🌈</div>
-                        <div class="font-semibold text-sm text-slate-900">Rainbow</div>
-                      </div>
-                      <div class="border border-slate-200 rounded-2xl p-4 text-center">
-                        <div class="w-12 h-12 mx-auto mb-2 bg-slate-100 rounded-xl flex items-center justify-center text-xl text-slate-400">⋯</div>
-                        <div class="font-semibold text-sm text-slate-900">Other</div>
-                      </div>
-                    </div>
-                    <div class="flex-1 flex flex-col items-center justify-center py-3">
-                      <div class="text-xs text-slate-500 mb-3">Or scan with mobile wallet</div>
-                      <div class="p-3 bg-white rounded-2xl border border-slate-200">
-                        <svg width="90" height="90" viewBox="0 0 100 100" class="bg-white rounded-lg">
-                          <rect x="4" y="4" width="22" height="22" fill="#1e293b"/><rect x="7" y="7" width="16" height="16" fill="white"/><rect x="10" y="10" width="10" height="10" fill="#1e293b"/>
-                          <rect x="74" y="4" width="22" height="22" fill="#1e293b"/><rect x="77" y="7" width="16" height="16" fill="white"/><rect x="80" y="10" width="10" height="10" fill="#1e293b"/>
-                          <rect x="4" y="74" width="22" height="22" fill="#1e293b"/><rect x="7" y="77" width="16" height="16" fill="white"/><rect x="10" y="80" width="10" height="10" fill="#1e293b"/>
-                          <rect x="40" y="44" width="20" height="20" rx="4" fill="#1e293b"/><rect x="44" y="48" width="12" height="12" rx="2" fill="white"/><rect x="48" y="52" width="4" height="4" fill="#1e293b"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl">Connect Wallet</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 4: Verify -->
-              <div class="phone-screen" data-screen="3">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="relative w-20 h-20 mb-6">
-                    <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                    </div>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-2">Connecting Securely...</div>
-                  <div class="text-sm text-slate-500 mb-6">Verifying your wallet</div>
-                  <div class="w-full bg-cyan-50 border border-cyan-200 rounded-2xl p-4 mb-6">
-                    <div class="flex gap-3">
-                      <div class="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-                      </div>
-                      <div>
-                        <div class="font-bold text-cyan-700 text-sm mb-1">Secure Connection</div>
-                        <div class="text-xs text-cyan-600">ChainMore <strong>never</strong> has access to your private keys.</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="w-full max-w-[200px] space-y-3">
-                    <div class="flex items-center gap-3">
-                      <div class="verify-step w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center" data-vstep="1">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                      </div>
-                      <span class="text-sm text-slate-900">Wallet connected</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <div class="verify-step w-5 h-5 border-2 border-cyan-400 rounded-full flex items-center justify-center" data-vstep="2">
-                        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                      </div>
-                      <span class="text-sm text-slate-500">Preparing payment...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 5: Confirm Payment -->
-              <div class="phone-screen" data-screen="4">
-                <div class="min-h-full flex flex-col p-5">
-                  <div class="text-xl font-bold text-slate-900 mb-1">Confirm Payment</div>
-                  <div class="text-slate-500 text-sm mb-5">Review your payment details</div>
-                  <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 mb-4 text-center">
-                    <div class="text-slate-400 text-sm mb-1">Amount to Pay</div>
-                    <div class="text-white text-3xl font-bold">€477.99</div>
-                    <div class="text-slate-400 text-sm mt-1">to Nexora Cloud</div>
-                  </div>
-                  <div class="border border-slate-200 rounded-2xl p-4 mb-3">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-3">Wallet</div>
-                    <div class="flex items-center gap-3">
-                      <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">🦊</div>
-                      <div class="flex-1">
-                        <div class="font-semibold text-slate-900">MetaMask</div>
-                        <div class="text-xs text-slate-500 font-mono">0x742d35Cc...f0bEb</div>
-                      </div>
-                      <div class="w-2.5 h-2.5 bg-cyan-400 rounded-full"></div>
-                    </div>
-                  </div>
-                  <div class="border border-slate-200 rounded-2xl p-4">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-3">You Pay</div>
-                    <div class="flex items-center gap-3 mb-3">
-                      <!-- EURC Logo -->
-                      <svg width="44" height="44" viewBox="0 0 64 64" fill="none">
-                        <circle cx="32" cy="32" r="32" fill="#2775CA"/>
-                        <path d="M 36.9 13.6 A 19 19 0 0 1 36.9 50.4" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                        <path d="M 27.1 50.4 A 19 19 0 0 1 27.1 13.6" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                        <text x="32" y="42" text-anchor="middle" fill="white" style="font-size: 30px; font-weight: 500; font-family: Arial, sans-serif;">€</text>
-                      </svg>
-                      <div class="flex-1">
-                        <div id="confirm-amount" class="font-bold text-slate-900 text-lg">477.99 EURC</div>
-                        <div id="confirm-name" class="text-xs text-slate-500">Euro Coin</div>
-                      </div>
-                    </div>
-                    <button id="switch-btn" class="w-full py-2 px-4 bg-cyan-50 border border-cyan-400 text-cyan-500 font-semibold rounded-xl text-sm flex items-center justify-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-                      <span id="switch-text">Switch to USDC</span>
-                    </button>
-                  </div>
-                  <div class="flex-1"></div>
-                  <button class="w-full py-4 bg-cyan-400 text-white font-semibold rounded-2xl mt-5">Confirm Payment</button>
-                  <div class="text-center text-xs text-slate-400 mt-3">Secured by ChainMore</div>
-                </div>
-              </div>
-
-              <!-- Screen 6: Signature Request -->
-              <div class="phone-screen" data-screen="5">
-                <div class="min-h-full flex items-center justify-center p-5">
-                  <div class="w-full bg-white rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-4">
-                      <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl">🦊</div>
-                        <div>
-                          <div class="font-bold text-white text-lg">Confirm Payment</div>
-                          <div class="text-white/80 text-sm">Signature Request</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="p-5">
-                      <div class="text-center mb-5">
-                        <div class="text-slate-500 text-sm mb-1">Pay to</div>
-                        <div class="text-slate-900 font-semibold mb-3">Nexora Cloud</div>
-                        <div id="sign-amount" class="text-3xl font-bold text-slate-900">477.99 EURC</div>
-                      </div>
-                      <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 mb-5">
-                        <div class="flex items-start gap-2">
-                          <svg class="w-4 h-4 text-cyan-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                          <div class="text-xs text-cyan-700">This works like 3D Secure. <strong>Please confirm in your wallet</strong> to authorize.</div>
-                        </div>
-                      </div>
-                      <div class="flex gap-3">
-                        <button class="flex-1 py-3.5 rounded-xl border border-slate-300 font-semibold text-slate-600">Cancel</button>
-                        <button class="flex-1 py-3.5 rounded-xl bg-cyan-400 text-white font-semibold">Confirm</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 7: Processing -->
-              <div class="phone-screen" data-screen="6">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="relative w-20 h-20 mb-6">
-                    <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
-                    <div class="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                    </div>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-2">Processing Payment...</div>
-                  <div class="text-sm text-slate-500 mb-8">Please wait</div>
-                  <div class="w-full max-w-[220px] space-y-4">
-                    <div class="flex items-center gap-3">
-                      <div class="process-step w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center" data-pstep="1">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                      </div>
-                      <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Signature verified</div>
-                        <div class="text-xs text-slate-400">Payment authorization</div>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <div class="process-step w-6 h-6 border-2 border-cyan-400 rounded-full flex items-center justify-center" data-pstep="2">
-                        <div class="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse"></div>
-                      </div>
-                      <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-500">Processing transfer...</div>
-                        <div id="process-amount" class="text-xs text-slate-400">Sending 477.99 EURC</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Screen 8: Success -->
-              <div class="phone-screen" data-screen="7">
-                <div class="min-h-full flex flex-col items-center justify-center p-5">
-                  <div class="w-20 h-20 bg-cyan-400 rounded-full flex items-center justify-center mb-5 shadow-xl" style="box-shadow: 0 10px 40px rgba(0, 212, 255, 0.5);">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                  <div class="text-xl font-bold text-slate-900 mb-1">Payment Successful!</div>
-                  <div class="text-slate-500 text-sm mb-6">Your payment is complete</div>
-                  <div class="w-full bg-slate-50 rounded-2xl p-5 mb-4">
-                    <div class="text-center mb-4">
-                      <div class="text-slate-500 text-sm">Amount Paid</div>
-                      <div id="success-amount" class="text-2xl font-bold text-slate-900">477.99 EURC</div>
-                      <div class="text-slate-400 text-sm">to Nexora Cloud</div>
-                    </div>
-                    <div class="border-t border-slate-200 pt-4 flex justify-between text-sm">
-                      <span class="text-slate-500">Date</span>
-                      <span class="font-medium text-slate-600">Dec 14, 2024</span>
-                    </div>
-                  </div>
-                  <div class="w-full bg-slate-100 rounded-xl p-4 mb-5">
-                    <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-2">Transaction Reference</div>
-                    <code class="text-xs text-slate-600">0x8f4d7a2c9e1b3f5a...</code>
-                  </div>
-                  <button class="w-full py-4 bg-slate-800 text-white font-semibold rounded-2xl">Done</button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Home Indicator -->
-            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-black rounded-full"></div>
-          </div>
-        </div>
-
-        <!-- Step Caption -->
-        <div class="mt-6 text-center">
-          <span class="text-white/50 text-sm">Step <span id="current-step">1</span> of 8: <span id="step-label" class="text-cyan-400 font-semibold">Checkout</span></span>
-        </div>
-
+        <div class="checkout-stage" data-size="desktop"><picture id="checkout-preview"><source media="(max-width: 899px)" srcset="/assets/checkout-preview/wallet-mobile.png"><img src="/assets/checkout-preview/wallet-desktop.png" alt="ChainMore checkout product preview: one Stablecoin entry with USDC and USDT, alongside Card, Apple Pay and Google Pay" loading="lazy"></picture></div>
+        <div class="tour-caption"><p id="checkout-caption" role="status">Choose Stablecoin, just as you would choose Card. USDC and USDT share one entry.</p><div class="tour-controls"><button type="button" id="checkout-back" disabled aria-label="Previous checkout preview step">←</button><button type="button" id="checkout-next">Next step →</button></div></div>
+        <details class="tour-other"><summary>When a payment cannot be completed</summary><div><button type="button" data-checkout-state="failed" aria-pressed="false">Payment failed</button><button type="button" data-checkout-state="expired" aria-pressed="false">Session expired</button></div></details>
       </div>
-
+      <p class="tour-disclosure">Product preview based on the ChainMore checkout, including the proposed single Stablecoin entry. No wallet connection, payment or real customer data. Use the tour controls to explore the screens.</p>
     </div>
   </section>
-  <!-- Routing Insight -->
+
   <section id="routing" class="py-10 md:py-14 px-4 md:px-6 bg-slate-900">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-6 md:mb-8">
-        <div class="text-cyan-400 font-semibold text-sm uppercase tracking-wider mb-2">Routing Insight</div>
-        <h2 class="text-2xl md:text-4xl font-bold text-white mb-2">Dynamic Route Selection</h2>
-        <p class="text-slate-400 text-base max-w-2xl mx-auto">ChainMore analyzes all available routes and selects the optimal path based on cost, speed, and reliability.</p>
-      </div>
-
-      <!-- Routing Visualization -->
-      <div class="bg-slate-800/50 rounded-2xl p-4 md:p-6 border border-slate-700">
-        
-        <!-- Transaction Info -->
-        <div class="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-5 pb-4 border-b border-slate-700">
-          <div class="text-center">
-            <div class="text-slate-500 text-xs uppercase tracking-wider mb-1">Amount</div>
-            <div class="text-white text-lg font-bold">€10,000</div>
-          </div>
-          <div class="text-cyan-400 text-xl">→</div>
-          <div class="text-center">
-            <div class="text-slate-500 text-xs uppercase tracking-wider mb-1">Destination</div>
-            <div class="text-white text-lg font-bold">Philippines</div>
-          </div>
-          <div class="hidden md:block w-px h-8 bg-slate-700"></div>
-          <div class="text-center">
-            <div class="text-slate-500 text-xs uppercase tracking-wider mb-1">Priority</div>
-            <div class="text-yellow-400 font-bold text-sm">Cost Optimized</div>
-          </div>
-        </div>
-        
-        <!-- Route Comparison with Animations -->
-        <div class="space-y-2">
-          <!-- SWIFT -->
-          <div class="route-row flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 transition">
-            <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
-            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">SWIFT</span>
-            <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full" style="--bar-width: 100%"></div>
-            </div>
-            <span class="text-red-400 w-12 md:w-14 text-right text-sm font-medium">3.2%</span>
-            <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">3-5 days</span>
-          </div>
-          
-          <!-- Wise -->
-          <div class="route-row flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 transition">
-            <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
-            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">Wise</span>
-            <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full" style="--bar-width: 47%; animation-delay: 0.1s"></div>
-            </div>
-            <span class="text-orange-400 w-12 md:w-14 text-right text-sm font-medium">1.5%</span>
-            <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">1-2 days</span>
-          </div>
-          
-          <!-- Remitly -->
-          <div class="route-row flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 transition">
-            <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">FIAT</span>
-            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">Remitly</span>
-            <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-yellow-500 to-yellow-400 h-full rounded-full" style="--bar-width: 38%; animation-delay: 0.2s"></div>
-            </div>
-            <span class="text-yellow-400 w-12 md:w-14 text-right text-sm font-medium">1.2%</span>
-            <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">4-8 hrs</span>
-          </div>
-          
-          <!-- Divider -->
-          <div class="flex items-center gap-4 py-1">
-            <div class="flex-1 h-px bg-slate-700"></div>
-            <span class="text-cyan-400 text-xs font-medium uppercase tracking-wider">Stablecoin Rails</span>
-            <div class="flex-1 h-px bg-slate-700"></div>
-          </div>
-          
-          <!-- USDC/Polygon - Winner -->
-          <div class="route-row optimal flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/40 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent animate-pulse"></div>
-            <span class="text-cyan-400 text-xs w-12 md:w-16 font-medium shrink-0 relative">STABLE</span>
-            <span class="text-cyan-300 w-16 md:w-24 text-sm font-medium shrink-0 relative">USDC/Poly</span>
-            <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden relative">
-              <div class="route-bar bg-gradient-to-r from-cyan-500 to-cyan-400 h-full rounded-full" style="--bar-width: 4%; animation-delay: 0.3s"></div>
-            </div>
-            <span class="text-cyan-400 w-12 md:w-14 text-right text-sm font-bold relative">0.12%</span>
-            <span class="text-cyan-400 w-16 md:w-20 text-right text-xs font-bold hidden sm:block relative">< 1 min</span>
-            <span class="bg-cyan-500 text-white text-xs px-2 py-1 rounded font-bold shrink-0 relative animate-bounce-subtle">OPTIMAL</span>
-          </div>
-          
-          <!-- USDC/Base -->
-          <div class="route-row flex items-center gap-3 md:gap-4 p-2 rounded-lg bg-slate-900/30 hover:bg-slate-900/50 transition">
-            <span class="text-slate-500 text-xs w-12 md:w-16 shrink-0">STABLE</span>
-            <span class="text-slate-300 w-16 md:w-24 text-sm shrink-0">USDC/Base</span>
-            <div class="flex-1 bg-slate-700/50 rounded-full h-2.5 overflow-hidden">
-              <div class="route-bar bg-gradient-to-r from-cyan-500/70 to-cyan-400/70 h-full rounded-full" style="--bar-width: 5%; animation-delay: 0.4s"></div>
-            </div>
-            <span class="text-cyan-400/70 w-12 md:w-14 text-right text-sm">0.15%</span>
-            <span class="text-slate-500 w-16 md:w-20 text-right text-xs hidden sm:block">8 min</span>
-          </div>
-        </div>
-        
-        <!-- Result Summary -->
-        <div class="mt-5 pt-4 border-t border-slate-700">
-          <div class="flex flex-col md:flex-row items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <div class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-white font-medium text-sm">Route selected:</span>
-              <span class="text-cyan-400 font-bold text-sm">USDC via Polygon</span>
-            </div>
-            <div class="flex items-center gap-6 text-sm">
-              <div>
-                <span class="text-slate-400">Saving</span>
-                <span class="text-green-400 font-bold ml-1">€308</span>
-                <span class="text-green-400/70 text-xs ml-1">(96.4% less)</span>
-              </div>
-              <div>
-                <span class="text-slate-400">Settlement</span>
-                <span class="text-white font-bold ml-1">< 1 min</span>
-                <span class="text-slate-500 text-xs ml-1">vs 3-5 days</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-      </div>
-    </div>
+    <div class="max-w-4xl mx-auto text-center"><span class="text-cyan-400 font-semibold text-sm uppercase tracking-wider">One connected experience</span><h2 class="text-3xl md:text-4xl font-bold text-white mt-4 mb-4">Powerful underneath.<br>Familiar on the surface.</h2><p class="text-slate-300 text-lg">Cards, bank payments and digital money should not feel like separate worlds. Our vision is one system that makes them work together for the business and the person paying.</p><p class="text-slate-400 text-sm mt-6">Explore the product vision. Available methods, destinations and fee support depend on your setup and supported connections. Required wallet or bank confirmations remain yours.</p></div>
   </section>
   
   <style>
@@ -2160,7 +1450,7 @@
             </svg>
           </div>
           <h3 class="text-lg font-bold mb-1">Global Payroll</h3>
-          <p class="text-slate-600 text-sm mb-3">Pay remote teams in 180+ countries. USDC for speed, local currency for convenience.</p>
+          <p class="text-slate-600 text-sm mb-3">Connect international teams with payment options that fit them. Digital money or local currency, through supported connections.</p>
           <div class="flex items-center gap-2 text-xs">
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → PHP</span>
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → NGN</span>
@@ -2227,144 +1517,6 @@
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">EUR → USDC (planned)</span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section id="pricing" class="py-16 md:py-24 px-4 md:px-6 bg-white">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-12 md:mb-16">
-        <div class="text-cyan-500 font-semibold text-sm uppercase tracking-wider mb-3">Pricing</div>
-        <h2 class="text-3xl md:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
-        <p class="text-slate-600 text-lg max-w-2xl mx-auto">Start free, scale as you grow. No hidden fees, no surprises.</p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-6 md:gap-8">
-        <!-- Starter -->
-        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200 hover-lift">
-          <div class="mb-6">
-            <h3 class="text-xl font-bold text-slate-900 mb-2">Starter</h3>
-            <p class="text-slate-500 text-sm">For startups testing the waters</p>
-          </div>
-          <div class="mb-6">
-            <div class="text-4xl font-bold text-slate-900">Free</div>
-            <div class="text-slate-500 text-sm">up to €1M/month volume</div>
-          </div>
-          <div class="mb-3">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Platform Fee</div>
-          </div>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600"><strong>0.08%</strong> Fiat transactions</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600"><strong>0.05%</strong> Stablecoin transactions</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Full API access</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Email support</span>
-            </div>
-          </div>
-          <a href="https://app.chainmore.io/get-started" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
-            Start Free
-          </a>
-        </div>
-
-        <!-- Growth - Featured -->
-        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 border border-cyan-500/30 shadow-xl shadow-cyan-500/10 relative hover-lift">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span class="bg-cyan-500 text-white text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</span>
-          </div>
-          <div class="mb-6">
-            <h3 class="text-xl font-bold text-white mb-2">Growth</h3>
-            <p class="text-slate-400 text-sm">For scaling businesses</p>
-          </div>
-          <div class="mb-6">
-            <div class="text-4xl font-bold text-white">€499<span class="text-lg font-normal text-slate-400">/mo</span></div>
-            <div class="text-slate-400 text-sm">up to €50M/month volume</div>
-          </div>
-          <div class="mb-3">
-            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Platform Fee</div>
-          </div>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-300"><strong>0.05%</strong> Fiat transactions</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-300"><strong>0.04%</strong> Stablecoin transactions</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-300">Advanced routing controls</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-300">Priority support</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-300">Webhooks & analytics</span>
-            </div>
-          </div>
-          <a href="https://app.chainmore.io/get-started" class="block w-full text-center bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500 transition shadow-lg shadow-cyan-500/30">
-            Start Growing
-          </a>
-        </div>
-
-        <!-- Enterprise -->
-        <div class="bg-slate-50 rounded-2xl p-8 border border-slate-200 hover-lift">
-          <div class="mb-6">
-            <h3 class="text-xl font-bold text-slate-900 mb-2">Enterprise</h3>
-            <p class="text-slate-500 text-sm">For high-volume operations</p>
-          </div>
-          <div class="mb-6">
-            <div class="text-4xl font-bold text-slate-900">Custom</div>
-            <div class="text-slate-500 text-sm">unlimited volume</div>
-          </div>
-          <div class="mb-3">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Platform Fee</div>
-          </div>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600"><strong>0.03-0.04%</strong> per transaction</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Volume discounts</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Dedicated account manager</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Reviewed SLA terms</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <svg class="w-5 h-5 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-slate-600">Custom integrations</span>
-            </div>
-          </div>
-          <a href="mailto:support@chainmore.io?subject=Enterprise%20pricing%20inquiry&body=Hi%20ChainMore%2C%0A%0AI%27d%20like%20to%20discuss%20Enterprise%20pricing.%0A%0A-%20Company%3A%20%0A-%20Approximate%20transaction%20volume%2Fmonth%3A%20%0A-%20Target%20rails%20(fiat%20%2F%20stablecoin%20%2F%20both)%3A%20%0A-%20Timeline%3A%20%0A%0AThanks%21" class="block w-full text-center bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-300 transition">
-            Contact Sales
-          </a>
-        </div>
-      </div>
-
-      <div class="mt-12 text-center space-y-3">
-        <p class="text-slate-500 text-sm">All plans include: Sandbox environment • Reviewed availability terms • Authorization and settlement through configured PSP, provider, and blockchain rails</p>
-        <p class="text-slate-400 text-xs">Provider costs (PSP fees, blockchain gas) passed through at cost.</p>
-        <p class="pt-2"><a href="/pricing.html" class="inline-flex items-center gap-1.5 text-cyan-600 hover:text-cyan-700 font-medium text-sm">See full pricing details, comparison table and FAQs <span aria-hidden="true">→</span></a></p>
       </div>
     </div>
   </section>
@@ -2478,7 +1630,7 @@
 
 <span class="text-slate-500">// Response includes optimal route</span>
 console.<span class="text-yellow-300">log</span>(payment.route);
-<span class="text-slate-500">// { rail: 'stablecoin', cost: '0.12%', time: '12min' }</span></pre>
+<span class="text-slate-500">// One payment. One connected view.</span></pre>
           </div>
         </div>
       </div>
@@ -2608,29 +1760,17 @@ console.<span class="text-yellow-300">log</span>(payment.route);
   </section>
 
   <!-- Footer -->
+  </main>
   <footer class="py-16 px-4 md:px-6 bg-slate-950 text-slate-400">
     <div class="max-w-6xl mx-auto">
       <div class="grid md:grid-cols-5 gap-8 mb-12">
         <!-- Brand Column -->
         <div class="md:col-span-2">
           <div class="flex items-center gap-2.5 mb-4">
-            <!-- Logo SVG - Dual flow converging -->
-            <svg width="32" height="32" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Upper path (Fiat) -->
-              <path d="M 20 35 C 45 35, 55 50, 75 60 C 95 70, 105 60, 105 60" 
-                    stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round"/>
-              <!-- Lower path (Stablecoin) -->
-              <path d="M 20 85 C 45 85, 55 70, 75 60 C 95 50, 105 60, 105 60" 
-                    stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round"/>
-              <!-- Unified endpoint -->
-              <circle cx="105" cy="60" r="10" fill="#00D9FF"/>
-              <circle cx="105" cy="60" r="5" fill="#FFFFFF"/>
-              <!-- Start indicators -->
-              <circle cx="20" cy="35" r="5" fill="#FFFFFF"/>
-              <circle cx="20" cy="85" r="5" fill="#94a3b8"/>
-            </svg>
+            <!-- Canonical ChainMore mark, matching the approved investor presentation -->
+            <img src="/assets/chainmore-mark.svg" width="32" height="27" alt="" aria-hidden="true">
             <span class="text-xl font-bold tracking-tight">
-              <span class="text-white">Chain</span><span class="text-[#00D9FF]">More</span>
+              <span class="text-white">ChainMore</span>
             </span>
           </div>
           <p class="text-sm mb-4 max-w-xs">Cross-Rail Payment Orchestration. The infrastructure layer for the next generation of payments.</p>
@@ -2642,7 +1782,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
           <div class="space-y-3 text-sm">
             <div><a href="#how-it-works" class="hover:text-white transition">How It Works</a></div>
             <div><a href="#solutions" class="hover:text-white transition">Solutions</a></div>
-            <div><a href="/pricing.html" class="hover:text-white transition">Pricing</a></div>
+            <div><a href="#contact" class="hover:text-white transition">Contact</a></div>
             <div><a href="#developers" class="hover:text-white transition">Developers</a></div>
             <div><a href="/docs.html" class="hover:text-white transition">API Docs</a></div>
           </div>
@@ -2680,945 +1820,7 @@ console.<span class="text-yellow-300">log</span>(payment.route);
     </div>
   </footer>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Menu Toggle
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    
-    if (mobileMenuBtn) {
-      const setMenuClosed = () => {
-        mobileMenu.classList.add('hidden');
-        document.body.style.overflow = '';
-        const icon = mobileMenuBtn.querySelector('svg');
-        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
-      };
-      const setMenuOpen = () => {
-        mobileMenu.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        const icon = mobileMenuBtn.querySelector('svg');
-        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
-      };
-
-      mobileMenuBtn.addEventListener('click', () => {
-        if (mobileMenu.classList.contains('hidden')) {
-          setMenuOpen();
-        } else {
-          setMenuClosed();
-        }
-      });
-
-      // Close menu when clicking a link
-      const mobileLinks = mobileMenu.querySelectorAll('a');
-      mobileLinks.forEach(function(link) {
-        link.addEventListener('click', setMenuClosed);
-      });
-
-      // Close menu on Escape
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-          setMenuClosed();
-        }
-      });
-
-      // Reset on resize to desktop
-      window.addEventListener('resize', () => {
-        if (window.innerWidth >= 1024 && !mobileMenu.classList.contains('hidden')) {
-          setMenuClosed();
-        }
-      });
-    }
-
-    // ========== PLATFORM DROPDOWN TAB INTERACTION ==========
-    const platformTabs = document.querySelectorAll('.platform-tab');
-    const platformContents = document.querySelectorAll('.platform-content');
-    
-    platformTabs.forEach(function(tab) {
-      tab.addEventListener('mouseenter', function() {
-        const targetTab = this.getAttribute('data-tab');
-        
-        // Update tab styles
-        platformTabs.forEach(function(t) {
-          t.classList.remove('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
-          t.classList.add('text-slate-600', 'border-transparent', 'font-medium');
-        });
-        
-        this.classList.add('active', 'text-cyan-700', 'bg-white', 'border-cyan-500', 'font-semibold');
-        this.classList.remove('text-slate-600', 'border-transparent', 'font-medium');
-        
-        // Update content visibility
-        platformContents.forEach(function(content) {
-          if (content.getAttribute('data-content') === targetTab) {
-            content.classList.remove('hidden');
-            content.classList.add('active');
-          } else {
-            content.classList.add('hidden');
-            content.classList.remove('active');
-          }
-        });
-      });
-    });
-
-    // Scenario Rotation
-    let currentScenario = 0;
-    const scenarios = document.querySelectorAll('.scenario');
-    const dots = document.querySelectorAll('.scenario-dot');
-    const labels = document.querySelectorAll('.scenario-label');
-    
-    function showScenario(index) {
-      scenarios.forEach((s, i) => s.classList.toggle('active', i === index));
-      dots.forEach((d, i) => d.classList.toggle('active', i === index));
-      labels.forEach((l, i) => {
-        if (i === index) {
-          l.classList.remove('bg-slate-100', 'text-slate-600');
-          l.classList.add('bg-slate-900', 'text-white');
-        } else {
-          l.classList.remove('bg-slate-900', 'text-white');
-          l.classList.add('bg-slate-100', 'text-slate-600');
-        }
-      });
-      currentScenario = index;
-    }
-    
-    // Auto-rotate every 5 seconds
-    let autoRotate = setInterval(() => {
-      showScenario((currentScenario + 1) % 4);
-    }, 5000);
-    
-    // Click handlers for manual control
-    function handleScenarioClick(index) {
-      clearInterval(autoRotate);
-      showScenario(index);
-      autoRotate = setInterval(() => {
-        showScenario((currentScenario + 1) % 4);
-      }, 5000);
-    }
-    
-    dots.forEach(dot => {
-      dot.addEventListener('click', () => handleScenarioClick(parseInt(dot.dataset.goto)));
-    });
-    
-    labels.forEach(label => {
-      label.addEventListener('click', () => handleScenarioClick(parseInt(label.dataset.goto)));
-    });
-
-    // The previous payment-flow builder block lived here. It targeted
-    // DOM ids (#input-options, #output-options, #result-input, #result-output,
-    // #result-type, #result-cost, #result-time, #result-savings, #result-usecase,
-    // .select-card, .result-panel) that no longer exist on the page; the
-    // updateResult() call at the bottom of that block threw
-    // `TypeError: Cannot set properties of null (setting 'textContent')`,
-    // which silently aborted everything after it inside this same
-    // DOMContentLoaded handler. Symptoms reported by Aldin: smooth-scroll,
-    // demo-tab buttons, switch-btn, scenario rotation manual control,
-    // and other handlers further down would not register.
-    //
-    // The actual interactive Payment Flow Builder is now wired in a
-    // separate <script> block at end-of-body (see "Interactive Payment
-    // Flow Builder" comment near </body>). That block targets the new
-    // DOM (.flow-input / .flow-output / #route-* labels). This stub
-    // remains as a tombstone so a future reader does not reintroduce
-    // the broken block by accident.
-
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Close mobile menu if open
-          if (mobileMenu) mobileMenu.classList.add('hidden');
-        }
-      });
-    });
-
-    // ========== CROSS-RAIL DEMO SECTION ==========
-    const demoTabs = document.querySelectorAll('.demo-tab');
-    const demoFlows = document.querySelectorAll('.demo-flow');
-    
-    let currentUseCase = 'checkout';
-    let currentStep = 1;
-    let maxSteps = { checkout: 5, payouts: 4 };
-    let autoPlayInterval = null;
-    const STEP_DURATION = 3000; // 3 seconds - balanced speed
-
-    function updateDemoStep() {
-      const activeFlow = document.querySelector(`.demo-flow[data-usecase="${currentUseCase}"]`);
-      if (!activeFlow) return;
-
-      // Update boxes
-      const boxes = activeFlow.querySelectorAll('.demo-box');
-      boxes.forEach(box => {
-        const boxStep = parseInt(box.dataset.step);
-        if (boxStep <= currentStep) {
-          box.classList.remove('opacity-40');
-          box.classList.add('opacity-100');
-        } else {
-          box.classList.add('opacity-40');
-          box.classList.remove('opacity-100');
-        }
-      });
-
-      // Update phone screens
-      const screens = activeFlow.querySelectorAll('.phone-screen');
-      screens.forEach(screen => {
-        const screenStep = parseInt(screen.dataset.step);
-        if (screenStep === currentStep) {
-          screen.classList.add('active');
-          screen.style.opacity = '1';
-        } else {
-          screen.classList.remove('active');
-          screen.style.opacity = '0';
-        }
-      });
-
-      // Update dots
-      const dots = activeFlow.querySelectorAll('.demo-dot');
-      dots.forEach(dot => {
-        const dotStep = parseInt(dot.dataset.step);
-        if (dotStep <= maxSteps[currentUseCase]) {
-          dot.style.display = 'block';
-          if (dotStep <= currentStep) {
-            dot.classList.remove('bg-slate-600');
-            dot.classList.add('bg-cyan-500');
-          } else {
-            dot.classList.remove('bg-cyan-500');
-            dot.classList.add('bg-slate-600');
-          }
-        } else {
-          dot.style.display = 'none';
-        }
-      });
-
-      // Update connection lines
-      const lines = activeFlow.querySelectorAll('.connection-line');
-      lines.forEach(line => {
-        const lineStep = parseInt(line.dataset.step);
-        if (lineStep <= currentStep) {
-          line.classList.add('active');
-        } else {
-          line.classList.remove('active');
-        }
-      });
-    }
-
-    function nextDemoStep() {
-      if (currentStep < maxSteps[currentUseCase]) {
-        currentStep++;
-      } else {
-        currentStep = 1;
-      }
-      updateDemoStep();
-    }
-
-    function switchUseCase(useCase) {
-      currentUseCase = useCase;
-      currentStep = 1;
-
-      demoTabs.forEach(tab => {
-        if (tab.dataset.usecase === useCase) {
-          tab.classList.add('bg-white', 'text-slate-900', 'shadow-lg');
-          tab.classList.remove('bg-slate-800', 'text-slate-400', 'border-slate-700');
-        } else {
-          tab.classList.remove('bg-white', 'text-slate-900', 'shadow-lg');
-          tab.classList.add('bg-slate-800', 'text-slate-400', 'border-slate-700');
-        }
-      });
-
-      demoFlows.forEach(flow => {
-        if (flow.dataset.usecase === useCase) {
-          flow.classList.remove('hidden');
-          flow.classList.add('active');
-        } else {
-          flow.classList.add('hidden');
-          flow.classList.remove('active');
-        }
-      });
-
-      updateDemoStep();
-    }
-
-    demoTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        switchUseCase(tab.dataset.usecase);
-      });
-    });
-
-    function startAutoPlay() {
-      if (autoPlayInterval) clearInterval(autoPlayInterval);
-      autoPlayInterval = setInterval(nextDemoStep, STEP_DURATION);
-    }
-
-    updateDemoStep();
-    startAutoPlay();
-
-    // ========== NEW PAYMENT EXPERIENCE DEMO ==========
-    console.log('Initializing Payment Demo...');
-    
-    // Use more specific selectors to avoid conflicts with other demo sections
-    const demoStepsContainer = document.getElementById('demo-steps');
-    console.log('demo-steps container:', demoStepsContainer);
-    
-    const paymentDemoSteps = demoStepsContainer ? demoStepsContainer.querySelectorAll('.demo-step-btn') : [];
-    console.log('Payment demo steps found:', paymentDemoSteps.length);
-    
-    const phoneContent = document.getElementById('phone-content');
-    console.log('phone-content:', phoneContent);
-    
-    const phoneScreens = phoneContent ? phoneContent.querySelectorAll('.phone-screen') : [];
-    console.log('Phone screens found:', phoneScreens.length);
-    
-    const autoplayToggle = document.getElementById('autoplay-toggle');
-    console.log('autoplay-toggle:', autoplayToggle);
-    
-    const autoplayIcon = document.getElementById('autoplay-icon');
-    const autoplayText = document.getElementById('autoplay-text');
-    const currentStepEl = document.getElementById('current-step');
-    const stepLabelEl = document.getElementById('step-label');
-    
-    const stepLabels = ['Checkout', 'Method', 'Wallet', 'Verify', 'Confirm', 'Sign', 'Process', 'Done'];
-    let currentPaymentStep = 0;
-    let paymentAutoPlayInterval = null;
-    let isPaymentAutoPlaying = true; // Start with autoplay enabled
-    const PAYMENT_STEP_DURATION = 4000; // 4 seconds per step
-    
-    // Stablecoin state
-    let selectedStablecoin = 'EURC';
-    
-    function updatePaymentStep(newStep) {
-      currentPaymentStep = newStep;
-      
-      // Update step buttons
-      paymentDemoSteps.forEach((btn, i) => {
-        if (i === currentPaymentStep) {
-          btn.classList.remove('bg-white/10', 'text-white/60');
-          btn.classList.add('bg-cyan-400', 'text-white');
-        } else {
-          btn.classList.remove('bg-cyan-400', 'text-white');
-          btn.classList.add('bg-white/10', 'text-white/60');
-        }
-      });
-      
-      // Update screens by data-screen attribute
-      phoneScreens.forEach((screen) => {
-        const screenIndex = parseInt(screen.getAttribute('data-screen'));
-        if (screenIndex === currentPaymentStep) {
-          screen.classList.add('active');
-          screen.style.display = 'block';
-        } else {
-          screen.classList.remove('active');
-          screen.style.display = 'none';
-        }
-      });
-      
-      // Update caption
-      if (currentStepEl) currentStepEl.textContent = currentPaymentStep + 1;
-      if (stepLabelEl) stepLabelEl.textContent = stepLabels[currentPaymentStep];
-      
-      // Scroll to top then bottom after delay
-      if (phoneContent) {
-        phoneContent.scrollTop = 0;
-        setTimeout(() => {
-          phoneContent.scrollTo({ top: phoneContent.scrollHeight, behavior: 'smooth' });
-        }, 1500);
-      }
-      
-      // Update stablecoin display
-      updateStablecoinDisplay();
-    }
-    
-    function updateStablecoinDisplay() {
-      const confirmAmount = document.getElementById('confirm-amount');
-      const confirmName = document.getElementById('confirm-name');
-      const switchText = document.getElementById('switch-text');
-      const signAmount = document.getElementById('sign-amount');
-      const processAmount = document.getElementById('process-amount');
-      const successAmount = document.getElementById('success-amount');
-      
-      if (selectedStablecoin === 'EURC') {
-        if (confirmAmount) confirmAmount.textContent = '477.99 EURC';
-        if (confirmName) confirmName.textContent = 'Euro Coin';
-        if (switchText) switchText.textContent = 'Switch to USDC';
-        if (signAmount) signAmount.textContent = '477.99 EURC';
-        if (processAmount) processAmount.textContent = 'Sending 477.99 EURC';
-        if (successAmount) successAmount.textContent = '477.99 EURC';
-      } else {
-        if (confirmAmount) confirmAmount.textContent = '519.21 USDC';
-        if (confirmName) confirmName.textContent = 'USD Coin';
-        if (switchText) switchText.textContent = 'Switch to EURC';
-        if (signAmount) signAmount.textContent = '519.21 USDC';
-        if (processAmount) processAmount.textContent = 'Sending 519.21 USDC';
-        if (successAmount) successAmount.textContent = '519.21 USDC';
-      }
-    }
-    
-    function nextPaymentStep() {
-      const next = (currentPaymentStep + 1) % 8;
-      updatePaymentStep(next);
-    }
-    
-    function startPaymentAutoPlay() {
-      if (paymentAutoPlayInterval) clearInterval(paymentAutoPlayInterval);
-      paymentAutoPlayInterval = setInterval(nextPaymentStep, PAYMENT_STEP_DURATION);
-      isPaymentAutoPlaying = true;
-      if (autoplayIcon) autoplayIcon.textContent = '⏸';
-      if (autoplayText) autoplayText.textContent = 'Pause';
-    }
-    
-    function stopPaymentAutoPlay() {
-      if (paymentAutoPlayInterval) {
-        clearInterval(paymentAutoPlayInterval);
-        paymentAutoPlayInterval = null;
-      }
-      isPaymentAutoPlaying = false;
-      if (autoplayIcon) autoplayIcon.textContent = '▶';
-      if (autoplayText) autoplayText.textContent = 'Play';
-    }
-    
-    // Step button clicks - use event delegation for reliability
-    if (demoStepsContainer) {
-      console.log('Adding click listener to demo-steps container');
-      demoStepsContainer.addEventListener('click', function(e) {
-        const btn = e.target.closest('.demo-step-btn');
-        if (btn) {
-          const stepIndex = parseInt(btn.getAttribute('data-step'));
-          console.log('Step button clicked:', stepIndex);
-          if (!isNaN(stepIndex)) {
-            stopPaymentAutoPlay();
-            updatePaymentStep(stepIndex);
-          }
-        }
-      });
-    } else {
-      console.error('demo-steps container not found!');
-    }
-    
-    // Autoplay toggle
-    if (autoplayToggle) {
-      console.log('Adding click listener to autoplay toggle');
-      autoplayToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Autoplay toggle clicked, currently playing:', isPaymentAutoPlaying);
-        if (isPaymentAutoPlaying) {
-          stopPaymentAutoPlay();
-        } else {
-          startPaymentAutoPlay();
-        }
-      });
-    } else {
-      console.error('autoplay-toggle not found!');
-    }
-    
-    // Switch button
-    const switchBtn = document.getElementById('switch-btn');
-    if (switchBtn) {
-      switchBtn.addEventListener('click', () => {
-        selectedStablecoin = selectedStablecoin === 'EURC' ? 'USDC' : 'EURC';
-        updateStablecoinDisplay();
-        
-        // Update logos
-        const eurcLogo = document.getElementById('eurc-logo');
-        const usdcLogo = document.getElementById('usdc-logo');
-        if (eurcLogo && usdcLogo) {
-          if (selectedStablecoin === 'EURC') {
-            eurcLogo.style.display = 'block';
-            usdcLogo.style.display = 'none';
-          } else {
-            eurcLogo.style.display = 'none';
-            usdcLogo.style.display = 'block';
-          }
-        }
-      });
-    }
-    
-    // Initialize - show first screen and start autoplay
-    console.log('Starting initialization...');
-    if (phoneScreens.length > 0) {
-      updatePaymentStep(0);
-      // Auto-start the demo
-      setTimeout(() => {
-        startPaymentAutoPlay();
-        console.log('Payment Demo auto-started!');
-      }, 500);
-      console.log('Payment Demo initialized successfully!');
-    } else {
-      console.error('No phone screens found - demo will not work');
-    }
-    
-    console.log('Payment Demo final state:', {
-      steps: paymentDemoSteps.length, screens: phoneScreens.length, autoplayToggle: !!autoplayToggle, isPlaying: isPaymentAutoPlaying
-    });
-    
-    console.log('All demos initialized');
-    
-    // ========== HERO FLOW ANIMATION ==========
-    console.log('=== HERO ANIMATION SETUP ===');
-    
-    var heroInputCards = document.querySelectorAll('.hero-input-card');
-    var heroOutputCards = document.querySelectorAll('.hero-output-card');
-    var heroRouteIndicators = document.querySelectorAll('.hero-route-indicator');
-    
-    console.log('Found:', heroInputCards.length, 'inputs,', heroOutputCards.length, 'outputs,', heroRouteIndicators.length, 'indicators');
-    
-    // Log each card's data-value
-    heroInputCards.forEach(function(c, i) {
-      console.log('Input card ' + i + ':', c.getAttribute('data-value'));
-    });
-    heroOutputCards.forEach(function(c, i) {
-      console.log('Output card ' + i + ':', c.getAttribute('data-value'));
-    });
-    
-    var heroCases = [
-      { input: 'card', output: 'bank' }, { input: 'card', output: 'usdc' }, { input: 'usdc', output: 'bank' }, { input: 'usdc', output: 'onchain' }
-    ];
-    
-    var heroCurrentCase = 0;
-    var heroAutoInterval = null;
-    
-    function showHeroCase(index) {
-      var caseData = heroCases[index];
-      console.log('>>> Case ' + index + ':', caseData.input, '->', caseData.output);
-      
-      // Update input cards
-      heroInputCards.forEach(function(card) {
-        var val = card.getAttribute('data-value');
-        if (val === caseData.input) {
-          card.style.opacity = '1';
-          card.style.pointerEvents = 'auto';
-        } else {
-          card.style.opacity = '0';
-          card.style.pointerEvents = 'none';
-        }
-      });
-      
-      // Update output cards
-      heroOutputCards.forEach(function(card) {
-        var val = card.getAttribute('data-value');
-        if (val === caseData.output) {
-          card.style.opacity = '1';
-          card.style.pointerEvents = 'auto';
-        } else {
-          card.style.opacity = '0';
-          card.style.pointerEvents = 'none';
-        }
-      });
-      
-      // Update indicators
-      heroRouteIndicators.forEach(function(ind, i) {
-        var dot = ind.querySelector('span:first-child');
-        if (i === index) {
-          ind.className = 'hero-route-indicator flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg';
-          if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
-        } else {
-          ind.className = 'hero-route-indicator flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer bg-slate-100 text-slate-500 hover:bg-slate-200';
-          if (dot) dot.className = 'w-2 h-2 rounded-full bg-current';
-        }
-      });
-      
-      heroCurrentCase = index;
-    }
-    
-    function startHeroAuto() {
-      console.log('Starting hero auto-rotate...');
-      if (heroAutoInterval) clearInterval(heroAutoInterval);
-      heroAutoInterval = setInterval(function() {
-        heroCurrentCase = (heroCurrentCase + 1) % 4;
-        showHeroCase(heroCurrentCase);
-      }, 4500);
-    }
-    
-    // Click handlers for indicators
-    heroRouteIndicators.forEach(function(ind, idx) {
-      ind.addEventListener('click', function() {
-        console.log('Indicator clicked:', idx);
-        if (heroAutoInterval) clearInterval(heroAutoInterval);
-        showHeroCase(idx);
-        startHeroAuto();
-      });
-    });
-    
-    // Initialize Hero
-    if (heroInputCards.length > 0 && heroOutputCards.length > 0) {
-      console.log('Initializing hero animation...');
-      showHeroCase(0);
-      startHeroAuto();
-      console.log('Hero animation RUNNING!');
-    } else {
-      console.error('Hero cards not found!');
-    }
-  });
-</script>
-
-<!-- STANDALONE ANIMATION SCRIPT - runs after everything is loaded -->
-<script>
-window.onload = function() {
-  console.log('=== WINDOW ONLOAD - STARTING ANIMATIONS ===');
-  
-  // ===== HERO FLOW ANIMATION =====
-  var inputCards = document.querySelectorAll('.hero-input-card');
-  var outputCards = document.querySelectorAll('.hero-output-card');
-  var indicators = document.querySelectorAll('.hero-route-indicator');
-  
-  console.log('Hero cards:', inputCards.length, outputCards.length, indicators.length);
-  
-  var cases = [
-    { inp: 'card', out: 'bank' }, { inp: 'card', out: 'usdc' }, { inp: 'usdc', out: 'bank' }, { inp: 'usdc', out: 'onchain' }
-  ];
-  
-  var currentIdx = 0;
-  
-  function showCase(idx) {
-    console.log('Hero case:', idx);
-    var c = cases[idx];
-    
-    // Show/hide input cards
-    for (var i = 0; i < inputCards.length; i++) {
-      if (inputCards[i].getAttribute('data-value') === c.inp) {
-        inputCards[i].style.opacity = '1';
-        inputCards[i].style.pointerEvents = 'auto';
-      } else {
-        inputCards[i].style.opacity = '0';
-        inputCards[i].style.pointerEvents = 'none';
-      }
-    }
-    
-    // Show/hide output cards
-    for (var j = 0; j < outputCards.length; j++) {
-      if (outputCards[j].getAttribute('data-value') === c.out) {
-        outputCards[j].style.opacity = '1';
-        outputCards[j].style.pointerEvents = 'auto';
-      } else {
-        outputCards[j].style.opacity = '0';
-        outputCards[j].style.pointerEvents = 'none';
-      }
-    }
-    
-    // Update indicators
-    for (var k = 0; k < indicators.length; k++) {
-      var dot = indicators[k].querySelector('span');
-      if (k === idx) {
-        indicators[k].style.background = 'linear-gradient(to right, #06b6d4, #0891b2)';
-        indicators[k].style.color = 'white';
-        if (dot) dot.style.background = 'white';
-      } else {
-        indicators[k].style.background = '#f1f5f9';
-        indicators[k].style.color = '#64748b';
-        if (dot) dot.style.background = '#64748b';
-      }
-    }
-    
-    currentIdx = idx;
-  }
-  
-  // Start auto-rotation
-  if (inputCards.length > 0) {
-    showCase(0);
-    setInterval(function() {
-      currentIdx = (currentIdx + 1) % 4;
-      showCase(currentIdx);
-    }, 4500);
-    console.log('Hero auto-rotation STARTED');
-  }
-  
-  // Click handlers
-  for (var m = 0; m < indicators.length; m++) {
-    (function(index) {
-      indicators[index].onclick = function() {
-        showCase(index);
-      };
-    })(m);
-  }
-  
-  // ===== PAYMENT DEMO ANIMATION =====
-  var phoneScreens = document.querySelectorAll('#phone-content .phone-screen');
-  var demoSteps = document.querySelectorAll('#demo-steps .demo-step-btn');
-  var phoneContent = document.getElementById('phone-content');
-  
-  console.log('Payment demo:', phoneScreens.length, 'screens,', demoSteps.length, 'steps');
-  
-  var paymentStep = 0;
-  // Screens that need scrolling (0-indexed): Checkout(0), Method(1), Wallet(2), Confirm(4)
-  var screensNeedingScroll = [0, 1, 2, 4];
-  
-  function showPaymentStep(step) {
-    console.log('Payment step:', step);
-    
-    // First reset scroll position
-    if (phoneContent) {
-      phoneContent.scrollTop = 0;
-    }
-    
-    // Show/hide screens
-    for (var i = 0; i < phoneScreens.length; i++) {
-      if (i === step) {
-        phoneScreens[i].classList.add('active');
-        phoneScreens[i].style.display = 'block';
-      } else {
-        phoneScreens[i].classList.remove('active');
-        phoneScreens[i].style.display = 'none';
-      }
-    }
-    
-    // Update step buttons
-    for (var j = 0; j < demoSteps.length; j++) {
-      if (j === step) {
-        demoSteps[j].classList.add('bg-cyan-500', 'text-white');
-        demoSteps[j].classList.remove('bg-slate-700', 'text-slate-400');
-      } else {
-        demoSteps[j].classList.remove('bg-cyan-500', 'text-white');
-        demoSteps[j].classList.add('bg-slate-700', 'text-slate-400');
-      }
-    }
-    
-    // Only scroll on screens that need it, with smooth animation
-    if (phoneContent && screensNeedingScroll.indexOf(step) !== -1) {
-      setTimeout(function() {
-        var scrollDistance = phoneContent.scrollHeight - phoneContent.clientHeight;
-        if (scrollDistance > 20) {
-          phoneContent.scrollTo({ top: scrollDistance, behavior: 'smooth' });
-        }
-      }, 1500); // Wait 1.5s before scrolling
-    }
-    
-    paymentStep = step;
-  }
-  
-  // Start payment demo auto-rotation - slower pace (6 seconds)
-  if (phoneScreens.length > 0) {
-    showPaymentStep(0);
-    setInterval(function() {
-      paymentStep = (paymentStep + 1) % phoneScreens.length;
-      showPaymentStep(paymentStep);
-    }, 6000);
-    console.log('Payment demo auto-rotation STARTED');
-  }
-  
-  // Click handlers for demo steps
-  for (var n = 0; n < demoSteps.length; n++) {
-    (function(index) {
-      demoSteps[index].onclick = function() {
-        showPaymentStep(index);
-      };
-    })(n);
-  }
-  
-  console.log('=== ALL ANIMATIONS INITIALIZED ===');
-};
-</script>
-
-<!-- Nav-dropdown coordination, exclusive-open behavior.
-     The pure-CSS group-hover pattern flickers when the user moves the
-     cursor quickly between two dropdown buttons because both menus
-     are mid-transition at the same time. This script enforces a
-     single-active-menu invariant: when one .nav-group is hovered, the
-     others are forced shut via the [data-active-menu] state on the
-     parent #primary-nav (the CSS rule in <head> does the actual
-     suppression).
-
-     Pointer-events:
-       - Buttons + their panels register hover via standard mouseenter.
-       - Leaving the entire #primary-nav with the cursor (mouseleave)
-         clears the active-menu state, so the menus close normally
-         when the user moves out of the navigation strip.
-
-     Keyboard:
-       - Focus on a dropdown trigger sets the active state too, so
-         keyboard users get the same exclusive behavior.
-       - Tabbing out of the entire nav clears the state on focusout.
--->
-<script>
-(function () {
-  var nav = document.getElementById('primary-nav');
-  if (!nav) return;
-  var groups = nav.querySelectorAll('.nav-group');
-  if (!groups.length) return;
-
-  function activate(group) {
-    var key = group.id ? group.id.replace('-dropdown', '') : '';
-    nav.setAttribute('data-active-menu', key);
-    groups.forEach(function (g) {
-      if (g === group) g.setAttribute('data-active', '');
-      else g.removeAttribute('data-active');
-    });
-  }
-
-  function deactivate() {
-    nav.setAttribute('data-active-menu', '');
-    groups.forEach(function (g) { g.removeAttribute('data-active'); });
-  }
-
-  groups.forEach(function (group) {
-    group.addEventListener('mouseenter', function () { activate(group); });
-    // Keyboard parity: focusing the trigger button activates too.
-    var trigger = group.querySelector('button');
-    if (trigger) trigger.addEventListener('focus', function () { activate(group); });
-  });
-
-  nav.addEventListener('mouseleave', deactivate);
-  nav.addEventListener('focusout', function (e) {
-    // focusout fires before focus moves to the new target; if the new
-    // target is still inside the nav we keep the state, otherwise
-    // clear it.
-    if (!nav.contains(e.relatedTarget)) deactivate();
-  });
-})();
-</script>
-
-<!-- Interactive Payment Flow Builder.
-     The "Build Your Payment Flow" widget on #how-it-works has two
-     columns of cards (Merchant Accepts / Merchant Receives). Each
-     card carries a data-flow-input or data-flow-output value. This
-     script handles click-to-select on both columns and drives the
-     "OPTIMAL ROUTE" display below from a 4 by 4 lookup table covering
-     every input/output combination.
-
-     The defaults (Card -> USDC/Polygon) are hardcoded in the markup
-     to render correctly with JS disabled too. With JS enabled, the
-     same defaults are applied programmatically on first paint via
-     setSelected, so click handlers can rely on a single state path.
--->
-<script>
-(function () {
-  var inputs = document.querySelectorAll('.flow-input');
-  var outputs = document.querySelectorAll('.flow-output');
-  if (!inputs.length || !outputs.length) return;
-
-  var routeInputLabel    = document.getElementById('route-input-label');
-  var routeOutputLabel   = document.getElementById('route-output-label');
-  var routeTypesLabel    = document.getElementById('route-types-label');
-  var metricCost         = document.getElementById('route-metric-cost');
-  var metricSpeed        = document.getElementById('route-metric-speed');
-  var metricChargebacks  = document.getElementById('route-metric-chargebacks');
-  var metricRiskLabel    = document.getElementById('route-metric-risk-label');
-  if (!routeInputLabel || !routeOutputLabel) return;
-
-  // Pretty labels for the input column.
-  var inputLabels = {
-    'card':       { name: 'Card',       type: 'Fiat'      },
-    'stablecoin': { name: 'USDC',       type: 'Stable'    },
-    'bank-wire':  { name: 'Bank Wire',  type: 'Fiat'      },
-    'apm':        { name: 'Apple Pay',  type: 'Fiat'      },
-  };
-
-  // Output side describes both the destination AND the rail. The
-  // "primary" string is what shows after the arrow; the "type" is
-  // what appears in parentheses on the right side of the route line.
-  var outputLabels = {
-    'bank':       { name: 'Bank Account',  type: 'Fiat'   },
-    'stablecoin': { name: 'USDC/Polygon',  type: 'Stable' },
-    'exchange':   { name: 'Coinbase USDC', type: 'CEX'    },
-    'onchain':    { name: 'Direct Wallet', type: 'DeFi'   },
-  };
-
-  // Per-pair metrics. Numbers are illustrative for the marketing
-  // surface; they do not pretend to be the result of a live cost
-  // calculation. Keep them realistic so the widget reads like a
-  // value-prop calculator, not a slot machine.
-  //
-  // Schema: routeMetrics[input][output] = { cost, speed, riskValue, riskLabel }
-  // where cost and speed are example "% saved" / "% faster" claims. The
-  // chargeback claim is only valid for stablecoin-input routes; card/APM/fiat
-  // inputs keep cardholder/provider dispute rights regardless of settlement rail.
-  var routeMetrics = {
-    'card': {
-      'bank':       { cost: '40%', speed: '60%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'stablecoin': { cost: '85%', speed: '95%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'exchange':   { cost: '70%', speed: '85%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'onchain':    { cost: '90%', speed: '95%', riskValue: 'Minutes', riskLabel: 'Finality' },
-    },
-    'stablecoin': {
-      'bank':       { cost: '60%', speed: '70%', riskValue: '0%', riskLabel: 'Chargebacks' },
-      'stablecoin': { cost: '95%', speed: '99%', riskValue: '0%', riskLabel: 'Chargebacks' },
-      'exchange':   { cost: '80%', speed: '90%', riskValue: '0%', riskLabel: 'Chargebacks' },
-      'onchain':    { cost: '95%', speed: '99%', riskValue: '0%', riskLabel: 'Chargebacks' },
-    },
-    'bank-wire': {
-      'bank':       { cost: '20%', speed: '30%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'stablecoin': { cost: '70%', speed: '85%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'exchange':   { cost: '55%', speed: '70%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'onchain':    { cost: '75%', speed: '90%', riskValue: 'Minutes', riskLabel: 'Finality' },
-    },
-    'apm': {
-      'bank':       { cost: '35%', speed: '55%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'stablecoin': { cost: '80%', speed: '92%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'exchange':   { cost: '65%', speed: '82%', riskValue: 'Minutes', riskLabel: 'Finality' },
-      'onchain':    { cost: '85%', speed: '93%', riskValue: 'Minutes', riskLabel: 'Finality' },
-    },
-  };
-
-  var state = { input: 'card', output: 'stablecoin' };
-
-  function paintInputCard(card) {
-    var sel = card.dataset.selected === 'true';
-    if (sel) {
-      card.classList.add('border-2', 'border-cyan-500', 'bg-cyan-50');
-      card.classList.remove('border', 'border-slate-200', 'hover:border-slate-300');
-    } else {
-      card.classList.add('border', 'border-slate-200', 'hover:border-slate-300');
-      card.classList.remove('border-2', 'border-cyan-500', 'bg-cyan-50');
-    }
-  }
-  function paintOutputCard(card) {
-    var sel = card.dataset.selected === 'true';
-    if (sel) {
-      card.classList.add('border-2', 'border-green-500', 'bg-green-50');
-      card.classList.remove('border', 'border-slate-200', 'hover:border-slate-300');
-    } else {
-      card.classList.add('border', 'border-slate-200', 'hover:border-slate-300');
-      card.classList.remove('border-2', 'border-green-500', 'bg-green-50');
-    }
-  }
-
-  function selectInput(value) {
-    state.input = value;
-    inputs.forEach(function (c) {
-      if (c.dataset.flowInput === value) c.dataset.selected = 'true';
-      else delete c.dataset.selected;
-      paintInputCard(c);
-    });
-    refresh();
-  }
-  function selectOutput(value) {
-    state.output = value;
-    outputs.forEach(function (c) {
-      if (c.dataset.flowOutput === value) c.dataset.selected = 'true';
-      else delete c.dataset.selected;
-      paintOutputCard(c);
-    });
-    refresh();
-  }
-
-  function refresh() {
-    var inLab  = inputLabels[state.input];
-    var outLab = outputLabels[state.output];
-    if (!inLab || !outLab) return;
-    routeInputLabel.textContent  = inLab.name;
-    routeOutputLabel.textContent = outLab.name;
-    routeTypesLabel.textContent  = inLab.type + ' to ' + outLab.type;
-    var m = (routeMetrics[state.input] || {})[state.output];
-    if (m) {
-      if (metricCost)        metricCost.textContent        = m.cost;
-      if (metricSpeed)       metricSpeed.textContent       = m.speed;
-      if (metricChargebacks) metricChargebacks.textContent = m.riskValue;
-      if (metricRiskLabel)   metricRiskLabel.textContent   = m.riskLabel;
-    }
-  }
-
-  inputs.forEach(function (c) {
-    c.addEventListener('click', function () { selectInput(c.dataset.flowInput); });
-  });
-  outputs.forEach(function (c) {
-    c.addEventListener('click', function () { selectOutput(c.dataset.flowOutput); });
-  });
-
-  // Apply the documented defaults explicitly so the JS path matches
-  // the markup state on first paint, even if a future edit forgets
-  // to mark default cards with data-selected.
-  selectInput('card');
-  selectOutput('stablecoin');
-})();
-</script>
-<script src="/assets/concierge-boot.js" defer></script>
+  <script src="/assets/website.js" defer></script>
+  <script src="/assets/concierge-boot.js" defer></script>
 </body>
 </html>

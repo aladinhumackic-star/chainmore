@@ -357,6 +357,9 @@ components:
           enum:
             - attempt_binding_mismatch
             - cctp_attestation_pending
+            - cctp_amount_below_minimum
+            - cctp_capacity_unobserved
+            - cctp_coverage_unavailable
             - cctp_awaiting_deposit
             - cctp_burn_pending
             - cctp_customer_sanctioned
@@ -369,13 +372,17 @@ components:
             - cctp_source_reorged
             - cctp_stuck_attestation
             - cctp_stuck_mint
+            - checkout_link_already_bound
+            - checkout_link_expired
+            - checkout_link_method_unavailable
+            - checkout_link_not_found
             - checkout_operation_failed
             - create_endpoint_failed
             - create_key_failed
             - create_payment_failed
             - cross_merchant_forbidden
-            - dashboard_role_forbidden
             - dashboard_operation_failed
+            - dashboard_role_forbidden
             - delivery_endpoint_mismatch
             - disable_endpoint_failed
             - dispatch_failed
@@ -419,11 +426,15 @@ components:
             - test_event_failed
             - unauthorized
             - update_endpoint_failed
+            - usdt0_source_unobserved
+            - usdt0_upstream_unavailable
             - validation_failed
             - validation_lookup_failed
             - validation_precondition_failed
+            - wallet_chain_not_accepted
             - wallet_insufficient_native_gas
             - wallet_insufficient_usdc
+            - wallet_insufficient_usdt
             - wallet_not_connected
             - wallet_unsupported
             - wallet_wrong_chain
@@ -535,23 +546,104 @@ components:
           format: date-time
 
     # ── Payments (Execution) ────────────────────────────────────────────────
+    SettlementDestination:
+      type: object
+      description: |
+        One payout target: where the merchant receives one token on one
+        chain (ADR-0075). `corridor` is `usdt0` (the legacy alias for USDT on
+        Arbitrum) or `<token>:<chain>` with token `usdt`|`usdc` and chain
+        `ethereum`|`arbitrum`|`polygon`|`optimism`|`bsc`|`base`|`tron`.
+        `token` and `chain` repeat the parsed corridor.
+      required: [corridor, mode, settlement_destination, status, priority, updated_at]
+      properties:
+        corridor:               { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$", example: "usdt:tron" }
+        token:                  { type: string, enum: [usdt, usdc] }
+        chain:                  { type: string, enum: [ethereum, arbitrum, polygon, optimism, bsc, base, tron] }
+        mode:                   { type: string, enum: [test, live] }
+        settlement_destination: { type: string, description: "The merchant's own account: lowercase CAIP-10 for EVM chains (e.g. eip155:1:0x…), or the TRON account tron:0x2b6653dc:T…" }
+        status:                 { type: string, enum: [active, disabled] }
+        priority:               { type: integer, minimum: 0, maximum: 1000, description: "Rank among the merchant's targets of the same token; lower wins. Default 100." }
+        updated_at:             { type: string, format: date-time }
+
+    PutSettlementDestinationRequest:
+      type: object
+      required: [settlement_destination]
+      additionalProperties: false
+      properties:
+        settlement_destination:
+          type: string
+          description: |
+            The merchant's own account on the corridor's chain. EVM chains:
+            CAIP-10 on that chain (`eip155:1:0x…`) or a bare `0x` address; a
+            mixed-case address must carry a valid EIP-55 checksum. TRON: the
+            `T…` base58 address (or its CAIP-10 form).
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          default: 100
+          description: Rank among the merchant's targets of the same token; lower wins. A payment without an explicit `settlement_destination` delivers to the highest-priority USDT target.
+
+    ListSettlementDestinationsResponse:
+      type: object
+      required: [settlement_destinations]
+      properties:
+        mode: { type: string, enum: [test, live], description: "The caller's resolved mode the list belongs to." }
+        settlement_destinations:
+          type: array
+          items: { $ref: "#/components/schemas/SettlementDestination" }
+
     CreatePaymentRequest:
       type: object
+      description: |
+        Exactly the fields the Core accepts (`domain.CreatePaymentRequest`).
+        The payment corridor is server-derived from `payment_method`; the
+        caller never asserts a payment case, settlement rail, asset or
+        checkout flag. `merchant_id` must match the bearer's merchant.
       required: [merchant_id, amount_minor, currency]
+      additionalProperties: false
       properties:
-        merchant_id:      { type: string }
-        merchant_order_id:{ type: string }
-        amount_minor:     { type: integer, minimum: 1 }
-        currency:         { type: string, description: "ISO-4217 fiat code, e.g. USD." }
-        payment_case:
+        merchant_id:           { type: string }
+        settlement_profile_id: { type: string, description: "Merchant provider profile the payment settles through (merchant_provider_profiles.id)." }
+        merchant_order_id:     { type: string, description: "Merchant order reference; idempotency key of the payment per merchant." }
+        amount_minor:          { type: integer, minimum: 1 }
+        currency:              { type: string, description: "ISO-4217 fiat code of the requested amount, e.g. EUR." }
+        payment_method:
           type: string
-          description: "Payment case, e.g. stable_to_stable."
-        canonical_asset:
+          enum: [card, usdt0, usdc]
+          description: |
+            Customer payment method that selects the corridor. `usdc`: the
+            customer pays USDC on their own chain and the merchant receives
+            USDC there, into the payout target declared for that chain
+            (ADR-0077); amount in six-decimal base units, currency `USDC`;
+            admitted only when the gateway has the USDC rail mounted. `card`: the
+            customer card is charged in EUR and the merchant settles in EUR
+            (`fiat_to_fiat`, payer rail fiat, settlement rail fiat, canonical
+            asset EUR). `currency` must be exactly `EUR`; any other or
+            non-canonical value is refused (400). No conversion, stablecoin
+            or delivery leg is implied. Sandbox/test mode only; a live-mode
+            card payment is refused. `usdt0`: the customer's own wallet sends
+            USDT on Ethereum and the merchant receives USDT0 on Arbitrum at
+            `settlement_destination` (`stable_to_stable`, stablecoin rails,
+            canonical asset USDT, six-decimal base units); `currency` must be
+            exactly `USDT`, `settlement_destination` is required, and the
+            gateway must have the corridor mounted (otherwise 400). Admitted
+            in test mode, and in live mode for a merchant whose live access
+            is approved and enabled (otherwise 400). Omitted: no corridor is
+            derived (the legacy non-card path).
+        settlement_destination:
           type: string
-          description: "Stablecoin symbol settled to the merchant (e.g. USDC, USDT)."
-        checkout_required:
-          type: boolean
-          description: "Whether a hosted-checkout session must be issued before the attempt path is usable."
+          description: |
+            The merchant's own account the rail delivers to, as a CAIP-10
+            account id (`eip155:42161:0x...`) or a bare `0x` address for the
+            corridor's fixed destination chain. Required for
+            `payment_method=usdt0` (Arbitrum One only), refused for every
+            other method. ChainMore never substitutes an address of its own:
+            the customer's transfer lands directly in this account.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Opaque merchant metadata stored on the payment.
 
     CreatePaymentResponse:
       type: object
@@ -747,6 +839,19 @@ components:
           format: uri
           maxLength: 2048
           description: Optional merchant-owned URL shown after Hosted Checkout reaches completed.
+        sponsored:
+          type: boolean
+          default: false
+          description: |
+            Opts the payment into the sponsored, all-in priced order: ChainMore
+            advances the gas on both legs, amount_usdc is the merchant's
+            INVOICE, and the customer is quoted one pre-agreed fee on top. The
+            merchant receives exactly the invoice. Whatever of the quoted
+            network allowance the transfer does not consume stays with
+            ChainMore as the unspent part of the agreed fee (ADR-0073); nothing
+            comes back and nothing is billed afterwards. The residual
+            recipient is ChainMore's fee wallet, set server-side; a request
+            cannot name one. Requires the sponsored route to be configured.
         fee_bps:
           type: integer
           minimum: 0
@@ -794,6 +899,56 @@ components:
         tx_hash:
           type: string
           pattern: '^0x[a-f0-9]{64}$'
+
+    EnterPaymentIntentWalletRecoveryRequest:
+      type: object
+      description: |
+        One idempotent browser report that WalletConnect was lost after the
+        approval step while no source transaction hash was available. This is
+        not evidence that a payment was or was not sent. The endpoint is
+        absent unless CCTP_CHECKOUT_WALLET_RECOVERY_STATE_ENABLED is explicitly
+        enabled.
+      required: [event_id, reason]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: Browser-generated idempotency key for this recovery entry. Reuse it on every retry, including delayed retries after a later entry.
+        reason:
+          type: string
+          enum: [wallet_connection_lost_after_approval]
+
+    PaymentIntentWalletRecovery:
+      type: object
+      required: [state, entry_count]
+      properties:
+        state:
+          type: string
+          enum: [none, payment_status_unconfirmed]
+          description: Recovery metadata only. It is never payment-finality evidence.
+        entered_at:
+          type: string
+          format: date-time
+          description: Present while the last reported recovery entry remains unconfirmed.
+        entry_count:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Number of unique recovery event IDs accepted for this payment intent.
+        updated_at:
+          type: string
+          format: date-time
+
+    EnterPaymentIntentWalletRecoveryResponse:
+      type: object
+      required: [payment_id, recorded, wallet_recovery]
+      properties:
+        payment_id: { type: string, format: uuid }
+        recorded:
+          type: boolean
+          description: True only when this event ID incremented the durable entry count; false on an idempotent replay.
+        wallet_recovery:
+          $ref: "#/components/schemas/PaymentIntentWalletRecovery"
 
     RelayCheckoutSourceBurnRequest:
       type: object
@@ -935,7 +1090,7 @@ components:
         checkout token. This response is intentionally smaller than the
         merchant-machine read surface and never includes merchant API-key
         material or internal CCTP state.
-      required: [payment_id, surface_status, checkout_step, checkout_phase, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
+      required: [payment_id, surface_status, checkout_step, checkout_phase, available_payment_methods, source_chain, dest_chain, amount_usdc, asset, expires_at, updated_at]
       properties:
         payment_id: { type: string, format: uuid }
         surface_status:
@@ -955,6 +1110,25 @@ components:
           description: |
             Human-readable hosted-checkout progress phase. This is intentionally
             coarser than internal CCTP state and drives customer-facing copy.
+        available_payment_methods:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum: [usdc_wallet]
+          description: |
+            Methods the server currently declares executable for this payment-intent checkout session. An empty array is the fail-closed live-revocation state. Hosted Checkout treats omitted or unknown methods as unavailable.
+            A payment intent is wallet-only: the fiat card method is a Core checkout-session capability (see `/v1/checkout/widget/session`) and never appears here.
+        source_burn_token:
+          type: string
+          pattern: '^0x[a-f0-9]{40}$'
+          description: |
+            Canonical native USDC contract address for source_chain. Present only when usdc_wallet is currently advertised as executable.
+            Omitted when preview derivation is unavailable.
+        merchant_display:
+          type: string
+          maxLength: 80
+          description: Optional merchant-maintained checkout label. Omitted when no display label is configured; never contains merchant_id.
         source_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
         amount_usdc: { type: string }
@@ -970,8 +1144,48 @@ components:
           format: uri
           maxLength: 2048
           description: Optional merchant-owned URL shown on the completed checkout screen.
+        read_only:
+          type: boolean
+          description: Present only when completed-session post-TTL read-only access is enabled for the token read path.
+        read_only_until:
+          type: string
+          format: date-time
+          description: End of the configured completed-session read-only window.
+        receipt_url:
+          type: string
+          description: Same-origin signed receipt URL, present only when signed receipt links are enabled.
+        wallet_recovery:
+          $ref: "#/components/schemas/PaymentIntentWalletRecovery"
+          description: Present only when the default-off server recovery feature is enabled.
         expires_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+
+    PaymentIntentCheckoutReceiptResponse:
+      type: object
+      description: |
+        Signed-link customer receipt for a completed payment intent. This is a
+        separate read-only bearer from the checkout token and exposes only
+        customer-safe receipt fields, never merchant identifiers, merchant
+        wallets, API-key material, or internal CCTP state.
+      required: [payment_id, surface_status, source_chain, dest_chain, amount_usdc, asset, completed_at, receipt_expires_at, issued_at]
+      properties:
+        payment_id: { type: string, format: uuid }
+        surface_status:
+          type: string
+          enum: [completed]
+        source_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        dest_chain: { type: string, enum: [ethereum, base, arbitrum, polygon] }
+        amount_usdc: { type: string }
+        asset: { type: string, enum: [USDC] }
+        customer_wallet:
+          type: string
+          description: Payer wallet address, present only after the customer browser bound a wallet.
+        source_tx_hash:
+          type: string
+          pattern: '^0x[a-f0-9]{64}$'
+        completed_at: { type: string, format: date-time }
+        receipt_expires_at: { type: string, format: date-time }
+        issued_at: { type: string, format: date-time }
 
     PatternESourceBurnInstructions:
       type: object
@@ -1424,6 +1638,103 @@ components:
         created_at:          { type: string, format: date-time }
 
     # ── Widget / Hosted Checkout (WGT-I1) ────────────────────────────────────
+    WidgetCardSubmitRequest:
+      type: object
+      additionalProperties: false
+      required: [payment_handle_token]
+      properties:
+        payment_handle_token:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: |
+            Single-use Paysafe payment handle token collected client-side.
+            It is consumed in memory only; the server never persists, logs or
+            echoes it. No other property is accepted.
+
+    WidgetCardSubmitResponse:
+      type: object
+      required: [state, replayed, accepted]
+      properties:
+        state:
+          type: string
+          enum: [completed, failed, processing, unknown, in_flight]
+          description: |
+            Redacted product state of the sandbox card charge. `completed`
+            and `failed` are final; `processing` awaits provider truth;
+            `unknown` and `in_flight` mean an effect may exist at the
+            provider and the browser must not retry.
+        replayed:
+          type: boolean
+          description: "True when durable truth was returned without a new provider call."
+        accepted:
+          type: boolean
+          description: "True when the provider accepted the charge (completed or processing)."
+
+    CheckoutLinkCreateRequest:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor: { type: integer, format: int64, minimum: 1, description: "Minor units of currency (USD/EUR cents)." }
+        currency: { type: string, enum: [USD, EUR], description: "USD offers the stablecoin rails at par; EUR offers card." }
+        merchant_order_id: { type: string, maxLength: 128 }
+        settlement_profile_id: { type: string, description: "Merchant provider profile (merchant_provider_profiles.id) the card/USDT payment settles through; omitted resolves the merchant's default or only active profile." }
+        metadata: { type: object, additionalProperties: true }
+        settlement_destination: { type: string, description: "The merchant's own USDT account on a chain the rails pay on: eip155 CAIP-10 (eip155:1:0x…, eip155:42161:0x…), a bare 0x address (Arbitrum), or a TRON account (tron:0x2b6653dc:T…); omitted: the merchant's highest-priority USDT payout target (ADR-0075). A mixed-case 0x address must carry a valid EIP-55 checksum unless it spells an account the merchant has declared (an active USDT payout target or the usdt0 default): that account is admitted in any spelling and stored lowercase. Any other spelling with a broken checksum is refused with the reason (400 invalid_request)." }
+        usdc:
+          type: object
+          description: Merchant facts the USDC rail needs; without it the link never offers USDC.
+          required: [merchant_wallet, source_chain, dest_chain]
+          properties:
+            merchant_wallet: { type: string }
+            source_chain: { type: string }
+            dest_chain: { type: string }
+            fee_bps: { type: integer, minimum: 0, maximum: 100 }
+        return_url: { type: string, maxLength: 2048 }
+    CheckoutLink:
+      type: object
+      required: [checkout_link_id, state, amount_minor, currency, available_payment_methods, created_at, expires_at]
+      properties:
+        checkout_link_id: { type: string }
+        checkout_token: { type: string, description: "cl_ bearer for the customer URL; returned once on create." }
+        state: { type: string, enum: [open, bound] }
+        amount_minor: { type: integer, format: int64 }
+        currency: { type: string }
+        merchant_order_id: { type: string }
+        available_payment_methods: { type: array, items: { type: string, enum: [card, usdt0, usdc] } }
+        payment_method: { type: string, enum: [card, usdt0, usdc] }
+        payment_id: { type: string, description: "Core payment id once bound to card or usdt0." }
+        intent_id: { type: string, description: "CCTP intent id once bound to usdc." }
+        bound_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+    CheckoutLinkView:
+      type: object
+      required: [token_kind, state, display, available_payment_methods, expires_at, generated_at]
+      properties:
+        token_kind: { type: string, enum: [checkout_link] }
+        state: { type: string, enum: [open, bound, expired] }
+        display:
+          type: object
+          properties:
+            amount_minor: { type: integer, format: int64 }
+            currency: { type: string }
+            amount_display: { type: string }
+            merchant_display: { type: string }
+            merchant_order_id: { type: string }
+        available_payment_methods: { type: array, items: { type: string, enum: [card, usdt0, usdc] } }
+        payment_method: { type: string }
+        checkout_token: { type: string, description: "Concrete checkout token once bound; the page continues there." }
+        expires_at: { type: string, format: date-time }
+        generated_at: { type: string, format: date-time }
+    CheckoutLinkSelection:
+      type: object
+      required: [payment_method, checkout_token]
+      properties:
+        payment_method: { type: string, enum: [card, usdt0, usdc] }
+        checkout_token: { type: string }
+        payment_id: { type: string }
+        intent_id: { type: string }
     WidgetSessionView:
       type: object
       description: |
@@ -1441,6 +1752,22 @@ components:
             Server-issued UI directive. One of: `connect_wallet`,
             `select_route`, `awaiting_user_signature`, `processing`,
             `settled`, `failed`, `expired`, `cancelled`.
+        surface_status:
+          type: string
+          enum: [awaiting, processing, delayed, needs_review, completed, failed_safely, expired]
+          description: Rail-neutral customer status vocabulary derived from `state`; the hosted shell renders every rail from it.
+        available_payment_methods:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum: [card, usdt0, usdc]
+          description: |
+            Customer payment methods the server admits for this session. `card` is present only for an admitted fiat card payment (payment_method=card: fiat_to_fiat in one currency); wallet sessions omit the field.
+        card_charge:
+          $ref: "#/components/schemas/WidgetCardCharge"
+        usdt0:
+          $ref: "#/components/schemas/CheckoutUSDT0View"
         display:
           type: object
           required: [amount_minor, currency]
@@ -1450,6 +1777,9 @@ components:
             asset:            { type: string }
             merchant_display: { type: string }
             merchant_order_id:{ type: string }
+            amount_display:
+              type: string
+              description: Requested amount formatted in major units of `currency` by the server (e.g. "100.00"); the browser never formats money itself.
         wallet:
           type: object
           properties:
@@ -1481,6 +1811,222 @@ components:
         expires_at:       { type: string, format: date-time }
         quote_expires_at: { type: string, format: date-time }
 
+    WidgetCardCharge:
+      type: object
+      description: |
+        Public, non-secret card method block of a Core checkout session,
+        present only when the server admits `card`. `amount_minor`/`currency`
+        are the exact fiat facts the card is charged (the Core payment's
+        requested amount and currency; the merchant settles in the same
+        currency), `reference` is the server-derived provider reference the
+        charge carries once the canonical attempt/leg has been admitted
+        through `POST /v1/checkout/widget/card/prepare` (empty before; the
+        browser passes it to the provider payment handle so handle and
+        charge agree), and `state` is the durable card execution state used
+        for re-render/reload recovery. An empty state only means that no
+        provider effect is visible at this read; it is not a proof that
+        nothing was submitted. `in_flight`, `processing` and `unknown` mean
+        the browser must not submit again and should read again;
+        `completed`/`failed` are final. No provider identifier, credential
+        or token appears here.
+      required: [amount_minor, currency, reference, state]
+      properties:
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        reference: { type: string, maxLength: 64 }
+        state:
+          type: string
+          enum: ["", in_flight, processing, completed, failed, unknown]
+
+    WidgetUSDT0PrepareRequest:
+      type: object
+      required: [payer_wallet]
+      properties:
+        payer_wallet:
+          type: string
+          pattern: '^(0x[0-9a-fA-F]{40}|T[1-9A-HJ-NP-Za-km-z]{33})$'
+          description: The customer's wallet that will sign the source transactions, as its 0x address or, for a TRON wallet, its T… base58 form (the same 20-byte account).
+        wallet_chain_id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: >-
+            Optional. The chain the customer's wallet is connected to: an
+            EIP-155 chain id, or 728126428 for a TRON wallet. It decides which
+            of the merchant's declared payout targets the wallet can be paid
+            into (ADR-0076): the same-chain rail tries the payment's stored
+            chain first, then this chain, then the others of the wallet's
+            address family, and delivers on each to the target the merchant
+            declared there or to the stored account where that is portable.
+            It never changes the amount. The EIP-155 chain the customer's wallet is already
+            connected to. The merchant's settlement chain is always tried
+            first; among the other configured chains, a chain named here is
+            tried before the rest, so a wallet funded off the settlement
+            chain is spared a network switch. Paying on a chain other than
+            the settlement chain delivers to the merchant's same address on
+            that chain, exactly as it does without this field. Absent,
+            unconfigured, unfunded or non-EVM values are ignored, and the
+            field never changes the amount, the recipient or the fee.
+
+    WidgetUSDT0TronTxRequest:
+      type: object
+      additionalProperties: false
+      required: [leg_id]
+      properties:
+        leg_id:
+          type: string
+          format: uuid
+          description: The reserved TRON leg whose retained call the node builds.
+    WidgetUSDT0TronTxResponse:
+      type: object
+      additionalProperties: false
+      required: [payment_id, leg_id, transaction, expires_at_ms]
+      properties:
+        payment_id: { type: string, format: uuid }
+        leg_id: { type: string, format: uuid }
+        expires_at_ms:
+          type: integer
+          format: int64
+          description: raw_data.expiration in Unix milliseconds; the wallet must sign before it.
+        transaction:
+          type: object
+          description: The node-built unsigned TriggerSmartContract (txID, raw_data, raw_data_hex, visible), passed to the wallet unchanged.
+          additionalProperties: true
+    WidgetUSDT0TronBroadcastRequest:
+      type: object
+      additionalProperties: false
+      required: [leg_id, transaction]
+      properties:
+        leg_id:
+          type: string
+          format: uuid
+        transaction:
+          type: object
+          description: The wallet-signed envelope (the built transaction plus signature[]).
+          additionalProperties: true
+    WidgetUSDT0SourceTxRequest:
+      type: object
+      required: [leg_id, tx_hash]
+      properties:
+        leg_id: { type: string, format: uuid }
+        tx_hash:
+          type: string
+          pattern: '^0x[0-9a-fA-F]{64}$'
+
+    CheckoutUSDT0Call:
+      type: object
+      description: |
+        The exact unsigned transaction the wallet must sign for the current
+        step. Gas hints are the simulated EIP-1559 envelope; the execution
+        gas ceiling is enforced when the signed transaction is verified.
+      required: [chain_id, from, to, value_wei, data]
+      properties:
+        chain_id: { type: integer, format: int64 }
+        from: { type: string, pattern: '^0x[0-9a-f]{40}$' }
+        to: { type: string, pattern: '^0x[0-9a-f]{40}$' }
+        value_wei: { type: string, pattern: '^[0-9]+$' }
+        data: { type: string, pattern: '^0x[0-9a-f]*$' }
+        gas_limit: { type: integer, format: int64 }
+        max_fee_per_gas_wei: { type: string, pattern: '^[0-9]+$' }
+        max_priority_fee_per_gas_wei: { type: string, pattern: '^[0-9]+$' }
+
+    CheckoutUSDT0Route:
+      type: object
+      required: [source_chain_id, destination_chain_id, source_token, source_oft, destination_token]
+      properties:
+        source_chain_id: { type: integer, format: int64 }
+        destination_chain_id: { type: integer, format: int64 }
+        source_token: { type: string }
+        source_oft: { type: string }
+        destination_token: { type: string }
+        recipient:
+          type: string
+          description: The merchant's own Arbitrum account the OFT send delivers to, from the Core payment's settlement_destination; never a ChainMore address.
+
+    CheckoutUSDT0Fee:
+      type: object
+      description: |
+        Present when ChainMore's source fee adapter is pinned (ADR-0066):
+        the merchant amount (what the merchant receives, the Core payment
+        amount), ChainMore's fee and the gross the wallet pays, all in USDT
+        base units (6 decimals). The fee is taken inside the payer's own
+        transaction; absent when the corridor sends directly with no fee on
+        chain.
+      required: [merchant_amount_ld, fee_ld, gross_ld]
+      properties:
+        merchant_amount_ld: { type: string, pattern: '^[0-9]+$' }
+        fee_ld: { type: string, pattern: '^[0-9]+$' }
+        gross_ld: { type: string, pattern: '^[0-9]+$' }
+
+    CheckoutUSDT0View:
+      type: object
+      description: |
+        Redacted progress of a payment_method=usdt0 checkout, derived from
+        Core rows and retained evidence on every read. `phase` says whether
+        the wallet must sign (`await_wallet`, with `call`), what the corridor
+        waits for (`await_source_receipt`, `await_source_finality`,
+        `await_delivery`), or the terminal outcome (`completed`, `failed`,
+        `expired`); `none` means no attempt exists yet.
+      required: [phase, step_index, route]
+      properties:
+        phase:
+          type: string
+          enum: [none, await_wallet, await_source_receipt, await_source_finality, await_delivery, completed, failed, expired]
+        step:
+          type: string
+          enum: [reset_approval, approve_exact, send]
+        step_index: { type: integer }
+        attempt_id: { type: string, format: uuid }
+        leg_id: { type: string, format: uuid }
+        call: { $ref: "#/components/schemas/CheckoutUSDT0Call" }
+        valid_before_unix: { type: integer, format: int64 }
+        source_transaction: { type: string }
+        source_guid: { type: string }
+        destination_transaction: { type: string }
+        detail:
+          type: string
+          description: |
+            Free-text reason for the current phase. While the bound source
+            transaction awaits inclusion it names the observation
+            (`awaiting inclusion`, `pending on the source chain`, `not visible
+            to the observer yet`). For `failed` it is the attempt failure
+            code: `usdt0_source_reverted` (nothing moved, a new attempt may be
+            prepared), `usdt0_source_abandoned` (the wallet cancelled or
+            replaced the transaction without sending; a new attempt may be
+            prepared), `usdt0_source_replaced` (the wallet executed the send
+            under another hash; funds moved and the payment is reconciled by
+            an operator, no new attempt is admitted), `usdt0_source_stale`
+            (send pending beyond the stale horizon; no new attempt is
+            admitted) or `usdt0_approval_stale` (an allowance transaction
+            pending beyond the stale horizon; nothing moved, a new attempt
+            may be prepared).
+        route: { $ref: "#/components/schemas/CheckoutUSDT0Route" }
+        fee: { $ref: "#/components/schemas/CheckoutUSDT0Fee" }
+
+    WidgetUSDT0Response:
+      type: object
+      required: [payment_id, usdt0]
+      properties:
+        payment_id: { type: string, format: uuid }
+        usdt0: { $ref: "#/components/schemas/CheckoutUSDT0View" }
+
+    WidgetCardPrepareResponse:
+      type: object
+      description: |
+        Result of admitting the card method for the session: the exact fiat
+        facts and the provider reference the browser must hand to the
+        provider payment handle. `replayed` is true when the session was
+        already card-owned; `state` is the durable card execution state.
+      required: [amount_minor, currency, reference, state, replayed]
+      properties:
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        reference: { type: string, maxLength: 64 }
+        state:
+          type: string
+          enum: ["", in_flight, processing, completed, failed, unknown]
+        replayed: { type: boolean }
+
     # ── Merchant Dashboard read plane (MDA-I2 - read-only) ───────────────────
     MerchantIntegrationView:
       type: object
@@ -1511,6 +2057,10 @@ components:
       properties:
         merchant_id:                    { type: string }
         legal_name:                     { type: string }
+        display_name:
+          type: string
+          maxLength: 80
+          description: Optional merchant-maintained presentation label. Checkout and dashboard shells prefer it when present and fall back to legal_name when blank.
         status:                         { type: string, description: "merchant account status (e.g. 'active')." }
         default_currency:               { type: string, description: "ISO 4217 fiat code." }
         mode:                           { type: string, enum: [test, live], description: "Bearer-resolved mode this response was scoped to." }
@@ -1654,6 +2204,30 @@ components:
         submission_id: { type: string }
         merchant_id:   { type: string, description: "Authenticated merchant id resolved by the server." }
         submitted_at:  { type: string, format: date-time }
+
+    UpdateMerchantDisplayNameRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        Merchant-owned presentation-label update. The merchant_id is not
+        accepted in this body; it is resolved from the authenticated dashboard
+        user. Blank clears the optional label. The server trims and caps the
+        value to 80 Unicode code points before storing it.
+      required:
+        - display_name
+      properties:
+        display_name:
+          type: string
+          maxLength: 80
+          description: Optional checkout/dashboard presentation label. Legal identity remains legal_name.
+
+    UpdateMerchantDisplayNameResponse:
+      type: object
+      required: [merchant_id, updated_at]
+      properties:
+        merchant_id:   { type: string, description: "Authenticated merchant id resolved by the server." }
+        display_name:  { type: string, maxLength: 80, description: "Stored optional presentation label; omitted when cleared." }
+        updated_at:    { type: string, format: date-time }
 
     AccountProfileReadbackResponse:
       type: object
@@ -3020,6 +3594,13 @@ components:
       content:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
+    NotImplemented:
+      description: |
+        The route exists but its productive path is not configured on this
+        deployment (e.g. the sandbox card ingress without PAYSAFE_CARD_CHECKOUT_MOUNT).
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
     RateLimited:
       description: Request refused by the fixed-window limiter.
       content:
@@ -3074,14 +3655,14 @@ paths:
           in: header
           required: true
           schema: { type: string }
-          description: Paysafe Base64 HMAC-SHA256 signature over the raw JSON request body.
+          description: Exactly one Paysafe Base64 HMAC-SHA256 signature over the raw JSON request body.
       requestBody:
         required: true
         content:
           application/json:
             schema: { type: object, additionalProperties: true }
       responses:
-        '202':
+        '200':
           description: Webhook accepted or duplicate event already recorded.
         '400':
           description: Invalid payload, missing/stale timestamp, or malformed webhook event.
@@ -3104,7 +3685,12 @@ paths:
             text/plain:
               schema: { type: string }
         '500':
-          description: Receiver not configured or idempotency/business callback failed.
+          description: Idempotency persistence or callback processing failed.
+          content:
+            text/plain:
+              schema: { type: string }
+        '503':
+          description: Webhook secret or durable persistence is not configured.
           content:
             text/plain:
               schema: { type: string }
@@ -3140,6 +3726,44 @@ paths:
               schema: { $ref: "#/components/schemas/MerchantIntakeResponse" }
         '400': { $ref: "#/components/responses/BadRequest" }
         '429': { $ref: "#/components/responses/RateLimited" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  /v1/payment-intents/checkout/receipt:
+    get:
+      summary: Read a signed customer receipt for a completed payment intent.
+      operationId: getPaymentIntentCheckoutReceipt
+      security: []
+      description: |
+        Browser-facing signed-link endpoint. Disabled unless
+        CHECKOUT_RECEIPT_LINK_ENABLED=true and a signing secret is configured.
+        The signature is HMAC-SHA256 over the payment_id and expires fields;
+        the handler verifies the signature before loading any receipt row and
+        never mutates payment state.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+        - name: payment_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: expires
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+          description: Unix timestamp seconds for the signed receipt-link expiry.
+        - name: sig
+          in: query
+          required: true
+          schema: { type: string }
+          description: Base64url HMAC-SHA256 signature for the receipt link.
+      responses:
+        '200':
+          description: Customer receipt.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntentCheckoutReceiptResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
         '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
   /v1/payment-intents/checkout/session:
@@ -3283,6 +3907,40 @@ paths:
         '404': { $ref: "#/components/responses/NotFound" }
         '409': { $ref: "#/components/responses/Conflict" }
         '429': { $ref: "#/components/responses/RateLimited" }
+
+  /v1/payment-intents/checkout/wallet-recovery:
+    post:
+      summary: Persist one ambiguous WalletConnect recovery entry.
+      operationId: enterPaymentIntentCheckoutWalletRecovery
+      security: []
+      description: |
+        Default-off browser endpoint. When explicitly enabled, Hosted Checkout
+        may persist that WalletConnect was lost after approval while no source
+        tx hash was available. The checkout token must be sent as an
+        Authorization Bearer; query-token credentials are rejected. A unique
+        event_id increments the per-intent count once; repeating the same ID is
+        idempotent. The record is not proof that a payment was or was not sent,
+        does not advance the payment lifecycle, and does not start a worker or
+        source-tx finder. With the feature disabled this path returns 404.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EnterPaymentIntentWalletRecoveryRequest" }
+      responses:
+        '200':
+          description: Recovery metadata stored or idempotently replayed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EnterPaymentIntentWalletRecoveryResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '429': { $ref: "#/components/responses/RateLimited" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
   /v1/payment-intents/{paymentId}:
     get:
@@ -3499,6 +4157,15 @@ paths:
   /v1/checkout/sessions:
     post:
       summary: Initialise a hosted-checkout session (CKO-I1 entry point).
+      description: |
+        Mints the one-time checkout token for a payment. A payment has exactly one
+        checkout session: while a session is active (created, wallet_bound,
+        route_ready, submitted, executing, card_authorizing) a second call is
+        refused with 409. A cancelled, expired or failed session is reopened in
+        place: the same session id continues with a fresh token, the previous
+        token stops resolving, and every wallet, route and transaction binding is
+        cleared. A settled session is the completed payment's record and is
+        refused with 409.
       operationId: initCheckoutSession
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -3510,7 +4177,7 @@ paths:
             schema: { $ref: "#/components/schemas/InitSessionRequest" }
       responses:
         '201':
-          description: Session created; raw token returned once.
+          description: Session created or reopened; raw token returned once.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/InitSessionResponse" }
@@ -3802,6 +4469,117 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+  /v1/checkout/links:
+    post:
+      summary: Create a method-neutral checkout link (ADR-0068 S2).
+      description: |
+        Prices an offer once (amount, currency, order). The hosted checkout
+        shows the customer the rails the link can bind to (Card for EUR,
+        USDT and USDC for USD, subject to the merchant's settlement
+        configuration); the customer's choice creates the payment on that
+        rail and binds the link to it exactly once. No payment row exists
+        until the customer chooses. The `checkout_token` (cl_ prefix) is
+        returned once; the checkout URL is `<checkout origin>/checkout/?token=<checkout_token>`.
+        Stablecoin rails settle a USD-priced amount at par in six-decimal
+        base units; there is no foreign exchange.
+      operationId: createCheckoutLink
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckoutLinkCreateRequest" }
+      responses:
+        '201':
+          description: Link created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLink" }
+        '200':
+          description: Replayed under the same Idempotency-Key with identical facts (the token is not echoed again).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLink" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/checkout/links/{id}:
+    get:
+      summary: Read a checkout link and, once bound, the payment or intent it points to.
+      operationId: getCheckoutLink
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Link.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLink" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/checkout/widget/link:
+    get:
+      summary: Redacted checkout-link view for the hosted checkout browser page.
+      description: |
+        Authenticated with the link token (`Authorization: Bearer cl_…` or
+        `?token=`). Lists `available_payment_methods`; once bound it carries
+        the concrete `checkout_token` the page continues on.
+      operationId: getWidgetCheckoutLink
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Link view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLinkView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/checkout/widget/link/select:
+    post:
+      summary: Bind the customer's payment-method choice; creates the payment on that rail.
+      operationId: selectWidgetCheckoutLinkMethod
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_method]
+              properties:
+                payment_method: { type: string, enum: [card, usdt0, usdc] }
+      responses:
+        '200':
+          description: Bound; continue on `checkout_token`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLinkSelection" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+
   /v1/checkout/widget/submit:
     post:
       summary: Submit the user-signed transaction using the checkout token.
@@ -3834,6 +4612,304 @@ paths:
         '404': { $ref: "#/components/responses/NotFound" }
         '409': { $ref: "#/components/responses/Conflict" }
         '410': { $ref: "#/components/responses/Gone" }
+
+  /v1/checkout/widget/usdt0/prepare:
+    post:
+      summary: Bind the customer's wallet to a payment_method=usdt0 payment and receive the next unsigned call.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. For a payment created with `payment_method=usdt0`
+        (test or live mode, canonical USDT, six-decimal base units) on a gateway
+        that mounted the USDT0 corridor runtime, the server reads a
+        hash-bound quote and allowance for the given payer wallet on
+        Ethereum, checks deployment policy, token state and the simulated
+        source call, records the Core quote/preflight validations, stages
+        the Core attempt, leg and provider binding for exactly one plan step
+        (approval reset, exact approval or OFT send) and reserves that effect
+        for external signing. The response carries the exact unsigned
+        transaction the wallet must sign. The server derives amount, route
+        and recipient; the request never asserts them. `wallet_chain_id`
+        names the chain the wallet is on (728126428 for a TRON wallet); the
+        same-chain rail routes by it (ADR-0076): it pays on the first chain
+        of the wallet's address family where the wallet holds the amount and
+        the merchant has an account, the target the merchant declared for
+        that chain first, otherwise the payment's stored account where it is
+        portable. A wallet on a family the merchant declared no target for
+        answers 400 `wallet_chain_not_accepted` with the accepted networks in
+        the detail. The USDT0 corridor (Ethereum to Arbitrum) is the fallback
+        for an Arbitrum account only. Idempotent for the
+        same wallet: a reserved, unexpired step replays; a step whose local
+        deadline passed without a bound transaction is retired and a new
+        attempt is planned. Another wallet, a non-usdt0 payment, a session
+        owned by the card rail or a merchant without a configured recipient
+        answers 409.
+      operationId: prepareWidgetUSDT0Step
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WidgetUSDT0PrepareRequest" }
+      responses:
+        '200':
+          description: Next USDT0 step prepared (or replayed).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetUSDT0Response" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/usdt0/source-tx:
+    post:
+      summary: Bind the wallet's broadcast transaction hash to the prepared USDT0 step.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. Binds the transaction hash the wallet reported for
+        the given leg to that leg's reserved provider effect exactly once
+        (a different hash for the same leg is a conflict, the same hash
+        replays) and then observes what is available now: inclusion of the
+        source transaction, the Ethereum finalized checkpoint for approvals,
+        the successor step, source ownership of the OFT send or destination
+        delivery. Nothing is credited from the request: every observation is
+        verified against the retained quote and the signed transaction.
+      operationId: registerWidgetUSDT0SourceTransaction
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WidgetUSDT0SourceTxRequest" }
+      responses:
+        '200':
+          description: Hash bound; current progress.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetUSDT0Response" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/usdt0/tron-tx:
+    post:
+      summary: Build the unsigned TRON transaction of the prepared USDT step for the wallet to sign.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token (ADR-0070). For a reserved leg on TRON, Core has the
+        node build the exact TriggerSmartContract envelope from the retained
+        calldata (byte for byte, with the configured fee limit). TRON
+        envelopes expire about a minute after they are built, so the page
+        asks at signing time. Nothing is bound by this call.
+      operationId: buildWidgetUSDT0TronTransaction
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WidgetUSDT0TronTxRequest" }
+      responses:
+        '200':
+          description: The unsigned envelope and its expiry.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetUSDT0TronTxResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/usdt0/tron-broadcast:
+    post:
+      summary: Broadcast the wallet-signed TRON transaction and bind its id to the prepared step.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token (ADR-0070). Core checks the signed envelope is the
+        retained plan (owner, target, calldata), broadcasts it through its
+        own node access and binds the transaction id to the leg exactly
+        once, then observes what is available now. The page never talks to
+        a TRON node and carries no provider secret.
+      operationId: broadcastWidgetUSDT0Tron
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WidgetUSDT0TronBroadcastRequest" }
+      responses:
+        '200':
+          description: Transaction broadcast and bound; current progress.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetUSDT0Response" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/usdt0/advance:
+    post:
+      summary: Observe the chain for the session's USDT0 payment and report progress.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. Performs the bounded chain observations the current
+        phase needs (source receipt, finalized checkpoint, successor
+        planning, destination OFTReceived lookup by GUID) and mirrors the
+        resulting progress into the session. Polled by the hosted checkout
+        while a step is in flight; `GET /v1/checkout/widget/session` reports
+        the same progress from retained evidence without chain reads.
+      operationId: advanceWidgetUSDT0
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Current progress after observation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetUSDT0Response" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/card/prepare:
+    post:
+      summary: Admit the card method for the session through the canonical pipeline.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. For an admitted fiat card payment (created with
+        `payment_method=card`: the customer card is charged in the requested
+        currency and the merchant settles in that same currency) the server
+        runs route selection (a registered PSP provider candidate), pre-flight
+        validation, the dispatcher gate and `StartAttempt` with the
+        `psp_payment_handle` authorization mode, materialising the canonical
+        attempt and psp_charge leg with NO provider effect, and makes the
+        card rail the owner of the session (`card_authorizing`). The response
+        carries the exact fiat facts and the provider reference the browser
+        must hand to the provider payment handle. Idempotent: a session the
+        card rail already owns replays its preparation. A wallet-owned
+        session, a non-card payment or a pipeline refusal answers 409.
+      operationId: prepareWidgetCardExecution
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Card execution prepared (or replayed).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetCardPrepareResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '410': { $ref: "#/components/responses/Gone" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
+
+  /v1/checkout/widget/card/submit:
+    post:
+      summary: Submit one Paysafe payment handle token for the session's prepared card charge.
+      description: |
+        Public browser endpoint authenticated only with the short-lived
+        checkout token. The server resolves the checkout session, the stored
+        fiat card payment and the attempt/leg admitted by
+        `/v1/checkout/widget/card/prepare` from the token, seals the durable
+        provider binding of that leg with the digest of the single-use
+        payment handle token (or replays an identical seal), and executes
+        the charge exactly once under the provider-outcome compare-and-swap:
+        concurrent or repeated submits never reach the provider twice. The
+        outcome advances the leg, the attempt, the payment and the session
+        consistently. The body carries only the payment handle token; any
+        other field is rejected. Merchant, payment, provider, amount,
+        currency, provider reference, attempt/leg identity, policy version
+        and environment are server-side facts and can never be supplied or
+        overridden by the browser. Sandbox test-mode only; the route answers
+        501 when the card path is not configured.
+
+        A session without a prepared card attempt, a session owned by the
+        wallet rail, a terminal session or a payment outside the fiat card
+        corridor answers 409. The gateway-wide `Idempotency-Key` header is
+        required on this POST like on every other mutation, but it carries
+        no money-path authority: the sealed binding and the durable session
+        ownership decide replay and conflict, never the browser-supplied key.
+      operationId: submitWidgetCardCharge
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - name: token
+          in: query
+          required: false
+          description: "Raw checkout token fallback when Authorization header is not used."
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WidgetCardSubmitRequest" }
+      responses:
+        '200':
+          description: |
+            Durable product truth of the card charge. `unknown` is also a 200:
+            the provider was called but the outcome is not yet known, and the
+            browser must not retry.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WidgetCardSubmitResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '501': { $ref: "#/components/responses/NotImplemented" }
 
   # -------------------------------------------------------------------------
   # Merchant Dashboard async export control plane
@@ -4045,6 +5121,34 @@ paths:
               schema: { $ref: "#/components/schemas/SubmitAccountProfileResponse" }
         '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
+        '500': { $ref: "#/components/responses/ServerMisconfigured" }
+
+  /v1/onboarding/display-name:
+    patch:
+      summary: Update the authenticated merchant's optional display name.
+      operationId: updateMerchantDisplayName
+      description: |
+        Merchant-user control-plane write for the merchant-maintained
+        presentation label used by dashboard and checkout surfaces. The server
+        resolves merchant_id from the authenticated dashboard user; callers must
+        not send tenant identity in the body. This does not change legal
+        identity, live access, API keys, provider handles, or payments.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateMerchantDisplayNameRequest" }
+      responses:
+        '200':
+          description: Merchant display name updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UpdateMerchantDisplayNameResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
         '500': { $ref: "#/components/responses/ServerMisconfigured" }
 
   # -------------------------------------------------------------------------
@@ -4791,6 +5895,144 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+  /v1/settlement_destinations:
+    get:
+      summary: List the authenticated merchant's payout targets in the key's mode.
+      operationId: listSettlementDestinations
+      description: |
+        One row per corridor (token on chain), ordered by priority. The
+        account is the merchant's own; a USDT payment created without
+        `settlement_destination` delivers to the merchant's highest-priority
+        active USDT target (the legacy `usdt0` row counts as USDT on
+        Arbitrum). ChainMore never derives or substitutes an account.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Configured default accounts in the caller's mode.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListSettlementDestinationsResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/settlement_destinations/{corridor}:
+    put:
+      summary: Declare or replace the authenticated merchant's payout target for one corridor, in the key's mode.
+      operationId: putSettlementDestination
+      description: |
+        Idempotent upsert (ADR-0075). The corridor names the token and chain
+        the merchant receives on: `usdt0` (legacy alias, USDT on Arbitrum) or
+        `<token>:<chain>`, e.g. `usdt:tron`, `usdt:ethereum`, `usdc:base`.
+        The account must be the merchant's own on that chain: for EVM chains
+        `eip155:<chain>:0x…` or a bare `0x` address, a mixed-case address
+        with a valid EIP-55 checksum (an all-lowercase one is checked for
+        shape only), stored lowercase; for TRON the `T…` address, stored as
+        `tron:0x2b6653dc:T…`. An account of another chain is refused. A
+        re-put reactivates a disabled target. Payments already created keep
+        the account they were created with.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PutSettlementDestinationRequest" }
+      responses:
+        '200':
+          description: The stored payout target.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SettlementDestination" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      summary: Disable the authenticated merchant's payout target for one corridor, in the key's mode.
+      operationId: disableSettlementDestination
+      description: |
+        Sets the target to `disabled`; it stays listed and a later PUT
+        reactivates it. Payments created while it was active keep it.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: The disabled payout target.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SettlementDestination" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/dashboard/settlement_destinations:
+    get:
+      summary: List the merchant user's payout targets in the dashboard's resolved mode.
+      operationId: listDashboardSettlementDestinations
+      description: |
+        The dashboard door to the same payout targets as
+        `/v1/settlement_destinations` (ADR-0075): OIDC merchant-user session,
+        mode from the server-side dashboard mode selection. The response
+        carries that mode so an empty list still names it.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Configured payout targets in the dashboard's mode.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListSettlementDestinationsResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/settlement_destinations/{corridor}:
+    put:
+      summary: Declare or replace one payout target from the dashboard, in the dashboard's resolved mode.
+      operationId: putDashboardSettlementDestination
+      description: Same contract as `PUT /v1/settlement_destinations/{corridor}`, for the merchant user's session.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PutSettlementDestinationRequest" }
+      responses:
+        '200':
+          description: The stored payout target.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SettlementDestination" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      summary: Disable one payout target from the dashboard, in the dashboard's resolved mode.
+      operationId: disableDashboardSettlementDestination
+      description: Same contract as `DELETE /v1/settlement_destinations/{corridor}`, for the merchant user's session.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: The disabled payout target.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SettlementDestination" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
   /v1/webhook_endpoints:
     get:
       summary: List webhook endpoints for the authenticated merchant, scoped to the key's mode.
