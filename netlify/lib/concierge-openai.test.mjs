@@ -93,6 +93,16 @@ test("private-how boundary stays brief without hiding public integration or avai
   for (const [, example] of examples) assert.equal(guardReply(example).ok, true);
 });
 
+test("routine comparisons separate internal factual controls from the sales answer", () => {
+  // Configuration regression, not proof of stochastic model behaviour.
+  assert.match(SYSTEM_PROMPT, /On an ordinary\n  comparison question, apply these controls silently/);
+  assert.match(SYSTEM_PROMPT, /If the visitor specifically asks whether a\n  competitor definitely cannot do something, or asks for evidence, answer that\n  directly/);
+  assert.match(SYSTEM_PROMPT, /Never conceal a relevant\n  limitation or replace uncertainty with an invented competitive advantage/);
+  assert.match(SYSTEM_PROMPT, /Do not\nanswer an unasked "Can Yuno definitely not do that\?" question/);
+  assert.match(SYSTEM_PROMPT, /not a generic compliment such as "Stripe ist stark"/);
+  assert.match(SYSTEM_PROMPT, /A missing public description is not proof a competitor cannot do something/);
+});
+
 test("specific competitor examples explain the remaining job and survive the output guard", () => {
   const section = CONCIERGE_KNOWLEDGE.split("### Conversation examples:")[1].split("### Source anchors")[0];
   const examples = [...section.matchAll(/Visitor: "([^"]+)"\nConcierge: "([\s\S]*?)"(?=\n)/g)];
