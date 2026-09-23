@@ -1261,9 +1261,9 @@
           
         </div>
         
-        <!-- OPTIMAL ROUTE Panel - Centered Below, Compact -->
+        <!-- Selected route and its customer / merchant benefits -->
         <div class="mt-6 flex justify-center">
-          <div class="bg-slate-900 rounded-xl px-8 py-4 text-white max-w-3xl w-full">
+          <div class="flow-result bg-slate-900 rounded-xl text-white w-full">
             <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
               <!-- Route Info -->
               <div class="flex items-center gap-3 flex-wrap">
@@ -1275,6 +1275,34 @@
 
               <p class="flow-benefit" id="flow-benefit">Your customer pays by card. You receive USDC on Polygon. No separate conversion to arrange.</p>
             </div>
+            <div class="route-benefits" aria-label="Benefits of this route">
+              <article><span class="route-benefit-label">Payment costs</span><h3 id="benefit-cost-title">Less lost in conversion</h3><p id="benefit-cost-copy">Bring card acceptance and your USDC payout into one flow, instead of arranging conversion separately.</p></article>
+              <article><span class="route-benefit-label">Time to receive</span><h3 id="benefit-speed-title">Fewer waiting steps</h3><p id="benefit-speed-copy">Receive USDC on your chosen network without a separate manual transfer after settlement.</p></article>
+              <article><span class="route-benefit-label">Customer effort</span><h3 id="benefit-effort-title">Card in. USDC out.</h3><p id="benefit-effort-copy">Your customer pays by card. They do not need a wallet for you to receive stablecoins.</p></article>
+            </div>
+            <details class="flow-comparison" id="flow-comparison">
+              <summary><span>What could your business save?</span><span class="comparison-summary-note">Explore an example</span></summary>
+              <div class="comparison-body">
+                <h3>Compare with your current setup</h3>
+                <p id="comparison-disclosure">Illustrative assumptions, not ChainMore pricing or measured market averages. Change both sides to model your business. Costs must include all fees; time must use the same start and finish points.</p>
+                <p class="comparison-route">Selected example: <span id="comparison-route">Card → USDC / Polygon</span></p>
+                <div class="comparison-inputs" aria-describedby="comparison-disclosure">
+                  <fieldset><legend>Current setup</legend>
+                    <label for="compare-current-cost">Total cost per payment (€)</label><input id="compare-current-cost" type="number" min="0" max="1000000" step="0.01" value="3" inputmode="decimal">
+                    <label for="compare-current-time">Time until funds are usable (hours)</label><input id="compare-current-time" type="number" min="0" max="87600" step="0.01" value="48" inputmode="decimal">
+                  </fieldset>
+                  <fieldset><legend>ChainMore scenario</legend>
+                    <label for="compare-scenario-cost">Assumed total cost per payment (€)</label><input id="compare-scenario-cost" type="number" min="0" max="1000000" step="0.01" value="1" inputmode="decimal">
+                    <label for="compare-scenario-time">Assumed time until funds are usable (hours)</label><input id="compare-scenario-time" type="number" min="0" max="87600" step="0.01" value="1" inputmode="decimal">
+                  </fieldset>
+                  <label class="comparison-volume" for="compare-volume">Payments per month<input id="compare-volume" type="number" min="1" max="1000000" step="1" value="1000" inputmode="numeric"></label>
+                </div>
+                <div class="comparison-results" id="comparison-results" aria-live="polite" aria-atomic="true">
+                  <p>Enable JavaScript to calculate your example. This tool does not request a quote or send your inputs anywhere.</p>
+                </div>
+                <p class="comparison-limit">Your assumptions stay the same when you change routes. Actual costs and timing depend on the route and agreed terms. This model excludes any costs you have not entered.</p>
+              </div>
+            </details>
           </div>
         </div>
         

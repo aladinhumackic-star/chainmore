@@ -98,6 +98,70 @@
   const paymentExamples = {card:"by card",stablecoin:"with the USDC they hold","bank-wire":"by bank transfer",apm:"with Apple Pay"};
   const settlementExamples = {bank:"EUR in your bank account",stablecoin:"USDC on Polygon",exchange:"USDC in your exchange account",onchain:"USDC in your chosen wallet"};
   const flow = {input:"card",output:"stablecoin"};
+  const costBenefits = {
+    bank: ["Fewer separate fees", "Bring acceptance and bank payout into one route, with the full cost considered together."],
+    stablecoin: ["Less lost in conversion", "Bring acceptance and your USDC payout into one flow, instead of arranging conversion separately."],
+    exchange: ["Skip an extra transfer", "Route funds to your exchange account instead of moving them there in a separate paid step."],
+    onchain: ["A shorter path to funds", "Receive funds in your chosen wallet without arranging an extra payout transfer yourself."]
+  };
+  const speedBenefits = {
+    bank: ["Less manual waiting", "Move from payment to bank payout in one flow. Bank processing times still apply."],
+    stablecoin: ["Fewer waiting steps", "Receive USDC on your chosen network without a separate manual transfer after settlement."],
+    exchange: ["Ready where you work", "Your payout goes to the account where you use it. Exchange deposit processing still applies."],
+    onchain: ["Straight to your wallet", "No separate withdrawal to arrange after receiving your payout. Network confirmation still applies."]
+  };
+  function showBenefits() {
+    let cost = costBenefits[flow.output];
+    if (flow.input === "stablecoin" && flow.output !== "bank") cost = ["Fewer fees on the way", "Use the stablecoins your customer already holds, without adding a card payment to this route."];
+    const effort = flow.input === "stablecoin"
+      ? ["No network guesswork", "One Stablecoin choice. The customer should not need to move funds between networks or buy a separate fee token."]
+      : flow.output === "bank"
+        ? ["Familiar for your customer", "They pay " + paymentExamples[flow.input] + ". You receive funds in your bank account through the same integration."]
+        : [inputs[flow.input][0] + " in. USDC out.", "Your customer pays " + paymentExamples[flow.input] + ". They do not need a wallet for you to receive stablecoins."];
+    [["cost",cost],["speed",speedBenefits[flow.output]],["effort",effort]].forEach(([key,copy]) => {
+      get("benefit-" + key + "-title").textContent = copy[0];
+      get("benefit-" + key + "-copy").textContent = copy[1];
+    });
+    get("comparison-route").textContent = inputs[flow.input][0] + " → " + outputs[flow.output][0];
+  }
+  // This calculator uses visitor-editable assumptions, never rates or route quotes.
+  const comparisonFields = ["current-cost","scenario-cost","current-time","scenario-time","volume"].map(name => get("compare-" + name));
+  const number = value => new Intl.NumberFormat("en-GB", {maximumFractionDigits:2}).format(value);
+  const euros = value => new Intl.NumberFormat("en-GB", {style:"currency",currency:"EUR",maximumFractionDigits:2}).format(value);
+  function calculateComparison() {
+    const valid = comparisonFields.map(field => {
+      const ok = field.value.trim() !== "" && Number.isFinite(field.valueAsNumber) && field.validity.valid;
+      field.setAttribute("aria-invalid", String(!ok)); return ok;
+    });
+    const target = get("comparison-results");
+    target.replaceChildren();
+    if (valid.includes(false)) {
+      const error = document.createElement("p");
+      error.textContent = "Enter valid non-negative costs (up to €1,000,000) and hours (up to 87,600), and 1 to 1,000,000 whole payments. No result is calculated from incomplete inputs.";
+      target.append(error); return;
+    }
+    const [currentCost, scenarioCost, currentTime, scenarioTime, volume] = comparisonFields.map(field => field.valueAsNumber);
+    // Work in cents and hundredths of an hour to avoid negative-zero / equality drift.
+    const costDelta = Math.round(currentCost * 100) - Math.round(scenarioCost * 100);
+    const timeDelta = Math.round(currentTime * 100) - Math.round(scenarioTime * 100);
+    function percentage(delta, baseline) {
+      if (baseline === 0) return "No percentage comparison against a zero baseline.";
+      const percent = Math.abs(delta) / Math.round(baseline * 100) * 100;
+      return number(percent) + "% " + (delta >= 0 ? "less" : "more") + " in this example.";
+    }
+    function result(metric, label, calculation, worse) {
+      const box = document.createElement("div"), strong = document.createElement("strong"), name = document.createElement("span"), detail = document.createElement("small");
+      strong.textContent = metric; strong.dataset.direction = worse ? "worse" : "better";
+      name.textContent = label; detail.textContent = calculation;
+      box.append(strong,name,detail); target.append(box);
+    }
+    result(euros(Math.abs(costDelta) * volume / 100), costDelta > 0 ? "Illustrative monthly saving" : costDelta < 0 ? "Additional monthly cost" : "No cost difference",
+      "(" + euros(currentCost) + " − " + euros(scenarioCost) + ") × " + number(volume) + " payments. " + percentage(costDelta,currentCost), costDelta < 0);
+    result(number(Math.abs(timeDelta) / 100) + " hours", timeDelta > 0 ? "Less waiting per payment" : timeDelta < 0 ? "More waiting per payment" : "No time difference",
+      number(currentTime) + " − " + number(scenarioTime) + " hours. " + percentage(timeDelta,currentTime), timeDelta < 0);
+  }
+  comparisonFields.forEach(field => field.addEventListener("input", calculateComparison));
+  calculateComparison();
   function setFlow(kind, value) {
     flow[kind] = value;
     all(".flow-" + kind).forEach(card => {
@@ -118,6 +182,7 @@
         ? "No separate conversion to arrange."
         : "Acceptance and settlement through one integration.";
     get("flow-benefit").textContent = "Your customer pays " + paymentExamples[flow.input] + ". You receive " + settlementExamples[flow.output] + ". " + benefit;
+    showBenefits();
   }
   ["input","output"].forEach(kind => {
     all(".flow-" + kind).forEach(card => {
