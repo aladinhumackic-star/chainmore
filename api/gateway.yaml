@@ -110,13 +110,13 @@ info:
     return `400 idempotency_required`.
   contact:
     name: ChainMore
-    url: https://github.com/chainmore/chainmore
+    url: https://chainmore.io
   license:
     name: Proprietary
 
 servers:
-  - url: https://api.chainmore.example
-    description: Production URL configured per deployment.
+  - url: https://api.chainmore.io
+    description: Gateway API. Test or live mode is selected by your credentials.
   - url: http://localhost:8080
     description: Local development
 
@@ -1683,7 +1683,7 @@ components:
         settlement_destination: { type: string, description: "The merchant's own USDT account on a chain the rails pay on: eip155 CAIP-10 (eip155:1:0x…, eip155:42161:0x…), a bare 0x address (Arbitrum), or a TRON account (tron:0x2b6653dc:T…); omitted: the merchant's highest-priority USDT payout target (ADR-0075). A mixed-case 0x address must carry a valid EIP-55 checksum unless it spells an account the merchant has declared (an active USDT payout target or the usdt0 default): that account is admitted in any spelling and stored lowercase. Any other spelling with a broken checksum is refused with the reason (400 invalid_request)." }
         usdc:
           type: object
-          description: Merchant facts the USDC rail needs; without it the link never offers USDC.
+          description: Optional explicit USDC routing details. When omitted, same-chain USDC can be offered if the merchant has an active settlement profile, a USDC payout destination and the USDC route is enabled.
           required: [merchant_wallet, source_chain, dest_chain]
           properties:
             merchant_wallet: { type: string }
@@ -1703,8 +1703,8 @@ components:
         merchant_order_id: { type: string }
         available_payment_methods: { type: array, items: { type: string, enum: [card, usdt0, usdc] } }
         payment_method: { type: string, enum: [card, usdt0, usdc] }
-        payment_id: { type: string, description: "Core payment id once bound to card or usdt0." }
-        intent_id: { type: string, description: "CCTP intent id once bound to usdc." }
+        payment_id: { type: string, description: "Payment identifier when bound to a Core payment, including same-chain USDC." }
+        intent_id: { type: string, description: "Payment-intent identifier when bound to the cross-chain USDC flow." }
         bound_at: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         expires_at: { type: string, format: date-time }
@@ -4107,7 +4107,7 @@ paths:
 
   /v1/payments/{id}/attempts:
     post:
-      summary: Start a payment attempt (EXE-GATE-I1 - refuses without wired gate).
+      summary: Start a payment attempt.
       operationId: startAttempt
       parameters:
         - $ref: "#/components/parameters/PaymentID"
@@ -4156,7 +4156,7 @@ paths:
 
   /v1/checkout/sessions:
     post:
-      summary: Initialise a hosted-checkout session (CKO-I1 entry point).
+      summary: Create a hosted-checkout session.
       description: |
         Mints the one-time checkout token for a payment. A payment has exactly one
         checkout session: while a session is active (created, wallet_bound,
@@ -4269,7 +4269,7 @@ paths:
 
   /v1/checkout/sessions/by-token/{token}:
     get:
-      summary: Look up the session bound to a raw checkout token (CKO-I4).
+      summary: Look up a checkout session by its token.
       operationId: getCheckoutSessionByToken
       parameters:
         - $ref: "#/components/parameters/CheckoutToken"
@@ -4284,7 +4284,7 @@ paths:
 
   /v1/merchants:
     get:
-      summary: Phase-1 merchants reserved response.
+      summary: Reserved merchant endpoint.
       operationId: merchantsPlaceholder
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
@@ -4298,7 +4298,7 @@ paths:
 
   /v1/routing/plan:
     post:
-      summary: Plan a route from aggregate bindings (REC-I1 C1).
+      summary: Plan a payment route.
       operationId: planRoute
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
@@ -4335,7 +4335,7 @@ paths:
 
   /v1/validation/validate:
     post:
-      summary: Pre-flight-validate a route candidate (PFV-I1 C1).
+      summary: Validate a proposed payment route.
       operationId: validateRoute
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
@@ -4372,7 +4372,7 @@ paths:
 
   /v1/dispatch/decide:
     post:
-      summary: Run the dispatcher gate (DISP-I1 D1/D4).
+      summary: Check whether a payment route can proceed.
       operationId: decideDispatch
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
@@ -4471,7 +4471,7 @@ paths:
 
   /v1/checkout/links:
     post:
-      summary: Create a method-neutral checkout link (ADR-0068 S2).
+      summary: Create a checkout link.
       description: |
         Prices an offer once (amount, currency, order). The hosted checkout
         shows the customer the rails the link can bind to (Card for EUR,

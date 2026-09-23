@@ -2,196 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Developer Documentation | ChainMore</title>
-  <meta name="description" content="ChainMore public API reference for the merchant-facing Gateway API. Every route, request schema, and response shape, in one place.">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.chainmore.io/docs.html">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.chainmore.io/docs.html">
-  <meta property="og:title" content="Developer Documentation | ChainMore">
-  <meta property="og:description" content="Merchant-facing Gateway API documentation for ChainMore.">
-  <meta property="og:site_name" content="ChainMore">
-  <meta property="og:locale" content="en_US">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Docs | ChainMore</title>
+  <meta name="description" content="Integrate ChainMore payments: create a checkout link, open the hosted checkout and receive payment updates. Full Gateway API reference.">
+  <link rel="canonical" href="https://chainmore.io/docs.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="stylesheet" href="/tailwind.css">
   <style>
-    * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
-    html { scroll-behavior: smooth; }
-    /* Make Redoc fill the available space below the nav strip. The
-       redoc-container is fixed-height to support its own internal scroll
-       (TOC sidebar plus content pane). */
-    .redoc-host { height: calc(100vh - 184px); min-height: 800px; }
-    .redoc-host > div { height: 100%; }
-    .spec-tab { transition: all 0.15s ease; }
-    .spec-tab.active { color: #00bfe6; border-color: #00bfe6; }
-    .spec-tab:hover { color: #00bfe6; }
+    :root{color-scheme:light;--navy:#0f172a;--cyan:#00bfe6;--muted:#526278}
+    *{box-sizing:border-box}html{scroll-padding-top:88px}body{margin:0;color:var(--navy);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f9fc}
+    a{color:#007c99;text-underline-offset:4px}a:focus-visible,summary:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+    header{position:sticky;top:0;z-index:50;background:var(--navy);color:white;border-bottom:1px solid #29344a}
+    .bar{max-width:1240px;margin:auto;min-height:72px;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:10px;color:white;text-decoration:none;font-size:22px;font-weight:700}.brand img{width:30px}
+    nav{display:flex;gap:24px;align-items:center;flex-wrap:wrap}nav a{color:#cbd5e1;text-decoration:none;font-size:14px}.nav-cta{color:#0f172a;background:#00d4ff;padding:9px 16px;border-radius:8px}
+    .intro{max-width:1240px;margin:auto;padding:56px 24px 32px}.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#007c99;font-weight:700}
+    h1{font-size:clamp(36px,5vw,60px);line-height:1.08;letter-spacing:-.04em;margin:12px 0 20px}h2{font-size:28px;line-height:1.2;letter-spacing:-.025em}h3{font-size:19px;margin:0 0 12px}p{margin:0 0 16px}
+    .intro>p{font-size:19px;max-width:720px;color:var(--muted)}.links{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0 0}
+    .layout{max-width:1240px;padding:0 24px 48px;margin:auto;display:grid;grid-template-columns:210px minmax(0,1fr);gap:36px}
+    .contents{align-self:start;position:sticky;top:96px;padding:16px 0}.contents a{display:block;padding:8px 0;font-size:14px;text-decoration:none;color:var(--muted)}.contents strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    .guide{min-width:0;background:white;padding:0 32px;border-top:1px solid #dce4ee}.guide section{border-bottom:1px solid #dce4ee;padding:32px 0;scroll-margin-top:90px}
+    .step{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:10px;background:#d9f8ff;color:#00758d;border-radius:8px;font-size:14px}
+    .note{border-left:3px solid #00bfe6;padding:12px 16px;background:#f0fbfd;color:#34465b;font-size:14px}
+    pre{overflow:auto;background:#101a2c;color:#e2e8f0;border-radius:10px;padding:22px;font-size:13px;line-height:1.7;tab-size:2}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}p code,li code{background:#eef3f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+    ul{padding-left:20px}li{margin-bottom:8px}.endpoint{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:16px}.method{color:#00758d;font-weight:700}
+    .reference-title{max-width:1240px;margin:auto;padding:24px}.reference-title p{color:var(--muted);max-width:720px}
+    #reference{background:white;border-top:1px solid #dce4ee;scroll-margin-top:72px}#redoc-container{min-height:300px}
+    footer{padding:32px 24px;background:var(--navy);color:#94a3b8;font-size:13px}footer>div{max-width:1192px;margin:auto;display:flex;gap:24px;justify-content:space-between;flex-wrap:wrap}footer a{color:#cbd5e1}
+    @media(max-width:760px){.bar{align-items:flex-start;gap:12px;padding:14px 18px}.brand{font-size:19px}nav{gap:12px}nav a{font-size:12px}.nav-cta{display:none}.intro{padding:32px 18px 24px}.layout{display:block;padding:0 18px 24px}.contents{position:static;display:flex;gap:14px;flex-wrap:wrap;padding:0 0 18px}.contents strong{width:100%}.contents a{padding:0}.guide section{padding:20px}pre{padding:16px;font-size:12px}}
+    @media(max-width:760px){.guide{padding:0 18px}.guide section{padding:24px 0}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
-<body class="bg-white text-slate-700">
-
-  <!-- Header -->
-  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2.5">
-        <img src="/assets/chainmore-mark.svg" width="32" height="27" alt="" aria-hidden="true">
-        <span class="text-lg font-bold tracking-tight">
-          <span class="text-white">ChainMore</span>
-        </span>
-      </a>
-      <nav class="hidden md:flex items-center gap-8 text-sm">
-        <a href="/#business" class="text-slate-300 hover:text-white transition">For your business</a>
-        <a href="/#contact" class="text-slate-300 hover:text-white transition">Contact</a>
-        <a href="/docs.html" class="text-white font-medium">Docs</a>
-        <a href="/security" class="text-slate-300 hover:text-white transition">Security</a>
-        <a href="/status.html" class="text-slate-300 hover:text-white transition">Status</a>
-      </nav>
-      <a href="/" class="text-sm text-slate-300 hover:text-white transition">← Back to homepage</a>
-    </div>
-  </header>
-
-  <!-- Spec switcher -->
-  <div class="bg-white border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center gap-1 overflow-x-auto">
-        <a href="?spec=gateway" id="tab-gateway" class="spec-tab inline-flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-sm font-semibold text-slate-700 whitespace-nowrap">
-          Gateway API
-          <span class="text-xs font-normal text-slate-500">(merchant-facing)</span>
-        </a>
-        <div class="ml-auto hidden md:flex items-center gap-3 text-xs text-slate-500 py-3">
-          <span>Raw spec:</span>
-          <a id="raw-gateway" href="/api/gateway.yaml" class="text-cyan-600 hover:underline">gateway.yaml</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Redoc target -->
-  <main class="redoc-host">
-    <div id="redoc-container"></div>
-  </main>
-
-  <!-- Footer (compact, the docs page is dense and footer is rarely the focus) -->
-  <footer class="bg-slate-950 text-slate-400 py-8 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-2 flex-wrap justify-center text-sm">
-          <a href="/" class="hover:text-white transition">← Home</a>
-          <span class="text-slate-700">·</span>
-          <a href="/#contact" class="hover:text-white transition">Contact</a>
-          <span class="text-slate-700">·</span>
-          <a href="/docs.html" class="hover:text-white transition">Docs</a>
-          <span class="text-slate-700">·</span>
-          <a href="/status.html" class="hover:text-white transition">Status</a>
-          <span class="text-slate-700">·</span>
-          <a href="/security" class="hover:text-white transition">Security</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/dpa.html" class="hover:text-white transition">DPA</a>
-          <span class="text-slate-700">·</span>
-          <a href="/legal/sub-processors.html" class="hover:text-white transition">Sub-Processors</a>
-        </div>
-        <div class="text-xs">© 2026 Chainmore OÜ · Patent pending</div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Self-hosted Redoc bundle. Vendor JS is checked in at
-       marketing/site/assets/redoc.standalone.js so the page stays
-       compatible with our strict CSP (script-src 'self'); no third-
-       party CDN script ever loads on chainmore.io. -->
-  <script src="/assets/redoc.standalone.js"></script>
-  <script>
-    (function () {
-      // Resolve which spec to render from ?spec=… (default: gateway).
-      // Public docs expose the merchant-facing Gateway API only.
-      var specs = {
-        gateway: {
-          url: "/api/gateway.yaml",
-          tabId: "tab-gateway",
-        },
-      };
-
-      var params = new URLSearchParams(window.location.search);
-      var requested = params.get("spec");
-      var picked = specs[requested] ? requested : "gateway";
-
-      // Highlight the active tab so visitors land where they think
-      // they are.
-      var tabEl = document.getElementById(specs[picked].tabId);
-      if (tabEl) tabEl.classList.add("active");
-
-      // Theme tuned to match the marketing-site palette: brand-cyan
-      // accent, JetBrains-style mono, and an Inter-like sans stack
-      // that mirrors what the rest of the site already uses (so we
-      // do NOT load Roboto from Google Fonts, which would break our
-      // CSP font-src 'self').
-      var theme = {
-        colors: {
-          primary: { main: "#00bfe6" },
-          success: { main: "#10b981" },
-          warning: { main: "#f59e0b" },
-          error:   { main: "#ef4444" },
-          text:    { primary: "#0f172a", secondary: "#475569" },
-          border:  { dark: "#cbd5e1", light: "#e2e8f0" },
-          http: {
-            get:    "#10b981",
-            post:   "#0ea5e9",
-            put:    "#f59e0b",
-            options:"#94a3b8",
-            patch:  "#a855f7",
-            delete: "#ef4444",
-            basic:  "#475569",
-            link:   "#0891b2",
-            head:   "#475569",
-          },
-        },
-        typography: {
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-          headings: {
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-            fontWeight: "700",
-          },
-          code: {
-            fontFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace',
-          },
-        },
-        sidebar: {
-          backgroundColor: "#f8fafc",
-          textColor: "#0f172a",
-          width: "280px",
-        },
-        rightPanel: {
-          backgroundColor: "#0f172a",
-          textColor: "#f1f5f9",
-        },
-      };
-
-      // disableSearch:false so the integrated search keeps working;
-      // hideDownloadButton:false so visitors get a one-click download
-      // of the spec they're looking at; expandResponses:"200,201" so
-      // the most-relevant success-response shape is open by default.
-      Redoc.init(
-        specs[picked].url,
-        {
-          theme: theme,
-          scrollYOffset: 64,
-          hideDownloadButton: false,
-          disableSearch: false,
-          expandResponses: "200,201",
-          hideHostname: false,
-          jsonSampleExpandLevel: 2,
-          // No third-party telemetry; turn off Redoc's "View on
-          // GitHub" / "Try it" links that point off-domain because
-          // the spec is internal-source-of-truth, not the public
-          // contract surface yet.
-          showExtensions: false,
-          requiredPropsFirst: true,
-          sortPropsAlphabetically: false,
-        },
-        document.getElementById("redoc-container")
-      );
-    })();
-  </script>
+<body>
+<header><div class="bar"><a class="brand" href="/"><img src="/assets/chainmore-mark.svg" alt="">ChainMore</a><nav aria-label="Documentation"><a href="#quickstart">Quickstart</a><a href="#reference">API reference</a><a href="https://app.chainmore.io" class="nav-cta">Dashboard ↗</a></nav></div></header>
+<main>
+<div class="intro"><span class="eyebrow">ChainMore / Developers</span><h1>From your checkout<br>to a confirmed payment.</h1><p>Create a checkout link from your server. Let the customer pay in the hosted checkout, then follow the result through your API and webhooks.</p><div class="links"><a href="#quickstart">Start integrating →</a><a href="/api/gateway.yaml">Download OpenAPI specification</a></div></div>
+<div class="layout">
+<aside class="contents" aria-label="Guide contents"><strong>Integration guide</strong><a href="#before-you-start">Before you start</a><a href="#quickstart">Create a checkout link</a><a href="#open-checkout">Open the checkout</a><a href="#payment-updates">Track payment updates</a><a href="#retries">Errors &amp; retries</a><a href="#reference">Full API reference</a></aside>
+<div class="guide">
+<section id="before-you-start"><h2>Before you start</h2><p>Use <code>https://api.chainmore.io</code> as the API base URL. Keep merchant API keys on your server, never in a browser bundle or mobile app.</p><ul><li>Create the appropriate API key in your <a href="https://app.chainmore.io/keys">merchant dashboard</a>. A <code>cm_test_…</code> key selects test mode; <code>cm_live_…</code> selects live mode. Do not pass a mode override in the request.</li><li>Configure your merchant settlement profile and payout destinations. Payment methods depend on those settings and the enabled routes; a new link can return an empty method list.</li></ul><p class="note">Test mode is not a guarantee of simulated blockchain activity. A wallet transaction can still use a public network and real assets. Do not sign or fund a test payment unless its network and cost are understood.</p></section>
+<section id="quickstart"><h2><span class="step">01</span>Create a checkout link</h2><div class="endpoint"><span class="method">POST</span><code>/v1/checkout/links</code></div><p>This example requests USD 10.00. <code>amount_minor</code> uses currency minor units: 1000 cents, not token atomic units. Set the environment variable on your server and use a unique idempotency key for each order.</p>
+<pre aria-label="Create checkout link example"><code>curl https://api.chainmore.io/v1/checkout/links \
+  --request POST \
+  --header "Authorization: Bearer ${CHAINMORE_API_KEY}" \
+  --header "Content-Type: application/json" \
+  --header "Idempotency-Key: order-1048-checkout" \
+  --data '{
+    "amount_minor": 1000,
+    "currency": "USD",
+    "merchant_order_id": "order-1048"
+  }'</code></pre>
+<p>Read <code>checkout_link_id</code>, <code>checkout_token</code> and <code>available_payment_methods</code> from the response. Store the link ID with your order. The checkout token is returned only on initial creation, not an idempotent replay.</p><p>For configured same-chain USDC acceptance, an additional <code>usdc</code> block is not required. Explicit USDC routing details are available in the <a href="#operation/createCheckoutLink">request reference</a>.</p></section>
+<section id="open-checkout"><h2><span class="step">02</span>Send the customer to checkout</h2><p>Build the customer URL from the returned checkout token, URL-encoding the value:</p><pre><code>https://checkout.chainmore.io/checkout/?token=&lt;checkout_token&gt;</code></pre><p>Only show payment options returned for this link. The hosted checkout handles the customer's method selection and wallet interaction. Your merchant API key must never be added to this URL.</p></section>
+<section id="payment-updates"><h2><span class="step">03</span>Confirm the outcome</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>A link becoming <code>bound</code> means that a payment method was selected, not that the order is paid. Follow the returned <code>payment_id</code> or <code>intent_id</code> through its corresponding status endpoint.</p><p>Register a webhook endpoint with <code>POST /v1/webhook_endpoints</code>. Verify <code>X-ChainMore-Signature</code> as a lowercase-hex HMAC-SHA256 of the exact raw request body, using your endpoint secret. Compare signatures in constant time and deduplicate by event <code>id</code>.</p><p class="note">Fulfil the order only after the relevant settled event or confirmed terminal payment state. A browser return, wallet submission or transaction hash alone is not a settlement confirmation.</p></section>
+<section id="retries"><h2>Errors and safe retries</h2><p>For merchant mutations, send an <code>Idempotency-Key</code>. Retry the same logical operation with the same key and request body; do not create a new operation just because a response was lost.</p><p>Read the machine-readable <code>code</code> in the problem response and retain the correlation ID for support. Authentication failures, unavailable methods and validation errors require correction before retrying. The endpoint reference lists applicable responses and authentication requirements.</p><p>Server API keys and dashboard login tokens are different credentials. Use the credential required by the endpoint; dashboard-only operations cannot be called with a merchant API key.</p></section>
+</div></div>
+<section id="reference"><div class="reference-title"><span class="eyebrow">Gateway API</span><h2>The complete reference.</h2><p>Search endpoints and inspect request fields, responses and authentication. Endpoint availability depends on the deployment and your merchant configuration.</p><a href="/api/gateway.yaml">Raw OpenAPI file ↓</a></div><div id="redoc-container"><p style="padding:24px">Loading the API reference… <a href="/api/gateway.yaml">Download the specification</a>.</p></div><noscript><p>The interactive reference needs JavaScript. The integration guide and <a href="/api/gateway.yaml">OpenAPI download</a> remain available.</p></noscript></section>
+</main>
+<footer><div><span>© 2026 Chainmore OÜ</span><span><a href="/">Homepage</a> · <a href="/security">Security</a> · <a href="/status">Status</a> · <a href="/#contact">Contact</a></span></div></footer>
+<script src="/assets/redoc.standalone.js"></script>
+<script>
+if (window.Redoc) Redoc.init("/api/gateway.yaml", {
+  scrollYOffset: 80, hideDownloadButton: false, disableSearch: false,
+  expandResponses: "200,201", hideHostname: false, jsonSampleExpandLevel: 1,
+  requiredPropsFirst: true, showExtensions: false,
+  theme: {
+    colors: {primary: {main: "#007c99"}, text: {primary: "#0f172a", secondary: "#526278"}},
+    typography: {fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: "15px", headings: {fontWeight: "650"}, code: {fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace"}},
+    sidebar: {backgroundColor: "#f7f9fc", width: "260px"},
+    rightPanel: {backgroundColor: "#101a2c"}
+  }
+}, document.getElementById("redoc-container"));
+</script>
 </body>
 </html>
