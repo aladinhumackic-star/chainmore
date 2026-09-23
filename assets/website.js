@@ -101,8 +101,8 @@
   const settlementExamples = {bank:"EUR in your bank account",stablecoin:"USDC on Polygon",exchange:"USDC in your exchange account",onchain:"USDC in your chosen wallet"};
   const flow = {input:"stablecoin",output:"stablecoin"};
   const costBenefits = {
-    bank: ["Fewer separate fees", "Bring acceptance and bank payout into one route, with the full cost considered together."],
-    stablecoin: ["Less lost in conversion", "Bring acceptance and your USDC payout into one flow, instead of arranging conversion separately."],
+    bank: ["See the full route cost", "Consider payment acceptance, any conversion and bank payout together. One integration does not remove your bank or card fees."],
+    stablecoin: ["Conversion in the same flow", "Bring payment acceptance and your USDC payout together, instead of arranging conversion separately. Conversion and service fees still apply."],
     exchange: ["Skip an extra transfer", "Route funds to your exchange account instead of moving them there in a separate paid step."],
     onchain: ["A shorter path to funds", "Receive funds in your chosen wallet without arranging an extra payout transfer yourself."]
   };
@@ -114,9 +114,9 @@
   };
   function showBenefits() {
     let cost = costBenefits[flow.output];
-    if (flow.input === "stablecoin" && flow.output !== "bank") cost = ["Fewer fees on the way", "Use the stablecoins your customer already holds, without adding a card payment to this route."];
+    if (flow.input === "stablecoin" && flow.output !== "bank") cost = ["No card fee in this route", "Use the USDC your customer already holds. This example has no card-processing step; network and service fees still apply."];
     const effort = flow.input === "stablecoin"
-      ? ["No network guesswork", "One Stablecoin choice. The customer should not need to move funds between networks or buy a separate fee token."]
+      ? ["No network guesswork", "A guided stablecoin payment instead of a separate transfer between networks. On eligible routes, fee support also avoids a separate fee-token purchase."]
       : flow.output === "bank"
         ? ["Familiar for your customer", "They pay " + paymentExamples[flow.input] + ". You receive funds in your bank account through the same integration."]
         : [inputs[flow.input][0] + " in. USDC out.", "Your customer pays " + paymentExamples[flow.input] + ". They do not need a wallet for you to receive stablecoins."];
@@ -197,7 +197,7 @@
     get("route-output-label").textContent = outputs[flow.output][0];
     get("route-types-label").textContent = inputs[flow.input][1] + " to " + outputs[flow.output][1];
     const benefit = flow.input === "stablecoin" && flow.output === "stablecoin"
-      ? "No manual transfers or extra fee tokens."
+      ? "Different networks, one checkout in this example."
       : inputs[flow.input][1] !== outputs[flow.output][1] && ["bank", "stablecoin"].includes(flow.output)
         ? "No separate conversion to arrange."
         : "Acceptance and settlement through one integration.";
