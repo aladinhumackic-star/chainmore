@@ -7,6 +7,10 @@
 # rules guard against a future Netlify config change that flips Pretty
 # URLs off.
 
+# Server-side Concierge source is bundled from here, not a public download.
+# Force the 404 even when the static publish directory contains the file.
+/netlify/*       /404.html              404!
+
 /security        /security.html         200
 /status          /status.html           200
 /docs            /docs.html             200
