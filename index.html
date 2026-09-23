@@ -734,9 +734,6 @@
           </div>
         </div>
         
-        <!-- Pricing Link -->
-        <a href="#contact" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Contact</a>
-
         <!-- API Docs Link -->
         <a href="/docs.html" class="px-4 py-2 text-slate-300 hover:text-white transition text-sm font-medium">Docs</a>
 
@@ -829,7 +826,6 @@
       <div class="flex flex-col gap-2 px-4 py-6">
         <a href="#how-it-works" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Platform</a>
         <a href="#solutions" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Solutions</a>
-        <a href="#contact" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Contact</a>
         <a href="#developers" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Developers</a>
         <a href="/docs.html" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">API Docs</a>
         <a href="https://app.chainmore.io" class="text-slate-300 py-3 text-lg hover:text-white border-b border-slate-800">Sign in</a>
@@ -893,7 +889,7 @@
       </div>
 
       <!-- Animated Flow Visual -->
-      <div class="max-w-5xl mx-auto mb-8">
+      <div class="hero-diagram max-w-5xl mx-auto mb-8">
         <div class="bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 md:p-12 border border-slate-200 shadow-xl">
           
           <!-- Main Content: 3 Columns with Connectors -->
@@ -927,7 +923,7 @@
                   </div>
                   <div>
                     <div class="font-bold text-slate-900">USDC</div>
-                    <div class="text-slate-500 text-sm">Stablecoin</div>
+                    <div class="text-slate-500 text-sm">On Ethereum</div>
                   </div>
                 </div>
                 <div class="hero-input-card absolute inset-0 flex items-center gap-3 p-4 rounded-xl border-2 border-cyan-500 bg-gradient-to-br from-cyan-50 to-white shadow-lg transition-all duration-500 opacity-0 pointer-events-none" data-value="usdt">
@@ -1038,8 +1034,8 @@
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                   </div>
                   <div>
-                    <div class="font-bold text-slate-900">On-Chain</div>
-                    <div class="text-slate-500 text-sm">Direct Wallet</div>
+                    <div class="font-bold text-slate-900">USDC</div>
+                    <div class="text-slate-500 text-sm">On Polygon</div>
                   </div>
                 </div>
               </div>
@@ -1070,6 +1066,7 @@
         </div>
       </div>
   <div class="hero-extra"><a href="#payment-demo" class="hero-tour-link">See the actual checkout <span aria-hidden="true">→</span></a><button type="button" class="motion-toggle" aria-pressed="false">Pause animation</button></div>
+    </div>
   </section>
 
   <!-- Platform Metrics -->
@@ -1103,15 +1100,21 @@
     <div class="max-w-7xl mx-auto">
       
       <!-- Section Header -->
-      <div class="text-center mb-8">
+      <div class="flow-heading text-center mb-8">
         <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider mb-2 block">How It Works</span>
         <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Build Your Payment Flow</h2>
         <p class="text-slate-600 text-base max-w-2xl mx-auto">Choose how your customer pays and how your business receives. ChainMore connects the two.</p>
       </div>
       
       <!-- Interactive Flow Builder -->
-      <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-4 sm:p-5 md:p-8 mb-12">
-        <div class="flex flex-col lg:grid lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-6 items-center">
+      <div class="flow-builder bg-white rounded-2xl shadow-xl border border-slate-200 p-4 sm:p-5 md:p-8 mb-12">
+        <div class="route-benefits" aria-label="Benefits of this route">
+          <details><summary><span class="route-benefit-label">Payment costs</span><span id="benefit-cost-title">Fewer fees on the way</span></summary><p id="benefit-cost-copy">Use the stablecoins your customer already holds, without adding a card payment to this route.</p></details>
+          <details><summary><span class="route-benefit-label">Time to receive</span><span id="benefit-speed-title">Fewer waiting steps</span></summary><p id="benefit-speed-copy">Receive USDC on your chosen network without a separate manual transfer after settlement.</p></details>
+          <details><summary><span class="route-benefit-label">Customer effort</span><span id="benefit-effort-title">No network guesswork</span></summary><p id="benefit-effort-copy">One Stablecoin choice. The customer should not need to move funds between networks or buy a separate fee token.</p></details>
+        </div>
+        <p class="flow-benefit" id="flow-benefit">Your customer pays with USDC on Ethereum. You receive USDC on Polygon. No manual transfers or extra fee tokens.</p>
+        <div class="flow-grid flex flex-col lg:grid lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-6 items-center">
           
           <!-- INPUT Column -->
           <div>
@@ -1120,8 +1123,8 @@
               <span class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Customer Pays</span>
             </div>
             <div class="space-y-2" id="flow-inputs">
-              <!-- Card Payment - default selected -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer transition" data-flow-input="card" data-selected="true" role="button" tabindex="0" aria-pressed="false">
+              <!-- Card Payment -->
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="card" role="button" tabindex="0" aria-pressed="false">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -1134,7 +1137,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- Stablecoin -->
-              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition" data-flow-input="stablecoin" role="button" tabindex="0" aria-pressed="false">
+              <div class="flow-input flow-card flex items-center justify-between p-3 rounded-xl border-2 border-cyan-500 bg-cyan-50 cursor-pointer transition" data-flow-input="stablecoin" data-selected="true" role="button" tabindex="0" aria-pressed="true">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
                     <span class="text-cyan-600 font-bold">$</span>
@@ -1218,7 +1221,7 @@
                 <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded">FIAT</span>
               </div>
               <!-- Stablecoin - default selected -->
-              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer transition" data-flow-output="stablecoin" data-selected="true" role="button" tabindex="0" aria-pressed="false">
+              <div class="flow-output flow-card flex items-center justify-between p-3 rounded-xl border-2 border-green-500 bg-green-50 cursor-pointer transition" data-flow-output="stablecoin" data-selected="true" role="button" tabindex="0" aria-pressed="true">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold">$</span>
@@ -1262,30 +1265,29 @@
         </div>
         
         <!-- Selected route and its customer / merchant benefits -->
-        <div class="mt-6 flex justify-center">
+        <div class="flow-result-wrap flex justify-center">
           <div class="flow-result bg-slate-900 rounded-xl text-white w-full">
             <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
               <!-- Route Info -->
               <div class="flex items-center gap-3 flex-wrap">
                 <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span class="text-green-400 font-semibold text-sm uppercase tracking-wider">Example route:</span>
-                <span class="text-xl font-bold"><span id="route-input-label">Card</span> <span class="text-green-400">→</span> <span id="route-output-label">USDC / Polygon</span></span>
-                <span class="text-slate-400 text-sm">(<span id="route-types-label">Fiat to Stable</span>)</span>
+                <span class="route-pair text-xl font-bold"><span id="route-input-label">USDC / Ethereum</span> <span class="text-green-400">→</span> <span id="route-output-label">USDC / Polygon</span></span>
+                <span class="text-slate-400 text-sm">(<span id="route-types-label">Stable to Stable</span>)</span>
               </div>
 
-              <p class="flow-benefit" id="flow-benefit">Your customer pays by card. You receive USDC on Polygon. No separate conversion to arrange.</p>
             </div>
-            <div class="route-benefits" aria-label="Benefits of this route">
-              <article><span class="route-benefit-label">Payment costs</span><h3 id="benefit-cost-title">Less lost in conversion</h3><p id="benefit-cost-copy">Bring card acceptance and your USDC payout into one flow, instead of arranging conversion separately.</p></article>
-              <article><span class="route-benefit-label">Time to receive</span><h3 id="benefit-speed-title">Fewer waiting steps</h3><p id="benefit-speed-copy">Receive USDC on your chosen network without a separate manual transfer after settlement.</p></article>
-              <article><span class="route-benefit-label">Customer effort</span><h3 id="benefit-effort-title">Card in. USDC out.</h3><p id="benefit-effort-copy">Your customer pays by card. They do not need a wallet for you to receive stablecoins.</p></article>
+            <div class="comparison-glance" aria-label="Illustrative comparison, not measured results">
+              <span class="comparison-glance-label">Illustrative comparison</span>
+              <p id="comparison-glance-cost">66.67% lower cost <small>€3 → €1 per payment</small></p>
+              <p id="comparison-glance-time">97.92% less waiting <small>48h → 1h until funds are usable</small></p>
             </div>
             <details class="flow-comparison" id="flow-comparison">
-              <summary><span>What could your business save?</span><span class="comparison-summary-note">Explore an example</span></summary>
+              <summary><span>Adjust this comparison</span><span class="comparison-summary-note">Example assumptions, not a quote or measured performance</span></summary>
               <div class="comparison-body">
                 <h3>Compare with your current setup</h3>
                 <p id="comparison-disclosure">Illustrative assumptions, not ChainMore pricing or measured market averages. Change both sides to model your business. Costs must include all fees; time must use the same start and finish points.</p>
-                <p class="comparison-route">Selected example: <span id="comparison-route">Card → USDC / Polygon</span></p>
+                <p class="comparison-route">Selected example: <span id="comparison-route">USDC / Ethereum → USDC / Polygon</span></p>
                 <div class="comparison-inputs" aria-describedby="comparison-disclosure">
                   <fieldset><legend>Current setup</legend>
                     <label for="compare-current-cost">Total cost per payment (€)</label><input id="compare-current-cost" type="number" min="0" max="1000000" step="0.01" value="3" inputmode="decimal">
@@ -1309,8 +1311,13 @@
       </div>
       
       
-      <!-- Customer and merchant value, without disclosing implementation -->
-      <div class="brand-benefits" id="the-difference">
+    </div>
+  </section>
+
+  <!-- Each story has its own viewport-aware section; no clipped fixed heights. -->
+  <section id="the-difference" class="story-section bg-slate-50">
+    <div class="max-w-7xl mx-auto">
+      <div class="brand-benefits">
         <div>
           <span class="text-cyan-600 font-semibold text-sm uppercase tracking-wider">The ChainMore difference</span>
           <h2 class="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mt-4 mb-6">The purchase is simple.<br><span class="text-cyan-500">Paying should be too.</span></h2>
@@ -1318,14 +1325,17 @@
           <p class="text-lg text-slate-600 leading-relaxed mt-4">ChainMore brings those moving parts into one payment experience. Less to figure out for the customer. Less to piece together for your business.</p>
           <a href="#payment-demo" class="inline-flex items-center gap-2 bg-cyan-500 text-white px-6 py-3 rounded-xl font-semibold mt-8 hover:bg-cyan-600 transition">Explore the checkout <span aria-hidden="true">→</span></a>
         </div>
-        <div class="benefit-stack">
+        <div class="benefit-stack" data-depth="18">
           <div><span class="benefit-number">01</span><h3>No network guesswork</h3><p>A clear path through the payment, without a technical checklist.</p></div>
           <div><span class="benefit-number">02</span><h3>No detour for fee tokens</h3><p>Built to remove the separate top-ups that make digital payments feel complicated.</p></div>
           <div><span class="benefit-number">03</span><h3>No guessing what happened</h3><p>Clear progress for the customer. A payment record your team can follow.</p></div>
         </div>
       </div>
-      <!-- KEY BENEFITS - Eigenständiges Design -->
-      <div class="mt-20 pt-16 border-t border-slate-200">
+    </div>
+  </section>
+  <section id="business-benefits" class="story-section bg-white">
+    <div class="max-w-7xl mx-auto">
+      <div class="business-benefits">
         <div class="text-center mb-12">
           <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Better for the person paying.<br>Better for the business getting paid.</h3>
         </div>
@@ -1380,7 +1390,7 @@
         <p>One Stablecoin button. Familiar USDC and USDT. A simpler start, with clear payment details before you confirm.</p>
       </div>
       <div class="checkout-tour">
-        <div class="tour-toolbar"><span class="preview-label"><i aria-hidden="true"></i> Interactive product tour</span><div class="viewport-buttons" aria-label="Checkout preview size"><button type="button" data-checkout-size="desktop" aria-pressed="true">Desktop</button><button type="button" data-checkout-size="mobile" aria-pressed="false">Mobile</button></div></div>
+        <div class="tour-toolbar"><span class="preview-label"><i aria-hidden="true"></i> Interactive product tour</span><div class="viewport-buttons" aria-label="Checkout preview size"><button type="button" data-checkout-size="desktop" aria-pressed="true">Desktop</button><button type="button" data-checkout-size="mobile" aria-pressed="false">Mobile</button><button type="button" id="checkout-expand" aria-haspopup="dialog">Expand ↗</button></div></div>
         <div class="tour-steps" aria-label="Checkout preview steps">
           <button type="button" data-checkout-state="wallet" aria-pressed="true"><span>1</span>Choose</button>
           <button type="button" data-checkout-state="qr" aria-pressed="false"><span>2</span>Connect</button>
@@ -1394,6 +1404,7 @@
         <details class="tour-other"><summary>When a payment cannot be completed</summary><div><button type="button" data-checkout-state="failed" aria-pressed="false">Payment failed</button><button type="button" data-checkout-state="expired" aria-pressed="false">Session expired</button></div></details>
       </div>
       <p class="tour-disclosure">Product preview based on the ChainMore checkout, including the proposed single Stablecoin entry. No wallet connection, payment or real customer data. Use the tour controls to explore the screens.</p>
+      <dialog id="checkout-detail" aria-labelledby="checkout-detail-title"><div class="detail-toolbar"><span id="checkout-detail-title">Checkout preview · full detail</span><button type="button" id="checkout-detail-close" aria-label="Close enlarged checkout preview">Close ×</button></div><img alt="Enlarged ChainMore checkout preview"></dialog>
     </div>
   </section>
 
@@ -1454,7 +1465,7 @@
         <p class="text-slate-600 max-w-2xl mx-auto">From payment checkouts to payroll, ChainMore automatically selects the optimal route.</p>
       </div>
 
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="solutions-grid grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Use Case 1 -->
         <div class="bg-white rounded-xl p-4 shadow-md hover-lift border border-slate-100">
           <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white mb-3 shadow-md shadow-indigo-500/20">
@@ -1478,7 +1489,7 @@
             </svg>
           </div>
           <h3 class="text-lg font-bold mb-1">Global Payroll</h3>
-          <p class="text-slate-600 text-sm mb-3">Connect international teams with payment options that fit them. Digital money or local currency, through supported connections.</p>
+          <p class="text-slate-600 text-sm mb-3">Connect your team to payments in digital money or local currency, through supported connections.</p>
           <div class="flex items-center gap-2 text-xs">
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → PHP</span>
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDC → NGN</span>
@@ -1494,7 +1505,7 @@
             </svg>
           </div>
           <h3 class="text-lg font-bold mb-1">High-complexity digital commerce</h3>
-          <p class="text-slate-600 text-sm mb-3">Reviewed payment intake and payout routes. Crypto-native customers can pay in stablecoins; merchants can settle through configured rails.</p>
+          <p class="text-slate-600 text-sm mb-3">Accept stablecoins from crypto-native customers. Settle through your configured payment routes.</p>
           <div class="flex items-center gap-2 text-xs">
             <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">USDT → USDC</span>
             <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">USDC → EUR</span>
@@ -1539,10 +1550,10 @@
             </svg>
           </div>
           <h3 class="text-lg font-bold mb-1">Affiliate & Creator Payouts <span class="ml-1 px-2 py-0.5 bg-cyan-100 text-cyan-600 text-xs font-semibold rounded-full align-middle">Roadmap</span></h3>
-          <p class="text-slate-600 text-sm mb-3">Planned payout orchestration for configured rails, with provider-state tracking and settlement evidence.</p>
+          <p class="text-slate-600 text-sm mb-3">Planned: coordinate payouts with clear status and settlement records.</p>
           <div class="flex items-center gap-2 text-xs">
-            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">EUR → Bank (planned)</span>
-            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">EUR → USDC (planned)</span>
+            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">EUR → Bank</span>
+            <span class="bg-cyan-100 text-cyan-600 px-2 py-1 rounded-full">EUR → USDC</span>
           </div>
         </div>
       </div>
@@ -1635,7 +1646,7 @@
         </div>
         
         <!-- Code Example -->
-        <div class="terminal rounded-2xl overflow-hidden shadow-2xl">
+        <div class="terminal rounded-2xl overflow-hidden shadow-2xl" data-depth="12">
           <div class="terminal-header px-4 py-3 flex items-center gap-3">
             <div class="flex gap-2">
               <div class="terminal-dot bg-red-500"></div>

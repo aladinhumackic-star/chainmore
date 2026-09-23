@@ -4,6 +4,7 @@
   const all = selector => [...document.querySelectorAll(selector)];
   const get = id => document.getElementById(id);
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  let syncScrollMotion = () => {};
 
   const menu = get("mobile-menu"), menuButton = get("mobile-menu-btn");
   function toggleMenu(open, returnFocus = false) {
@@ -55,7 +56,7 @@
   });
 
   const cases = [{input:"card",output:"bank"},{input:"card",output:"usdc"},{input:"usdc",output:"bank"},{input:"usdc",output:"onchain"}];
-  let heroIndex = 0, heroTimer = null, heroVisible = true, paused = false;
+  let heroIndex = 3, heroTimer = null, heroVisible = true, paused = false;
   const pauseButton = document.querySelector(".motion-toggle");
   function showHero(index) {
     heroIndex = index;
@@ -82,6 +83,7 @@
     pauseButton.textContent = motion.matches ? "Reduced motion on" : paused ? "Play animation" : "Pause animation";
     pauseButton.disabled = motion.matches;
     pauseButton.setAttribute("aria-pressed", String(stop));
+    syncScrollMotion();
     if (!stop && heroVisible) heroTimer = setInterval(() => showHero((heroIndex + 1) % cases.length), 5000);
   }
   all(".hero-route-indicator").forEach((button, index) => button.addEventListener("click", () => {
@@ -91,13 +93,13 @@
   motion.addEventListener("change", syncMotion);
   document.addEventListener("visibilitychange", syncMotion);
   new IntersectionObserver(entries => { heroVisible = entries[0].isIntersecting; syncMotion(); }).observe(get("hero"));
-  showHero(0); syncMotion();
+  showHero(heroIndex); syncMotion();
 
-  const inputs = {card:["Card","Fiat"],stablecoin:["USDC","Stable"],"bank-wire":["Bank transfer","Fiat"],apm:["Apple Pay","Fiat"]};
+  const inputs = {card:["Card","Fiat"],stablecoin:["USDC / Ethereum","Stable"],"bank-wire":["Bank transfer","Fiat"],apm:["Apple Pay","Fiat"]};
   const outputs = {bank:["EUR / Bank account","Fiat"],stablecoin:["USDC / Polygon","Stable"],exchange:["USDC / Exchange account","Exchange"],onchain:["USDC / Your wallet","Wallet"]};
-  const paymentExamples = {card:"by card",stablecoin:"with the USDC they hold","bank-wire":"by bank transfer",apm:"with Apple Pay"};
+  const paymentExamples = {card:"by card",stablecoin:"with USDC on Ethereum","bank-wire":"by bank transfer",apm:"with Apple Pay"};
   const settlementExamples = {bank:"EUR in your bank account",stablecoin:"USDC on Polygon",exchange:"USDC in your exchange account",onchain:"USDC in your chosen wallet"};
-  const flow = {input:"card",output:"stablecoin"};
+  const flow = {input:"stablecoin",output:"stablecoin"};
   const costBenefits = {
     bank: ["Fewer separate fees", "Bring acceptance and bank payout into one route, with the full cost considered together."],
     stablecoin: ["Less lost in conversion", "Bring acceptance and your USDC payout into one flow, instead of arranging conversion separately."],
@@ -135,7 +137,11 @@
     });
     const target = get("comparison-results");
     target.replaceChildren();
+    const glanceCost = get("comparison-glance-cost"), glanceTime = get("comparison-glance-time");
     if (valid.includes(false)) {
+      glanceCost.textContent = "Enter valid assumptions";
+      glanceTime.textContent = "No comparison calculated";
+      glanceCost.dataset.direction = glanceTime.dataset.direction = "neutral";
       const error = document.createElement("p");
       error.textContent = "Enter valid non-negative costs (up to €1,000,000) and hours (up to 87,600), and 1 to 1,000,000 whole payments. No result is calculated from incomplete inputs.";
       target.append(error); return;
@@ -149,6 +155,20 @@
       const percent = Math.abs(delta) / Math.round(baseline * 100) * 100;
       return number(percent) + "% " + (delta >= 0 ? "less" : "more") + " in this example.";
     }
+    function glance(node, delta, baseline, lower, higher, equal, assumption) {
+      const metric = delta === 0 ? equal : baseline === 0
+        ? "No percentage: zero baseline"
+        : number(Math.abs(delta) / Math.round(baseline * 100) * 100) + "% " + (delta > 0 ? lower : higher);
+      node.textContent = metric + " ";
+      const detail = document.createElement("small");
+      detail.textContent = assumption;
+      node.append(detail);
+      node.dataset.direction = delta < 0 ? "worse" : delta === 0 || baseline === 0 ? "neutral" : "better";
+    }
+    glance(glanceCost, costDelta, currentCost, "lower cost", "higher cost", "No cost difference",
+      euros(currentCost) + " → " + euros(scenarioCost) + " per payment");
+    glance(glanceTime, timeDelta, currentTime, "less waiting", "more waiting", "No time difference",
+      number(currentTime) + "h → " + number(scenarioTime) + "h until funds are usable");
     function result(metric, label, calculation, worse) {
       const box = document.createElement("div"), strong = document.createElement("strong"), name = document.createElement("span"), detail = document.createElement("small");
       strong.textContent = metric; strong.dataset.direction = worse ? "worse" : "better";
@@ -177,7 +197,7 @@
     get("route-output-label").textContent = outputs[flow.output][0];
     get("route-types-label").textContent = inputs[flow.input][1] + " to " + outputs[flow.output][1];
     const benefit = flow.input === "stablecoin" && flow.output === "stablecoin"
-      ? "No manual network transfer for either side."
+      ? "No manual transfers or extra fee tokens."
       : inputs[flow.input][1] !== outputs[flow.output][1] && ["bank", "stablecoin"].includes(flow.output)
         ? "No separate conversion to arrange."
         : "Acceptance and settlement through one integration.";
@@ -191,14 +211,14 @@
       card.addEventListener("keydown", e => { if (["Enter"," "].includes(e.key)) { e.preventDefault(); select(); } });
     });
   });
-  setFlow("input","card"); setFlow("output","stablecoin");
+  setFlow("input","stablecoin"); setFlow("output","stablecoin");
 
   const preview = get("checkout-preview"), stage = document.querySelector(".checkout-stage");
   const previewImage = preview.querySelector("img"), previewSource = preview.querySelector("source");
   const states = ["wallet","qr","approve","payment_review","confirming","completed"];
   const captions = {
     wallet: "Choose Stablecoin, just as you would choose Card. USDC and USDT share one entry.",
-    qr: "Connect your wallet. This preview code cannot connect a real wallet.",
+    qr: "Try scanning the demo QR. It opens chainmore.io, without connecting a wallet or starting a payment.",
     approve: "Approve the required permission in your wallet. An approval is not a completed payment.",
     payment_review: "Review the payment in your wallet. It has not been confirmed yet.",
     confirming: "The payment is being confirmed. The checkout clearly shows that it is still in progress.",
@@ -230,5 +250,72 @@
     all("[data-checkout-size]").forEach(other => other.setAttribute("aria-pressed", String(other === button)));
     showCheckoutImage();
   }));
+  const detail = get('checkout-detail');
+  get('checkout-expand').addEventListener('click', () => {
+    const image = detail.querySelector('img');
+    image.src = previewImage.currentSrc || previewImage.src;
+    image.alt = previewImage.alt;
+    detail.showModal();
+    detail.scrollTop = 0;
+    get('checkout-detail-close').focus();
+  });
+  get('checkout-detail-close').addEventListener('click', () => detail.close());
+  detail.addEventListener('close', () => get('checkout-expand').focus({preventScroll:true}));
+
+  // Progressive enhancement: native scrolling, no pinned wheel/touch handlers.
+  // Without JS or with reduced motion, all content stays visible and stationary.
+  const revealNodes = all('.flow-heading, .brand-benefits > div:first-child, .benefit-stack > div, .business-benefits > .text-center, .business-benefits > .grid > div, .showcase-heading, .solutions-grid > div, #solutions > div > .text-center, #developers .grid > div:first-child');
+  const depthNodes = all('[data-depth]');
+  const wideScreen = matchMedia('(min-width: 980px)');
+  const visibleDepth = new Set();
+  let frame = 0;
+  const motionEnabled = () => !paused && !motion.matches && !document.hidden;
+  function drawDepth() {
+    frame = 0;
+    if (!motionEnabled() || !wideScreen.matches) return;
+    visibleDepth.forEach(node => {
+      const bounds = node.getBoundingClientRect();
+      const progress = Math.max(-1, Math.min(1, (innerHeight / 2 - bounds.top - bounds.height / 2) / (innerHeight / 2)));
+      const amount = node.hasAttribute('data-depth') ? Number(node.dataset.depth) : 24;
+      node.style.setProperty(node.hasAttribute('data-depth') ? '--depth-y' : '--glow-y', (progress * amount).toFixed(2) + 'px');
+    });
+  }
+  function requestDepth() {
+    if (!frame && motionEnabled() && wideScreen.matches && visibleDepth.size) frame = requestAnimationFrame(drawDepth);
+  }
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.remove('reveal-wait');
+        revealObserver.unobserve(entry.target);
+      }
+    }), { threshold: .08 });
+    revealNodes.forEach((node, i) => {
+      node.classList.add('reveal-item');
+      node.style.setProperty('--reveal-delay', (i % 3) * 65 + 'ms');
+      if (motionEnabled() && node.getBoundingClientRect().top > innerHeight) node.classList.add('reveal-wait');
+      revealObserver.observe(node);
+      node.addEventListener('focusin', () => node.classList.remove('reveal-wait'));
+    });
+    const depthObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => entry.isIntersecting ? visibleDepth.add(entry.target) : visibleDepth.delete(entry.target));
+      requestDepth();
+    });
+    [...depthNodes, get('payment-demo')].forEach(node => depthObserver.observe(node));
+    window.addEventListener('scroll', requestDepth, { passive: true });
+    window.addEventListener('resize', requestDepth, { passive: true });
+  }
+  syncScrollMotion = () => {
+    if (!motionEnabled() || !wideScreen.matches) {
+      cancelAnimationFrame(frame); frame = 0;
+      [...depthNodes, get('payment-demo')].forEach(node => {
+        node.style.removeProperty('--depth-y'); node.style.removeProperty('--glow-y');
+      });
+    }
+    if (!motionEnabled()) revealNodes.forEach(node => node.classList.remove('reveal-wait'));
+    requestDepth();
+  };
+  wideScreen.addEventListener('change', syncScrollMotion);
+  syncScrollMotion();
   document.body.classList.add("js-ready");
 })();

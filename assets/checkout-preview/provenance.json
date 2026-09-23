@@ -1,12 +1,14 @@
 {
   "renderer": "internal/hostedcheckout/assets",
   "fixture": "scripts/preview-hostedcheckout-design.mjs",
+  "fixtureSha256": "fd10330c0dc092eed30f263434478208e22119fc5695c71245576a5c063fa50c",
   "presentationFixture": "tools/checkout-marketing-fixture.mjs",
-  "presentationFixtureSha256": "8afb9a9fff3f72ae52fe5329acf993cf6f70c515c238a886e6d87f6eab2a13b5",
+  "presentationFixtureSha256": "6aaa8248286659f1976fbaf26cbe19daa55e7f2ea4f38dce5177d97884e0c21e",
   "presentation": "Proposed unified Stablecoin entry; synthetic merchant offers all displayed methods. Not a change to production availability or asset selection.",
   "checks": [
     {
       "state": "wallet",
+      "renderedStateCopy": null,
       "unavailableMethods": 0,
       "methods": [
         "Stablecoin",
@@ -22,6 +24,7 @@
     },
     {
       "state": "qr",
+      "renderedStateCopy": null,
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -29,6 +32,7 @@
     },
     {
       "state": "approve",
+      "renderedStateCopy": "Allow USDC",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -36,6 +40,7 @@
     },
     {
       "state": "payment_review",
+      "renderedStateCopy": null,
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -43,6 +48,7 @@
     },
     {
       "state": "confirming",
+      "renderedStateCopy": "You're done",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -50,6 +56,7 @@
     },
     {
       "state": "completed",
+      "renderedStateCopy": "Payment complete",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -57,6 +64,7 @@
     },
     {
       "state": "failed",
+      "renderedStateCopy": "Payment not completed",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -64,6 +72,7 @@
     },
     {
       "state": "expired",
+      "renderedStateCopy": "Checkout expired",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -72,27 +81,28 @@
   ],
   "sourceSha256": {
     "checkout.html": "aba409c1dd49418230edb843f4ea89b0a226e53ed652ef371ac2aa7d4f580d95",
-    "checkout.js": "8b5b0dc31ef43b325f3dcaff331ff4184b02ddf379e29c77e4465d67f7d481dc",
+    "checkout.js": "677e3ab563b6e06c9f32e8f114f0a562b01154bc7902677a1b3f71bc95aaa6b2",
     "checkout.css": "f02731e32faa37dfe3ed924148a75e9491d364e5580452e7cfb82fc8166e6b88",
     "checkout-tokens.css": "5d53be7317826bc539853a49d463e5b1a15614052030a8b02097699349c20e98"
   },
   "imageSha256": {
-    "wallet-desktop.png": "20da07f268606445a0d489fb9bf78c1a604f07a0c5e36d41defafd9dd6bb04c7",
-    "wallet-mobile.png": "fcc4de1a8542741d632e3b4d3406ad20cedb08bda7f4d11a413be80a3584a1c2",
-    "qr-desktop.png": "177d59accc67a6f73b620821fb1b0f6007c060deceb64f3fa1b31c2f9eb8b57c",
-    "qr-mobile.png": "268bac11704bfee6e2cac32793e1823e68c09ce719066a1c9c456ce2ef77a861",
-    "approve-desktop.png": "72f25bf12c08fd75cc32f2ddcfb358bfd4b1b50b00b7d2e39d732723e816e64e",
-    "approve-mobile.png": "a7633af2b8a1064fe874d30e90bed7aa1a1e7f3639d6d0426a04866eda33ab99",
-    "payment_review-desktop.png": "c7d20ba9248fde79212b3885a5269a673654e9ce6090ae75e6ca67f2e99cd2f1",
-    "payment_review-mobile.png": "9785fbcb7fc277701102ea69322369d61f08d44213cfcd08f7be69e8149bf19d",
-    "confirming-desktop.png": "025ab765ea5aadd8edb2f37275d03f90db1372b83f2ce28e3de895bf4c6d49f0",
-    "confirming-mobile.png": "8a524bf27376e9ff4f39e23e161d1a94c90593d9e0709649ffaa16be26d874d7",
-    "completed-desktop.png": "618e3c4a985dcc339a487f6eb34334f0204e7b0490c6cc96884d0f4bfad7c460",
-    "completed-mobile.png": "473e1d5a883967561fadf96c1ea0b14259c6bc90fc0b56e7df52dbfeb7d5aa47",
-    "failed-desktop.png": "785ddad79f9507df347b0ddcebfc73e45b4c4e5694dcbe0b765004d4258ec637",
-    "failed-mobile.png": "27d40cccf26b805023481fd6773e9af99ac2e0aebdebddad3645220f52667d0e",
-    "expired-desktop.png": "c12a134a42e17f58d82d9054d8d4d57dae809730a64c376894a5ca36153ec111",
-    "expired-mobile.png": "27d40cccf26b805023481fd6773e9af99ac2e0aebdebddad3645220f52667d0e"
+    "wallet-desktop.png": "f7d07bd51769a5c0f7f3ca22fa0cd6683b336567e92781ffd58d524072ccc816",
+    "wallet-mobile.png": "50b432bedada1c6d495c9bcfa98deebe5a03ab98973b5759c1cee4d1a0c156ee",
+    "qr-desktop.png": "5ae1fa2b0015703eadba1b17bcc304c65ae372f20236c14d21a66aac7a93e102",
+    "qr-mobile.png": "932c7ee90d575bc0178265e816c6e3676852228b073fcafa91dfaad7594846ed",
+    "approve-desktop.png": "74db08808342f541a2c3910c395376ac4886c8b031b6c71cc4e4e42d3a6dc5cc",
+    "approve-mobile.png": "9ad0ea424d20a70142326f679f9643f7f41acef63fe4497f8d16d712133aba14",
+    "payment_review-desktop.png": "29b7fd46bfc67d70233ac12be24df60413b853a4850b0aa148d5f5d5ce1de36c",
+    "payment_review-mobile.png": "64f1f097bae1aca1f8da0a5a93a1db1de57089420a4da911464a9950257bd9b4",
+    "confirming-desktop.png": "ed2ac66b649286891ec66a58163ac3b6097b23496511f1e88fcc0ec4e5c03d16",
+    "confirming-mobile.png": "13f2acef19d5636f37fe72c6dc709ba229775ec3b1f6afb273e393712637556d",
+    "completed-desktop.png": "c577182cb1bd69ac0c3b8a84f3aae1434203a34c089123b53db51e7fc47fc9e5",
+    "completed-mobile.png": "ef81e3e13cb3c27a60589c1a4f1db9a38de26f076b4f72cf666b82be0a989acc",
+    "failed-desktop.png": "4fc1ff5f982864ec29ba9803ceb01ee375deb13d528f2fe0029c30e13d2a6a5d",
+    "failed-mobile.png": "6da9dca61a56579bb98945d4e82fcd393c22b0e19c297c4338682d14a8db476b",
+    "expired-desktop.png": "ca29eda95dc0895bcb8eede0ff13c1158269727d9d2febacb253e4ed37a844bf",
+    "expired-mobile.png": "13c91dae0bd66309594d49ee0504dec2c15cf31834b986ab98536ef6198cc92d",
+    "website-qr.svg": "ec2bd43a5a5c970f2428f09afc08346a9212a4c0733aa2ff6fd6f1d6d95027fe"
   },
   "states": [
     "wallet",
