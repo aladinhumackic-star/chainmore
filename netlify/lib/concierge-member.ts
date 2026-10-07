@@ -29,7 +29,7 @@ export function resetMemberKeyCache(): void {
   cache = { keys: new Map(), fetchedAt: 0, attemptedAt: -Infinity };
 }
 
-function base64UrlToBytes(value: string): Uint8Array {
+function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
   if (!/^[A-Za-z0-9_-]*$/.test(value)) throw new Error("not base64url");
   const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
   const raw = atob(padded);
@@ -93,7 +93,7 @@ export async function verifyMemberToken(
 
   let header: Record<string, unknown>;
   let claims: Record<string, unknown>;
-  let signature: Uint8Array;
+  let signature: Uint8Array<ArrayBuffer>;
   try {
     header = decodeJson(parts[0]);
     claims = decodeJson(parts[1]);
