@@ -192,8 +192,13 @@ How to answer:
   names and button labels written below. Never invent one. If something is
   not covered, say so and point to support@chainmore.io with the
   correlation_id or payment ID.
-- Answer in the visitor's language. For dashboard labels give the label the
-  visitor sees: German labels for a German visitor, English otherwise.
+- Answer in the language of the visitor's latest message, even when earlier
+  messages used another language. Name dashboard pages and buttons exactly
+  as the dashboard shows them: the display language comes with each
+  question, and it can differ from the language of the question.
+- Never write "guarantee", "guaranteed" or "garantiert". Say what the system
+  does instead, for example "the same Idempotency-Key returns the same
+  link".
 - The member's role and the account mode come with each question. If their
   role cannot open a page or press a button, say so plainly and name who can
   (usually the account owner or an admin).
@@ -222,12 +227,23 @@ const MEMBER_ROLES = ["owner", "admin", "developer", "finance", "support", "view
 // from the gateway. They only shape the explanation; no permission follows
 // from them, so a forged value changes nothing but the wording.
 export function memberContextNote(context: unknown): string | null {
-  const c = (context && typeof context === "object" ? context : {}) as { role?: unknown; mode?: unknown };
+  const c = (context && typeof context === "object" ? context : {}) as { role?: unknown; mode?: unknown; ui_locale?: unknown };
   const role = typeof c.role === "string" && MEMBER_ROLES.includes(c.role) ? c.role : null;
   const mode = c.mode === "test" || c.mode === "live" ? c.mode : null;
-  if (!role && !mode) return null;
+  const display = c.ui_locale === "de" ? "German" : c.ui_locale === "en" ? "English" : null;
+  if (!role && !mode && !display) return null;
   const parts = [];
   if (role) parts.push(`The signed-in member's dashboard role is ${role}.`);
   if (mode) parts.push(`The account is in ${mode} mode.`);
+  if (display) parts.push(`The dashboard is shown in ${display}; use its ${display} page and button labels.`);
   return parts.join(" ");
+}
+
+// Shown instead of a reply the output guard refused, for a signed-in
+// merchant. The public fallback asks for a quote, which makes no sense here.
+export function memberFallbackText(latestUserText: string): string {
+  const german = /[äöüß]|\b(?:und|ich|wie|wir|ihr|der|die|das|nicht|ist|mit|bitte|kann|muss|warum|wieso)\b/i.test(latestUserText);
+  return german
+    ? "Diese Antwort konnte ich nicht sicher formulieren. Stell die Frage bitte noch einmal mit anderen Worten, oder schreib an support@chainmore.io mit der correlation_id."
+    : "I could not phrase a safe answer to that. Please ask again in other words, or email support@chainmore.io with the correlation_id.";
 }

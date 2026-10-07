@@ -18,7 +18,7 @@ import {
 import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
 import { INTEGRATION_TURN_NOTE } from "./concierge-integration.ts";
 import { MEMBER_CLIENT_ID, MEMBER_ISSUER, MEMBER_JWKS_URL, resetMemberKeyCache } from "./concierge-member.ts";
-import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, memberContextNote } from "./concierge-prompt.ts";
+import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, memberContextNote, memberFallbackText } from "./concierge-prompt.ts";
 import { CONCIERGE_DASHBOARD_KNOWLEDGE } from "./concierge-dashboard-knowledge.ts";
 import { REDACTION_NOTE } from "./concierge-redact.ts";
 
@@ -473,6 +473,8 @@ test("long member conversations keep the newest turns instead of failing", async
 test("the member context shapes the prompt and accepts only known values", async (t) => {
   assert.equal(memberContextNote({ role: "finance", mode: "live" }), "The signed-in member's dashboard role is finance. The account is in live mode.");
   assert.equal(memberContextNote({ role: "superuser", mode: "prod" }), null);
+  assert.equal(memberContextNote({ ui_locale: "de" }), "The dashboard is shown in German; use its German page and button labels.");
+  assert.equal(memberContextNote({ ui_locale: "fr" }), null);
   assert.equal(memberContextNote("owner"), null);
 
   withConciergeEnv(t);
@@ -507,4 +509,21 @@ test("secrets in any message never reach the model provider", async (t) => {
   assert.ok(!sent.includes(secret));
   assert.ok(sent.includes("[removed: API key]"));
   assert.ok(calls.openai.at(-1).input[0].content.some((c) => c.text === REDACTION_NOTE));
+});
+
+test("a refused reply in the dashboard gets a helpful note in the visitor's language", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "The Idempotency-Key guarantees one link per order." }] }] });
+  const ask = async (content, ip) => {
+    const response = await handler(memberRequest(await memberIdToken({ sub: `refused-${ip}` }), [{ role: "user", content }]), { ip, userAgent: "node" });
+    const all = await events(response);
+    assert.equal(all[0].type, "delta", JSON.stringify(all));
+    return all[0].text;
+  };
+  assert.equal(await ask("Our server retried creating a checkout link. Could the customer pay twice?", "198.51.100.18"), memberFallbackText("Could"));
+  assert.match(await ask("Kann der Kunde zweimal zahlen, wenn wir die Anfrage wiederholen?", "198.51.100.19"), /mit anderen Worten/);
+  for (const text of [memberFallbackText("x"), memberFallbackText("und")]) assert.equal(guardReply(text).ok, true);
+  assert.match(MEMBER_PROMPT, /Never write "guarantee"/);
+  assert.match(MEMBER_PROMPT, /language of the visitor's latest message/);
 });

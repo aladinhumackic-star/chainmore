@@ -29,7 +29,7 @@ import {
 import { guardReply } from "../lib/concierge-guard.ts";
 import { sseAfter } from "../lib/concierge-sse.ts";
 import { verifyMemberToken } from "../lib/concierge-member.ts";
-import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, SYSTEM_PROMPT, memberContextNote } from "../lib/concierge-prompt.ts";
+import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, SYSTEM_PROMPT, memberContextNote, memberFallbackText } from "../lib/concierge-prompt.ts";
 import { REDACTION_NOTE, redact } from "../lib/concierge-redact.ts";
 import { INTEGRATION_TURN_NOTE, codeOutsideScope, isMemberIntegrationTurn, outOfScopeReply } from "../lib/concierge-integration.ts";
 import { buildConciergeResponsesPayload, cutOffByBudget, cutOffNote, rejectsTextVerbosity, withoutTextVerbosity } from "../lib/concierge-openai.ts";
@@ -304,6 +304,7 @@ export default async (req: Request, ctx: Context) => {
     // The law, not the advice: deterministic guard on the full reply.
     const guarded = guardReply(reply, { allowCodePlaceholders: member });
     if (!guarded.ok) console.warn("[concierge] guard blocked reply", guarded.hits);
-    return [{ type: "delta", text: guarded.text }, { type: "done" }];
+    const text = !guarded.ok && member ? memberFallbackText(messages[messages.length - 1].content) : guarded.text;
+    return [{ type: "delta", text }, { type: "done" }];
   }, snag);
 };
