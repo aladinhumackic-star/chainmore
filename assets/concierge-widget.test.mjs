@@ -9,6 +9,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const widgetPath = path.join(__dirname, "concierge-widget.js");
 const SESSION_HEADER = "x-chainmore-concierge-session";
 
+test("launcher uses the same Concierge name as the panel", () => {
+  const source = fs.readFileSync(widgetPath, "utf8");
+  assert.match(source, /'aria-label': 'ChainMore Concierge'/);
+  assert.match(source, /class: 'cm-concierge-fab__label', text: 'ChainMore Concierge'/);
+  assert.doesNotMatch(source, /Ask ChainMore/);
+});
+
 function response(status, body = {}) {
   return {
     status,

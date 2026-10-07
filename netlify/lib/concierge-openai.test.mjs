@@ -10,9 +10,11 @@ import {
   CONCIERGE_MAX_OUTPUT_TOKENS,
   CONCIERGE_MODEL,
   buildConciergeResponsesPayload,
+  rejectsTextVerbosity,
+  withoutTextVerbosity,
 } from "./concierge-openai.ts";
 
-test("builds GPT-5.5 Responses payload for the public Concierge", () => {
+test("builds GPT-6.1 Sol Responses payload for the public Concierge", () => {
   const input = [
     {
       role: "user",
@@ -22,7 +24,7 @@ test("builds GPT-5.5 Responses payload for the public Concierge", () => {
 
   const payload = buildConciergeResponsesPayload(input);
 
-  assert.equal(payload.model, "gpt-5.5");
+  assert.equal(payload.model, "gpt-6.1-sol");
   assert.equal(payload.model, CONCIERGE_MODEL);
   assert.equal(payload.input, input);
   assert.equal(payload.stream, false);
@@ -32,7 +34,7 @@ test("builds GPT-5.5 Responses payload for the public Concierge", () => {
   assert.ok(payload.max_output_tokens >= 800);
 });
 
-test("does not send legacy sampling parameters rejected by GPT-5-family models", () => {
+test("does not send legacy sampling parameters rejected by reasoning models", () => {
   const payload = buildConciergeResponsesPayload([]);
 
   assert.equal(Object.hasOwn(payload, "temperature"), false);
@@ -201,4 +203,47 @@ test("comparison conversations use the advocacy prompt without bypassing admissi
   }), binding);
   const events = (await blocked.text()).trim().split("\n\n").map(line => JSON.parse(line.slice(6)));
   assert.deepEqual(events, [{ type: "delta", text: FALLBACK_TEXT }, { type: "done" }]);
+});
+
+test("drops text.verbosity only when the API rejects it, and asks once more", async (t) => {
+  assert.equal(rejectsTextVerbosity(400, '{"error":{"message":"Unsupported parameter: \'text.verbosity\'","param":"text.verbosity"}}'), true);
+  assert.equal(rejectsTextVerbosity(400, '{"error":{"message":"Invalid input"}}'), false);
+  assert.equal(rejectsTextVerbosity(429, "verbosity"), false);
+  const stripped = withoutTextVerbosity(buildConciergeResponsesPayload([]));
+  assert.equal(Object.hasOwn(stripped, "text"), false);
+  assert.deepEqual(stripped.reasoning, { effort: "low" });
+
+  const secret = "synthetic-test-secret";
+  const denoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "Deno");
+  Object.defineProperty(globalThis, "Deno", { configurable: true, value: { env: { get: (name) => ({
+    OPENAI_API_KEY: "synthetic-test-key", CONCIERGE_ABUSE_SECRET: secret,
+  })[name] } } });
+  t.after(() => {
+    if (denoDescriptor) Object.defineProperty(globalThis, "Deno", denoDescriptor);
+    else delete globalThis.Deno;
+  });
+  t.mock.method(console, "warn", () => {});
+  const bodies = [];
+  t.mock.method(globalThis, "fetch", async (_url, init) => {
+    const body = JSON.parse(init.body);
+    bodies.push(body);
+    if (body.text) {
+      return Response.json({ error: { message: "Unsupported parameter: 'text.verbosity'", param: "text.verbosity" } }, { status: 400 });
+    }
+    return Response.json({ output: [{ content: [{ type: "output_text", text: "Create a checkout link from your server, then send the customer to the checkout page." }] }] });
+  });
+  const binding = { ip: "203.0.113.91", userAgent: "SyntheticBrowserVerbosity" };
+  const token = await createConciergeSessionToken(secret, binding);
+  const response = await handler(new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { origin: "https://chainmore.io", "content-type": "application/json", "user-agent": binding.userAgent, [CONCIERGE_SESSION_HEADER]: token },
+    body: JSON.stringify({ messages: [{ role: "user", content: "How do I start the integration?" }] }),
+  }), binding);
+  const text = await response.text();
+  assert.equal(response.status, 200, text);
+  assert.equal(bodies.length, 2);
+  assert.ok(bodies[0].text);
+  assert.equal(Object.hasOwn(bodies[1], "text"), false);
+  assert.equal(bodies[1].model, "gpt-6.1-sol");
+  assert.match(text, /checkout link/);
 });

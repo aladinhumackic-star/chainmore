@@ -27,7 +27,7 @@ import {
 } from "../lib/concierge-abuse.ts";
 import { guardReply } from "../lib/concierge-guard.ts";
 import { SYSTEM_PROMPT } from "../lib/concierge-prompt.ts";
-import { buildConciergeResponsesPayload } from "../lib/concierge-openai.ts";
+import { buildConciergeResponsesPayload, rejectsTextVerbosity, withoutTextVerbosity } from "../lib/concierge-openai.ts";
 import { deterministicConciergeReply } from "../lib/concierge-sales.ts";
 
 const MAX_MESSAGES = 20;
@@ -207,11 +207,20 @@ export default async (req: Request, ctx: Context) => {
 
   let reply = "";
   try {
-    const upstream = await fetch("https://api.openai.com/v1/responses", {
+    const call = (payload: unknown) => fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify(buildConciergeResponsesPayload(input)),
+      body: JSON.stringify(payload),
     });
+    const payload = buildConciergeResponsesPayload(input);
+    let upstream = await call(payload);
+    if (!upstream.ok && upstream.status === 400) {
+      const detail = await upstream.text();
+      if (rejectsTextVerbosity(upstream.status, detail)) {
+        console.warn("[concierge] model rejected text.verbosity; asking once without it");
+        upstream = await call(withoutTextVerbosity(payload));
+      }
+    }
     if (!upstream.ok) {
       console.error("[concierge] upstream status", upstream.status);
       return sse([{ type: "error", message: "The Concierge hit a snag. Please try again." }], 502);

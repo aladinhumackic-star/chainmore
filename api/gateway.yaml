@@ -101,13 +101,23 @@ info:
     (`POST /v1/webhook_endpoints/{id}/test`) is the single
     dual-auth route that accepts either kind.
 
+    **Which credential an endpoint takes:** each operation lists its
+    security scheme. `bearerAuth` is the merchant API key for your
+    server. `dashboardSession` is the login token of the merchant
+    dashboard; endpoints with this scheme serve the dashboard and
+    refuse an API key. Endpoints with `security: []` or a checkout
+    token scheme take no merchant credential. They are public, or they
+    check a checkout token or a provider signature as their
+    description says.
+
     **Idempotency:** every POST, PUT, PATCH, and DELETE request MUST
-    include an `Idempotency-Key` header. The key scopes server-side
-    deduplication: a retry of the same request with the same key
-    returns the cached response without producing a second side
-    effect. Generate one key per logical operation (e.g. per
-    user-clicked Submit), not per network attempt. Missing keys
-    return `400 idempotency_required`.
+    include an `Idempotency-Key` header. A missing or empty key returns
+    `400 idempotency_required`; the gateway checks the header before it
+    checks the credential. Generate one key per logical operation (for
+    example per click on Submit) and reuse it when you retry that
+    operation. The one exception is the Paysafe provider callback
+    (`POST /internal/providers/paysafe/webhooks`), which is signed by
+    the provider instead.
   contact:
     name: ChainMore
     url: https://chainmore.io
@@ -128,23 +138,41 @@ security:
 
 components:
   securitySchemes:
+    checkoutSessionToken:
+      type: http
+      scheme: bearer
+      description: Short-lived checkout session token; preferred over the query fallback.
+    checkoutSessionTokenQuery:
+      type: apiKey
+      in: query
+      name: token
+      description: Checkout token fallback. Bearer takes precedence when both are present.
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: cm_{mode}_{hex}
       description: |
-        Merchant API key presented as `Authorization: Bearer
+        Merchant API key, sent from your server as `Authorization: Bearer
         cm_test_<hex>` (test mode) or `Authorization: Bearer
-        cm_live_<hex>` (live mode). Required for every route except
-        `GET /health`, the public `/checkout*` HTML shell, and the
-        widget JSON routes under `/v1/checkout/widget/*`, which use
-        a short-lived checkout token minted by `POST
-        /v1/checkout/sessions` instead of the merchant key.
+        cm_live_<hex>` (live mode). Endpoints with this scheme accept
+        only a merchant API key; a dashboard login token returns
+        `401 wrong_auth_kind`. Endpoints marked `security: []` need no
+        merchant credential.
 
-        IDX-I2: mode (test/live) is derived server-side from the
-        authenticated key and is NEVER accepted as a body, header,
-        or query field. Attempts to assert mode on the request are
-        silently ignored in favour of the key's mode.
+        IDX-I2: the key sets the mode (test or live). The gateway never
+        reads the mode from a body, header, or query field. A mode sent
+        on the request is ignored.
+    dashboardSession:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Login token of the merchant dashboard. Endpoints with this scheme
+        are used by the dashboard and cannot be called with a merchant
+        API key. An API key returns `401 wrong_auth_kind`. The gateway
+        takes the mode (test or live) from the dashboard's mode selection
+        (`/v1/dashboard/mode-selection`), never from the request. Without
+        approved live access the mode is always test.
 
   parameters:
     CorrelationID:
@@ -160,24 +188,11 @@ components:
     IdempotencyKey:
       name: Idempotency-Key
       in: header
-      required: false
-      description: |
-        Idempotency key for mutation endpoints that explicitly declare
-        this parameter. Required on create/plan/decision surfaces such
-        as `/v1/payment-intents`, `/v1/routing/plan`,
-        `/v1/validation/validate`, `/v1/dispatch/decide`, and
-        `POST /v1/payments/{id}/attempts` in strict modes; optional on
-        checkout endpoints where the session ID already provides
-        idempotency.
-      schema: { type: string, minLength: 1, maxLength: 128 }
-
-    RequiredIdempotencyKey:
-      name: Idempotency-Key
-      in: header
       required: true
       description: |
-        Required idempotency key for this mutation. Reuse the same value
-        when retrying the same logical request.
+        Required on every POST, PUT, PATCH and DELETE. Reuse the same key
+        when you retry the same request; a missing key returns 400
+        idempotency_required.
       schema: { type: string, minLength: 1, maxLength: 128 }
 
     PaymentID:
@@ -327,13 +342,99 @@ components:
   # Schemas
   # -------------------------------------------------------------------------
   schemas:
+
+    StablecoinDecisionWallet:
+      type: object
+      additionalProperties: false
+      required: [address, chain_id]
+      properties:
+        address: { type: string, pattern: '^0x[0-9a-fA-F]{40}$' }
+        chain_id: { type: integer, minimum: 1, maximum: 9007199254740991 }
+
+    StablecoinDecisionQuote:
+      type: object
+      additionalProperties: false
+      description: |
+        Displayed terms, submitted unchanged for revalidation. No signature
+        or execution authority. Native routes, and for USDT the USDT0
+        corridor (route oft: paid on Ethereum, received on Arbitrum after
+        delivery_seconds); USDT and USDC are not converted into each other.
+        Amount strings are atomic units.
+      required: [id, payment_method, asset, chain_id, network, token, recipient,
+        route, merchant_atomic, fee_atomic, gross_atomic, native_fee_atomic,
+        native_currency, native_decimals, wallet_actions, gas_financed, expires_at, snapshot]
+      properties:
+        id: { type: string }
+        payment_method: { type: string, enum: [usdt0, usdc] }
+        asset: { type: string, enum: [USDT, USDC] }
+        chain_id: { type: integer, minimum: 1 }
+        network: { type: string }
+        token: { type: string }
+        issuer:
+          type: string
+          description: |
+            Who issues the token when that is not the usual issuer of its
+            symbol, so the token is never equated with another by its
+            symbol: `binance` for USDT on BNB Chain (chain 56). Absent
+            otherwise.
+        adapter: { type: string }
+        adapter_version: { type: integer }
+        fee_recipient: { type: string }
+        recipient: { type: string }
+        route: { type: string, enum: [native, oft] }
+        source_chain: { type: string }
+        dest_chain: { type: string }
+        destination_chain_id: { type: integer }
+        destination_network: { type: string }
+        merchant_atomic: { type: string, pattern: '^[0-9]+$' }
+        fee_atomic: { type: string, pattern: '^[0-9]+$' }
+        gross_atomic: { type: string, pattern: '^[0-9]+$' }
+        native_fee_atomic: { type: string, pattern: '^[0-9]+$' }
+        approval_fee_atomic: { type: string, pattern: '^[0-9]+$' }
+        payment_fee_atomic: { type: string, pattern: '^[0-9]+$' }
+        native_currency: { type: string }
+        native_decimals: { type: integer }
+        total_usd_atomic: { type: string, pattern: '^[0-9]+$' }
+        wallet_actions: { type: integer }
+        gas_financed: { type: boolean }
+        terms_signature: { type: boolean }
+        delivery_seconds: { type: integer, minimum: 1 }
+        expires_at: { type: string, format: date-time }
+        snapshot: { type: string }
+
+    StablecoinDecisionProposal:
+      type: object
+      required: [wallet, choices, comparison_complete, findings, expires_at,
+        amount_atomic, amount_decimals, asset]
+      properties:
+        wallet: { $ref: "#/components/schemas/StablecoinDecisionWallet" }
+        choices:
+          type: array
+          items: { $ref: "#/components/schemas/StablecoinDecisionQuote" }
+        recommended_id: { type: string }
+        comparison_complete: { type: boolean }
+        findings:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [payment_method, code]
+            properties:
+              payment_method: { type: string }
+              chain_id: { type: integer }
+              code: { type: string }
+        expires_at: { type: string, format: date-time }
+        amount_atomic: { type: string, pattern: '^[0-9]+$' }
+        amount_decimals: { type: integer, enum: [6] }
+        asset: { type: string, enum: [USDT, USDC] }
+
     Problem:
       type: object
       description: |
         RFC 7807 error envelope. Every failure response from this API
         carries this shape; match on `code` for stable integration
         behaviour. See the per-code merchant-facing remedy pages at
-        `https://docs.chainmore.dev/errors/<slug>` (the full URL is
+        `https://chainmore.io/errors/<slug>` (the full URL is
         also returned inline as `docs_url`).
       required: [title, code]
       properties:
@@ -349,19 +450,18 @@ components:
         code:
           type: string
           description: |
-            Stable machine-readable error code. See the merchant error
-            reference at `docs/merchant/error-reference.md` for the
-            canonical remedy for each code. New codes may be added at
-            any time; clients MUST NOT treat an unknown code as a parse
-            error.
+            Stable machine-readable error code. See the error reference
+            at https://chainmore.io/errors for the remedy for each code.
+            New codes may be added at any time; clients MUST NOT treat an
+            unknown code as a parse error.
           enum:
             - attempt_binding_mismatch
-            - cctp_attestation_pending
             - cctp_amount_below_minimum
-            - cctp_capacity_unobserved
-            - cctp_coverage_unavailable
+            - cctp_attestation_pending
             - cctp_awaiting_deposit
             - cctp_burn_pending
+            - cctp_capacity_unobserved
+            - cctp_coverage_unavailable
             - cctp_customer_sanctioned
             - cctp_destination_gas_exhausted
             - cctp_manual_review
@@ -377,6 +477,7 @@ components:
             - checkout_link_method_unavailable
             - checkout_link_not_found
             - checkout_operation_failed
+            - checkout_terms_changed
             - create_endpoint_failed
             - create_key_failed
             - create_payment_failed
@@ -394,6 +495,7 @@ components:
             - exec_dispatch_decision_not_found
             - exec_dispatch_not_allowed
             - exec_no_dispatch_decision
+            - handouts_paused
             - idempotency_required
             - invalid_authorization_mode
             - invalid_json
@@ -405,10 +507,13 @@ components:
             - list_endpoints_failed
             - list_keys_failed
             - membership_missing
+            - merchant_limit_reached
             - method_not_allowed
             - not_found
             - not_implemented
             - payment_lookup_failed
+            - pending_confirmation
+            - rail_not_ready
             - rate_limited
             - register_direct_tx_failed
             - replay_delivery_failed
@@ -431,6 +536,8 @@ components:
             - validation_failed
             - validation_lookup_failed
             - validation_precondition_failed
+            - wallet_account_unsupported
+            - wallet_call_would_revert
             - wallet_chain_not_accepted
             - wallet_insufficient_native_gas
             - wallet_insufficient_usdc
@@ -454,7 +561,7 @@ components:
             Stable per `code` value - safe to link to from dashboards
             or verifiers. Empty when the code is unregistered (which
             the refusalcodes drift-check guards against in CI).
-          example: https://docs.chainmore.dev/errors/endpoint-disabled
+          example: https://chainmore.io/errors/endpoint-disabled
         correlation_id:
           type: string
           description: Server-generated correlation ID; echoed in `X-Correlation-ID`.
@@ -634,12 +741,17 @@ components:
         settlement_destination:
           type: string
           description: |
-            The merchant's own account the rail delivers to, as a CAIP-10
-            account id (`eip155:42161:0x...`) or a bare `0x` address for the
-            corridor's fixed destination chain. Required for
-            `payment_method=usdt0` (Arbitrum One only), refused for every
-            other method. ChainMore never substitutes an address of its own:
-            the customer's transfer lands directly in this account.
+            The merchant's own account the rail delivers to: a CAIP-10
+            account id on a chain the rails pay on (`eip155:<chain>:0x...`)
+            or a TRON account (`tron:0x2b6653dc:T...`). A bare `0x` address
+            names no network and is accepted only when it is the merchant's
+            declared target on Arbitrum for the payment's token
+            (`PUT /v1/settlement_destinations/<token>:arbitrum` or the legacy
+            `usdt0`); otherwise 400 invalid_request. Omitted: the merchant's
+            highest-priority payout target, which must lie on its own
+            corridor's chain. Refused for methods that do not deliver on
+            chain. ChainMore never substitutes an address of its own: the
+            customer's transfer lands directly in this account.
         metadata:
           type: object
           additionalProperties: true
@@ -1680,7 +1792,7 @@ components:
         merchant_order_id: { type: string, maxLength: 128 }
         settlement_profile_id: { type: string, description: "Merchant provider profile (merchant_provider_profiles.id) the card/USDT payment settles through; omitted resolves the merchant's default or only active profile." }
         metadata: { type: object, additionalProperties: true }
-        settlement_destination: { type: string, description: "The merchant's own USDT account on a chain the rails pay on: eip155 CAIP-10 (eip155:1:0x…, eip155:42161:0x…), a bare 0x address (Arbitrum), or a TRON account (tron:0x2b6653dc:T…); omitted: the merchant's highest-priority USDT payout target (ADR-0075). A mixed-case 0x address must carry a valid EIP-55 checksum unless it spells an account the merchant has declared (an active USDT payout target or the usdt0 default): that account is admitted in any spelling and stored lowercase. Any other spelling with a broken checksum is refused with the reason (400 invalid_request)." }
+        settlement_destination: { type: string, description: "The merchant's own USDT account on a chain the rails pay on: eip155 CAIP-10 (eip155:1:0x…, eip155:42161:0x…) or a TRON account (tron:0x2b6653dc:T…); a bare 0x address names no network and is accepted only when it is the merchant's declared USDT target on Arbitrum (otherwise 400 invalid_request); omitted: the merchant's highest-priority USDT payout target (ADR-0075). A mixed-case 0x address must carry a valid EIP-55 checksum unless it spells an account the merchant has declared (an active USDT payout target or the usdt0 default): that account is admitted in any spelling and stored lowercase. Any other spelling with a broken checksum is refused with the reason (400 invalid_request)." }
         usdc:
           type: object
           description: Optional explicit USDC routing details. When omitted, same-chain USDC can be offered if the merchant has an active settlement profile, a USDC payout destination and the USDC route is enabled.
@@ -1857,14 +1969,15 @@ components:
             into (ADR-0076): the same-chain rail tries the payment's stored
             chain first, then this chain, then the others of the wallet's
             address family, and delivers on each to the target the merchant
-            declared there or to the stored account where that is portable.
+            declared there, or on the stored chain to the account the payment
+            was bound to; a chain without an approval is not paid.
             It never changes the amount. The EIP-155 chain the customer's wallet is already
             connected to. The merchant's settlement chain is always tried
             first; among the other configured chains, a chain named here is
             tried before the rest, so a wallet funded off the settlement
             chain is spared a network switch. Paying on a chain other than
-            the settlement chain delivers to the merchant's same address on
-            that chain, exactly as it does without this field. Absent,
+            the settlement chain delivers only to a payout target the
+            merchant declared for that chain, exactly as without this field. Absent,
             unconfigured, unfunded or non-EVM values are ignored, and the
             field never changes the amount, the recipient or the fee.
 
@@ -2002,6 +2115,25 @@ components:
             may be prepared).
         route: { $ref: "#/components/schemas/CheckoutUSDT0Route" }
         fee: { $ref: "#/components/schemas/CheckoutUSDT0Fee" }
+        delay: { $ref: "#/components/schemas/CheckoutUSDT0Delay" }
+
+    CheckoutUSDT0Delay:
+      type: object
+      description: |
+        Present in `await_delivery` when the delivery to the merchant
+        failed and is held for clarification: the destination chain and
+        the message provider's status both say so. The payment is not
+        ended and nothing is sent again; it completes if the delivery
+        still arrives. `merchant_notice` says how far the merchant was
+        told: `delivered` (the merchant's endpoint acknowledged the
+        `payment.delivery_delayed` event), `queued` (the event is not
+        delivered yet) or `none` (no event reached or is on its way to the
+        merchant).
+      required: [merchant_notice]
+      properties:
+        merchant_notice:
+          type: string
+          enum: [delivered, queued, none]
 
     WidgetUSDT0Response:
       type: object
@@ -3403,9 +3535,9 @@ components:
     CreateKeyRequest:
       type: object
       description: |
-        Body for `POST /v1/keys`. IDX-I2: `mode` MUST NOT appear in
-        the body - it is derived from the authenticated key. A `mode`
-        field, if sent, is silently ignored.
+        Body for `POST /v1/keys`. IDX-I2: the new key gets the mode
+        selected in the dashboard session that calls this endpoint. A
+        `mode` field in the body is ignored.
       properties:
         name: { type: string, description: "Human-readable label." }
 
@@ -3488,9 +3620,10 @@ components:
       type: object
       required: [url, events]
       description: |
-        Body for `POST /v1/webhook_endpoints`. IDX-I2: `mode` is NOT
-        accepted in the body; it is derived from the authenticated
-        key. Non-https URLs are rejected.
+        Body for `POST /v1/webhook_endpoints`. IDX-I2: the endpoint gets
+        the mode selected in the dashboard session that calls this
+        endpoint. A `mode` field in the body is ignored. Non-https URLs
+        are rejected.
       properties:
         url:
           type: string
@@ -3498,7 +3631,14 @@ components:
           description: "Must be an https URL."
         events:
           type: array
-          description: "Event types to subscribe to (e.g. payment.settled, payment_intent.settled)."
+          description: |
+            Event types to subscribe to: `payment_intent.settled`,
+            `payment.settled`, `payment.expired`,
+            `payment.late_payment_received`, `payment.delivery_delayed`.
+            An empty list receives `payment_intent.settled` and
+            `payment.settled` only. `payment.expired`,
+            `payment.late_payment_received` and `payment.delivery_delayed`
+            reach only endpoints that list them by name.
           items: { type: string }
 
     CreateEndpointResponse:
@@ -3538,27 +3678,129 @@ components:
           items: { $ref: "#/components/schemas/WebhookEndpoint" }
         mode: { type: string, enum: [test, live] }
 
-    # ── Webhook delivery body (merchant consumes) ────────────────────────────
+    # ── Webhook delivery bodies (merchant consumes) ──────────────────────────
+    # Each schema lists exactly the fields its producer writes; a test
+    # (cmd/openapi-drift-check, webhook_schema_test.go) compares them.
     WebhookEvent:
       type: object
       description: |
-        Shape of the JSON body ChainMore POSTs to a registered
-        webhook endpoint. The body is signed with HMAC-SHA256 over
-        the exact raw bytes using the endpoint's `whsec_*` secret;
-        the signature is carried in the `X-ChainMore-Signature`
-        header as lowercase hex. See docs/quickstart.md section 4 for the
-        verification snippet.
-      required: [id, type, created_at, mode, data]
+        Body of the `payment.*` events. The signature is HMAC-SHA256 with
+        the endpoint's `whsec_*` secret over the `X-ChainMore-Timestamp`
+        header value, a dot, and the exact raw body bytes; it is carried
+        in the `X-ChainMore-Signature` header as lowercase hex. While a
+        rotated secret is still valid, `X-ChainMore-Signature-Previous`
+        carries the signature with that secret. `X-ChainMore-Event-ID`
+        repeats `event_id`. See https://chainmore.io/docs#webhooks for
+        the verification snippet.
+
+        Delivery is at least once: a retried delivery carries the same
+        `event_id`, so dedupe by it. Existing fields keep their name and
+        meaning; new fields may be added.
+      required: [schema_version, event_type, occurred_at, payment_id, merchant_id, state, amount]
       properties:
-        id:         { type: string, description: "Unique event id - dedupe by this." }
-        type:
+        schema_version:
+          type: integer
+          description: |
+            Version of this body, `1`. A replay of a delivery written
+            before the field existed carries `0`; its other fields are
+            the same.
+        event_type:
           type: string
-          description: "Event type, e.g. `payment.settled`, `payment_intent.settled`."
-        created_at: { type: string, format: date-time }
-        mode:       { type: string, enum: [test, live] }
-        data:
+          enum: [payment.settled, payment.failed, payment.expired, payment.late_payment_received, payment.delivery_delayed]
+        event_id:
+          type: string
+          description: "Delivery identity, set on every delivery. A replay has a new one."
+        occurred_at: { type: string, format: date-time }
+        payment_id: { type: string }
+        merchant_id: { type: string }
+        merchant_order_id: { type: string }
+        state:
+          type: string
+          description: |
+            The state the event reports: `settled`, `failed`, `expired`,
+            `late_payment_received` or `delivery_delayed`.
+        failure_code:
+          type: string
+          description: "Machine-readable reason of `payment.expired`; absent otherwise."
+        amount:
           type: object
-          description: "Event-specific payload. For payment.* events: { payment, checkout_session }."
+          description: |
+            The amount the payment requested. For
+            `payment.late_payment_received` this is not the amount of the
+            further transfer; that one is in `transfer`.
+          required: [minor, currency]
+          properties:
+            minor: { type: integer, format: int64 }
+            currency: { type: string }
+            asset: { type: string }
+        transfer:
+          type: object
+          description: |
+            Only on `payment.late_payment_received`: the further on-chain
+            transfer. `amount_atomic` is what it moved to the merchant's
+            address, in the token's base units on that chain;
+            `amount_decimals` is that token's scale there (6, or 18 for USDT
+            on BNB Chain). Absent on every other event.
+          required: [chain_id, tx_hash, log_index, amount_atomic, amount_decimals]
+          properties:
+            chain_id: { type: integer, format: int64 }
+            tx_hash: { type: string, description: "Lowercase hex." }
+            log_index: { type: integer, format: int64 }
+            amount_atomic: { type: string, pattern: '^[0-9]+$' }
+            amount_decimals: { type: integer, minimum: 6, maximum: 18 }
+            asset: { type: string }
+        test_event:
+          type: boolean
+          description: "`true` on a test event from `POST /v1/webhook_endpoints/{id}/test`; absent otherwise."
+        replayed_from_event_id:
+          type: string
+          description: "On a replay, the `event_id` of the original delivery; absent otherwise."
+
+    PaymentIntentWebhookEvent:
+      type: object
+      description: |
+        Body of `payment_intent.settled`. Signed and delivered like
+        `WebhookEvent`. This body has no `schema_version` field.
+      required: [event_type, event_id, occurred_at, payment_id, merchant_id, mode, surface_status, amount, route, settlement]
+      properties:
+        event_type:
+          type: string
+          enum: [payment_intent.settled]
+        event_id: { type: string }
+        occurred_at: { type: string, format: date-time }
+        payment_id: { type: string }
+        merchant_id: { type: string }
+        mode: { type: string, enum: [test, live] }
+        surface_status: { type: string }
+        merchant_order_id: { type: string }
+        customer_reference: { type: string }
+        amount:
+          type: object
+          required: [usdc_atomic, asset]
+          properties:
+            usdc_atomic: { type: string }
+            asset: { type: string }
+        route:
+          type: object
+          required: [source_chain, dest_chain, finality_mode]
+          properties:
+            source_chain: { type: string }
+            dest_chain: { type: string }
+            finality_mode: { type: string }
+        settlement:
+          type: object
+          required: [merchant_wallet, settlement_contract]
+          properties:
+            source_tx_hash: { type: string }
+            mint_tx_hash: { type: string }
+            merchant_wallet: { type: string }
+            settlement_contract: { type: string }
+        test_event:
+          type: boolean
+          description: "`true` on a test event from `POST /v1/webhook_endpoints/{id}/test`; absent otherwise."
+        replayed_from_event_id:
+          type: string
+          description: "On a replay, the `event_id` of the original delivery; absent otherwise."
 
   responses:
     BadRequest:
@@ -3711,7 +3953,7 @@ paths:
         a 32 KiB request-body cap, strict JSON decoding, and a honeypot field
         that returns a normal-looking 201 without inserting a row.
       parameters:
-        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -3808,6 +4050,7 @@ paths:
         intent; it does not grant merchant API access. If both Authorization
         Bearer and query token credentials are sent, they must match exactly.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: token
           in: query
@@ -3846,6 +4089,7 @@ paths:
         hash as a pending browser/server claim. The on-chain observer still
         owns final BURNED verification.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: token
           in: query
@@ -3885,6 +4129,7 @@ paths:
         Authorization Bearer and query token credentials are sent, they must
         match exactly.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: token
           in: query
@@ -3923,6 +4168,7 @@ paths:
         does not advance the payment lifecycle, and does not start a worker or
         source-tx finder. With the feature disabled this path returns 404.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4004,6 +4250,8 @@ paths:
     get:
       summary: List CCTP payment intents that need review.
       operationId: listPaymentIntentsNeedsReview
+      security:
+        - dashboardSession: []
       description: |
         Narrow list endpoint for the merchant dashboard review queue.
         Only surface_status=needs_review is supported. Unknown, delayed,
@@ -4271,6 +4519,13 @@ paths:
     get:
       summary: Look up a checkout session by its token.
       operationId: getCheckoutSessionByToken
+      security: []
+      description: |
+        Used by the hosted checkout page. It needs no `Authorization`
+        header and no merchant API key. The checkout token in the path is
+        the credential, so anyone who holds the token can read the
+        session. The gateway hashes the token and looks up the session by
+        the hash. An unknown token returns 404.
       parameters:
         - $ref: "#/components/parameters/CheckoutToken"
         - $ref: "#/components/parameters/CorrelationID"
@@ -4425,6 +4680,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4524,6 +4780,111 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
+
+  /v1/checkout/widget/stablecoin/quote:
+    post:
+      summary: Observe native stablecoin routes for an existing API payment.
+      description: |
+        Requires the short-lived checkout session token, not a merchant API
+        key. The token selects the payment and its merchant, mode, amount,
+        asset, target and expiry. These cannot be overridden in the request.
+        Available only when the shared stablecoin decision service is wired
+        (currently with checkout-link wiring); this contract does not assert
+        deployment or hosted-page integration. Test/live scope must match.
+        Expired, terminal, card-owned or already executing sessions refuse.
+        Payments with a checkout-link-bound selection refuse with 409;
+        use the original link to resume its accepted route.
+        Read-only: creates no payment, attempt, signature or reservation.
+        An incomplete comparison includes findings; no balance is guessed.
+      operationId: quoteWidgetStablecoinPayment
+      security:
+        - checkoutSessionToken: []
+        - checkoutSessionTokenQuery: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StablecoinDecisionWallet"
+      responses:
+        '200':
+          description: Observed proposal; Cache-Control no-store.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StablecoinDecisionProposal"
+        '400':
+          description: Invalid input or expired session.
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409':
+          description: Session or payment state refuses, or terms changed.
+        '429':
+          description: Discovery busy; Retry-After 1 second.
+        '500':
+          description: Decision not wired or internal failure; no internal detail.
+        '503':
+          description: Observations unavailable; retry without assuming a route.
+
+  /v1/checkout/widget/stablecoin/select:
+    post:
+      summary: Retain the displayed native route terms on the existing API payment.
+      description: |
+        Requires the short-lived checkout session token, not a merchant API
+        key. The token selects the payment and its merchant, mode, amount,
+        asset, target and expiry. These cannot be overridden in the request.
+        Available only when the shared stablecoin decision service is wired
+        (currently with checkout-link wiring); this contract does not assert
+        deployment or hosted-page integration. Test/live scope must match.
+        Expired, terminal, card-owned or already executing sessions refuse.
+        Payments with a checkout-link-bound selection refuse with 409;
+        the session token cannot replace the link's accepted route.
+        Re-quotes and rejects changed terms. Does not start execution or sign.
+        After success use the existing widget/usdt0/prepare wallet flow.
+      operationId: selectWidgetStablecoinPayment
+      security:
+        - checkoutSessionToken: []
+        - checkoutSessionTokenQuery: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [wallet, stablecoin]
+              properties:
+                wallet: { $ref: "#/components/schemas/StablecoinDecisionWallet" }
+                stablecoin: { $ref: "#/components/schemas/StablecoinDecisionQuote" }
+      responses:
+        '200':
+          description: Terms retained; Cache-Control no-store. No execution started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [selected]
+                properties:
+                  selected: { type: boolean, enum: [true] }
+        '400':
+          description: Invalid input or expired session.
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409':
+          description: Session or payment state refuses, or terms changed.
+        '429':
+          description: Discovery busy; Retry-After 1 second.
+        '500':
+          description: Decision not wired or internal failure; no internal detail.
+        '503':
+          description: Observations unavailable; retry without assuming a route.
+
   /v1/checkout/widget/link:
     get:
       summary: Redacted checkout-link view for the hosted checkout browser page.
@@ -4558,6 +4919,7 @@ paths:
           in: query
           required: false
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4595,6 +4957,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4633,8 +4996,8 @@ paths:
         same-chain rail routes by it (ADR-0076): it pays on the first chain
         of the wallet's address family where the wallet holds the amount and
         the merchant has an account, the target the merchant declared for
-        that chain first, otherwise the payment's stored account where it is
-        portable. A wallet on a family the merchant declared no target for
+        that chain, or on the stored chain the account the payment was bound
+        to. A wallet on a family the merchant declared no target for
         answers 400 `wallet_chain_not_accepted` with the accepted networks in
         the detail. The USDT0 corridor (Ethereum to Arbitrum) is the fallback
         for an Arbitrum account only. Idempotent for the
@@ -4651,6 +5014,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4691,6 +5055,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4728,6 +5093,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4765,6 +5131,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4803,6 +5170,7 @@ paths:
           required: false
           description: "Raw checkout token fallback when Authorization header is not used."
           schema: { type: string, minLength: 1, maxLength: 256 }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
@@ -4810,6 +5178,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/WidgetUSDT0Response" }
+        '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
         '409': { $ref: "#/components/responses/Conflict" }
@@ -4836,7 +5205,7 @@ paths:
       operationId: prepareWidgetCardExecution
       security: []
       parameters:
-        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - $ref: "#/components/parameters/IdempotencyKey"
         - name: token
           in: query
           required: false
@@ -4849,6 +5218,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/WidgetCardPrepareResponse" }
+        '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
         '409': { $ref: "#/components/responses/Conflict" }
@@ -4884,7 +5254,7 @@ paths:
       operationId: submitWidgetCardCharge
       security: []
       parameters:
-        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - $ref: "#/components/parameters/IdempotencyKey"
         - name: token
           in: query
           required: false
@@ -4918,6 +5288,8 @@ paths:
     get:
       summary: Read the server-resolved dashboard test/live mode state.
       operationId: getDashboardModeSelection
+      security:
+        - dashboardSession: []
       description: |
         Returns the effective dashboard mode for the authenticated OIDC
         merchant-user session. The mode is derived from server-owned
@@ -4939,6 +5311,8 @@ paths:
     post:
       summary: Persist a server-authoritative dashboard test/live mode selection.
       operationId: setDashboardModeSelection
+      security:
+        - dashboardSession: []
       description: |
         Requests a dashboard mode switch for the authenticated OIDC
         merchant-user session. The server verifies membership and live-access
@@ -4947,6 +5321,7 @@ paths:
         live money movement, live webhooks, live provider credentials, or host
         environment changes.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -4967,6 +5342,8 @@ paths:
     get:
       summary: List recent async dashboard export jobs.
       operationId: listDashboardExportJobs
+      security:
+        - dashboardSession: []
       description: |
         Lists recent async export job metadata for the authenticated
         merchant and mode. Cross-merchant and cross-mode jobs are not
@@ -4993,13 +5370,15 @@ paths:
     post:
       summary: Queue an async dashboard export job for the authenticated merchant.
       operationId: createDashboardExportJob
+      security:
+        - dashboardSession: []
       description: |
         Creates export job metadata only. Merchant and mode are resolved
         from the dashboard auth context; request bodies cannot assert
         merchant_id or mode. This endpoint does not run a worker, create
         a downloadable file, expose storage URIs, or move funds.
       parameters:
-        - $ref: "#/components/parameters/RequiredIdempotencyKey"
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5023,6 +5402,8 @@ paths:
     get:
       summary: Read async dashboard export job status.
       operationId: getDashboardExportJob
+      security:
+        - dashboardSession: []
       description: |
         Reads export job metadata for the authenticated merchant and
         mode. Cross-merchant or cross-mode job IDs do not return another
@@ -5045,6 +5426,8 @@ paths:
     get:
       summary: Download a completed async dashboard export.
       operationId: downloadDashboardExportJob
+      security:
+        - dashboardSession: []
       description: |
         Streams the generated export artifact for the authenticated
         merchant and mode. Cross-merchant, cross-mode, missing, queued,
@@ -5081,6 +5464,8 @@ paths:
     get:
       summary: Read the authenticated merchant's current business profile submission.
       operationId: getAccountProfileSubmission
+      security:
+        - dashboardSession: []
       description: |
         Merchant-user readback for the current submitted business profile.
         The server resolves merchant_id from the authenticated dashboard user.
@@ -5100,6 +5485,8 @@ paths:
     post:
       summary: Submit the authenticated merchant's business profile for account review.
       operationId: submitAccountProfile
+      security:
+        - dashboardSession: []
       description: |
         Merchant-user control-plane write. The server resolves
         merchant_id from the authenticated dashboard user; callers must
@@ -5107,6 +5494,7 @@ paths:
         only. It does not grant live access, issue API keys, create
         provider handles, or trigger payments.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5127,6 +5515,8 @@ paths:
     patch:
       summary: Update the authenticated merchant's optional display name.
       operationId: updateMerchantDisplayName
+      security:
+        - dashboardSession: []
       description: |
         Merchant-user control-plane write for the merchant-maintained
         presentation label used by dashboard and checkout surfaces. The server
@@ -5134,6 +5524,7 @@ paths:
         not send tenant identity in the body. This does not change legal
         identity, live access, API keys, provider handles, or payments.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5159,6 +5550,8 @@ paths:
     get:
       summary: Merchant-scoped integration posture summary.
       operationId: getDashboardIntegration
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
       responses:
@@ -5174,6 +5567,8 @@ paths:
     get:
       summary: Read merchant onboarding setup progress.
       operationId: getDashboardOnboardingProgress
+      security:
+        - dashboardSession: []
       description: |
         Read-only setup-progress contract for the authenticated
         merchant. The response is derived from existing account,
@@ -5195,6 +5590,8 @@ paths:
     get:
       summary: List account audit events for the authenticated merchant.
       operationId: listDashboardAuditEvents
+      security:
+        - dashboardSession: []
       description: |
         Read-only account activity for the authenticated merchant. The
         endpoint is merchant-scoped and deliberately redacted: it returns
@@ -5217,6 +5614,8 @@ paths:
     get:
       summary: Read team members and invitations for the authenticated merchant.
       operationId: getDashboardTeamAccess
+      security:
+        - dashboardSession: []
       description: |
         Read-only account-level team access snapshot. The endpoint is
         merchant-scoped and redacted: it returns member role/status and
@@ -5237,6 +5636,8 @@ paths:
     get:
       summary: Read dashboard notification-routing preferences.
       operationId: getDashboardNotificationPreferences
+      security:
+        - dashboardSession: []
       description: |
         Merchant- and mode-scoped saved dashboard notification
         preferences. This endpoint returns dashboard signal-routing
@@ -5254,6 +5655,8 @@ paths:
     put:
       summary: Save dashboard notification-routing preferences.
       operationId: updateDashboardNotificationPreferences
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped control-plane action. The caller must be an
         owner/admin dashboard user. The endpoint persists dashboard
@@ -5261,6 +5664,7 @@ paths:
         but it does not configure email, Slack, pager, provider-side
         delivery, or hidden operator routing.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5281,6 +5685,8 @@ paths:
     post:
       summary: Create a pending team invitation for the authenticated merchant.
       operationId: createDashboardTeamInvitation
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped team access control action. The caller must be
         an owner/admin dashboard user. The endpoint records a pending
@@ -5289,6 +5695,7 @@ paths:
         issuer, or subject is exposed. The invited person joins by
         signing in with the same verified email.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5301,6 +5708,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '403': { $ref: "#/components/responses/Forbidden" }
         '409': { $ref: "#/components/responses/Conflict" }
@@ -5309,12 +5717,15 @@ paths:
     post:
       summary: Revoke a pending team invitation for the authenticated merchant.
       operationId: revokeDashboardTeamInvitation
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped team access control action. The caller must be
         an owner/admin dashboard user. The endpoint only revokes pending
         invitations, never accepted membership, and never exposes
         invitation_token_hash or plaintext invitation tokens.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: id
           in: path
@@ -5326,6 +5737,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardTeamInvitationView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '403': { $ref: "#/components/responses/Forbidden" }
         '404': { $ref: "#/components/responses/NotFound" }
@@ -5335,6 +5747,8 @@ paths:
     post:
       summary: Change an active non-owner team member's dashboard role.
       operationId: updateDashboardTeamMemberRole
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped team access control action. The caller must be
         an owner/admin dashboard user. The endpoint changes only active
@@ -5342,6 +5756,7 @@ paths:
         changes, or cross-merchant membership edits. The response is a
         redacted member projection and never exposes OIDC issuer/subject.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: id
           in: path
@@ -5368,12 +5783,15 @@ paths:
     post:
       summary: Remove an active non-owner team member's dashboard access.
       operationId: revokeDashboardTeamMember
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped team access control action. The caller must be
         an owner/admin dashboard user. The endpoint revokes active
         non-owner membership without deleting the audit row; owner
         removal and self-removal require a separate reviewed process.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
         - name: id
           in: path
@@ -5385,6 +5803,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardTeamMemberView" }
+        '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '403': { $ref: "#/components/responses/Forbidden" }
         '404': { $ref: "#/components/responses/NotFound" }
@@ -5394,12 +5813,15 @@ paths:
     post:
       summary: Submit a settlement-policy change request for review.
       operationId: createDashboardPolicyChangeRequest
+      security:
+        - dashboardSession: []
       description: |
         Merchant-scoped control-plane action. The caller must be an
         owner/admin dashboard user. The request is persisted as review
         evidence and audited, but it does not mutate merchant_policies,
         routing, or live settlement behavior.
       parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5420,6 +5842,8 @@ paths:
     get:
       summary: Read CCTP exception depth for the authenticated merchant (mode-scoped).
       operationId: getDashboardExceptionSummary
+      security:
+        - dashboardSession: []
       description: |
         Compact read-only Ops snapshot for delayed, needs_review,
         failed_safely, and expired CCTP payment intents. Merchant and
@@ -5439,6 +5863,8 @@ paths:
     get:
       summary: Read Customer-360 activity for one merchant-supplied customer reference.
       operationId: getDashboardCustomerActivity
+      security:
+        - dashboardSession: []
       description: |
         Returns a merchant- and mode-scoped CCTP activity summary plus
         recent stage-based payment-intent rows for one pseudonymous
@@ -5469,6 +5895,8 @@ paths:
     get:
       summary: List payments for the authenticated merchant (mode-scoped).
       operationId: listDashboardPayments
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardCursor"
         - $ref: "#/components/parameters/DashboardLimit"
@@ -5489,6 +5917,8 @@ paths:
     get:
       summary: Export the filtered dashboard payment result set as CSV.
       operationId: exportDashboardPaymentsCSV
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardPaymentSearch"
         - $ref: "#/components/parameters/DashboardPaymentStatus"
@@ -5521,6 +5951,8 @@ paths:
     get:
       summary: Read a single payment from the dashboard projection.
       operationId: getDashboardPayment
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardPaymentID"
         - $ref: "#/components/parameters/CorrelationID"
@@ -5537,6 +5969,8 @@ paths:
     get:
       summary: List checkout sessions for the authenticated merchant (mode-scoped).
       operationId: listDashboardSessions
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardCursor"
         - $ref: "#/components/parameters/DashboardLimit"
@@ -5553,6 +5987,8 @@ paths:
     get:
       summary: Read a single checkout session from the dashboard projection.
       operationId: getDashboardSession
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardSessionID"
         - $ref: "#/components/parameters/CorrelationID"
@@ -5569,6 +6005,8 @@ paths:
     get:
       summary: Search CCTP reconciliation rows for the authenticated merchant (mode-scoped).
       operationId: listDashboardReconciliation
+      security:
+        - dashboardSession: []
       description: |
         Read-only merchant dashboard projection over payment_intents.
         The required `q` parameter is exact-match support lookup by
@@ -5598,6 +6036,8 @@ paths:
     get:
       summary: List recent CCTP payment-intent evidence for the authenticated merchant.
       operationId: listRecentDashboardReconciliation
+      security:
+        - dashboardSession: []
       description: |
         Read-only merchant dashboard projection over the most recent
         payment_intents rows. Merchant and mode are resolved from auth
@@ -5620,6 +6060,8 @@ paths:
     get:
       summary: Read aggregate settlement reconciliation for a bounded period.
       operationId: getDashboardSettlementReconciliationSummary
+      security:
+        - dashboardSession: []
       description: |
         Read-only high-volume Finance summary. Merchant and mode are
         resolved from auth context; the query only bounds the time
@@ -5673,6 +6115,8 @@ paths:
     get:
       summary: Read route-level ledger summary for a bounded period.
       operationId: getDashboardRouteLedgerSummary
+      security:
+        - dashboardSession: []
       description: |
         Read-only Merchant Dashboard route ledger contract. Merchant and
         mode are resolved from auth context; query parameters only bound
@@ -5709,6 +6153,8 @@ paths:
     get:
       summary: Read route-level health projection for a bounded period.
       operationId: getDashboardRouteHealthSummary
+      security:
+        - dashboardSession: []
       description: |
         Backend-only Merchant Dashboard route-health projection. Merchant
         and mode are resolved from auth context; query parameters only
@@ -5746,6 +6192,8 @@ paths:
     get:
       summary: Read one CCTP payment-intent reconciliation detail row.
       operationId: getDashboardReconciliation
+      security:
+        - dashboardSession: []
       description: |
         Read-only merchant dashboard detail for one payment intent.
         Merchant and mode are resolved from auth context; cross-tenant
@@ -5770,6 +6218,8 @@ paths:
     get:
       summary: List webhook endpoints for the authenticated merchant (mode-scoped).
       operationId: listDashboardWebhookEndpoints
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
       responses:
@@ -5784,6 +6234,8 @@ paths:
     get:
       summary: Read webhook delivery health summary for the authenticated merchant (mode-scoped).
       operationId: getDashboardWebhookHealthSummary
+      security:
+        - dashboardSession: []
       description: |
         Read-only merchant dashboard metric contract over
         webhook_endpoints and webhook_outbox for the last 24h. Merchant
@@ -5804,6 +6256,8 @@ paths:
     get:
       summary: List webhook delivery attempts for the authenticated merchant (mode-scoped).
       operationId: listDashboardWebhookDeliveries
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/DashboardCursor"
         - $ref: "#/components/parameters/DashboardLimit"
@@ -5819,25 +6273,31 @@ paths:
   # -------------------------------------------------------------------------
   # Merchant Integration control plane (IDX-I3 - self-service lifecycle)
   #
-  # All mutations in this section derive (merchant_id, mode) from the
-  # authenticated API key. IDX-I2 forbids mode assertion from the caller.
+  # These endpoints take only a dashboard login token (dashboardSession).
+  # The one exception is POST /v1/webhook_endpoints/{id}/test, which also
+  # takes a merchant API key. The merchant and the mode come from the
+  # credential; the caller cannot set the mode (IDX-I2).
   # -------------------------------------------------------------------------
   /v1/keys:
     get:
-      summary: List API keys for the authenticated merchant, scoped to the key's mode.
+      summary: List API keys for the authenticated merchant, in the dashboard's selected mode.
       operationId: listKeys
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
-          description: Keys in the caller's mode.
+          description: Keys in the dashboard's selected mode.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ListKeysResponse" }
         '401': { $ref: "#/components/responses/Unauthorized" }
     post:
-      summary: Mint a new API key for the authenticated merchant, in the caller's mode.
+      summary: Mint a new API key for the authenticated merchant, in the dashboard's selected mode.
       operationId: createKey
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
@@ -5859,6 +6319,8 @@ paths:
     delete:
       summary: Revoke an API key. Idempotent - revoking an already-revoked key is a no-op.
       operationId: revokeKey
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -5881,6 +6343,8 @@ paths:
     post:
       summary: Rotate an API key - mint a successor, revoke the predecessor, in one transaction.
       operationId: rotateKey
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/APIKeyID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -5935,6 +6399,7 @@ paths:
           in: path
           required: true
           schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -5960,6 +6425,7 @@ paths:
           in: path
           required: true
           schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
@@ -5975,6 +6441,8 @@ paths:
     get:
       summary: List the merchant user's payout targets in the dashboard's resolved mode.
       operationId: listDashboardSettlementDestinations
+      security:
+        - dashboardSession: []
       description: |
         The dashboard door to the same payout targets as
         `/v1/settlement_destinations` (ADR-0075): OIDC merchant-user session,
@@ -5994,12 +6462,15 @@ paths:
     put:
       summary: Declare or replace one payout target from the dashboard, in the dashboard's resolved mode.
       operationId: putDashboardSettlementDestination
+      security:
+        - dashboardSession: []
       description: Same contract as `PUT /v1/settlement_destinations/{corridor}`, for the merchant user's session.
       parameters:
         - name: corridor
           in: path
           required: true
           schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
         required: true
@@ -6017,12 +6488,15 @@ paths:
     delete:
       summary: Disable one payout target from the dashboard, in the dashboard's resolved mode.
       operationId: disableDashboardSettlementDestination
+      security:
+        - dashboardSession: []
       description: Same contract as `DELETE /v1/settlement_destinations/{corridor}`, for the merchant user's session.
       parameters:
         - name: corridor
           in: path
           required: true
           schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
@@ -6035,20 +6509,24 @@ paths:
         '404': { $ref: "#/components/responses/NotFound" }
   /v1/webhook_endpoints:
     get:
-      summary: List webhook endpoints for the authenticated merchant, scoped to the key's mode.
+      summary: List webhook endpoints for the authenticated merchant, in the dashboard's selected mode.
       operationId: listWebhookEndpoints
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/CorrelationID"
       responses:
         '200':
-          description: Webhook endpoints in the caller's mode.
+          description: Webhook endpoints in the dashboard's selected mode.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ListEndpointsResponse" }
         '401': { $ref: "#/components/responses/Unauthorized" }
     post:
-      summary: Register a new webhook endpoint, in the caller's mode.
+      summary: Register a new webhook endpoint, in the dashboard's selected mode.
       operationId: createWebhookEndpoint
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
@@ -6070,6 +6548,8 @@ paths:
     patch:
       summary: Update a webhook endpoint (url / events / enabled). Mode is not patchable.
       operationId: updateWebhookEndpoint
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -6095,6 +6575,8 @@ paths:
     delete:
       summary: Disable a webhook endpoint. Idempotent.
       operationId: disableWebhookEndpoint
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -6136,10 +6618,16 @@ paths:
         rejected with `invalid_request`; the test endpoint never sends an
         event type outside the endpoint subscription.
 
-        The outbox row's `mode` is stamped from the authenticated
-        bearer; a live-mode key may not test a test-mode endpoint and
-        vice versa.
+        This is the one endpoint that accepts both credentials: a
+        merchant API key (for example from a CI job) or a dashboard
+        login token. The outbox row's `mode` comes from that credential,
+        either the key's mode or the mode selected in the dashboard. A
+        request in live mode cannot test a test-mode endpoint, and the
+        reverse.
       operationId: sendTestWebhookEvent
+      security:
+        - bearerAuth: []
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -6199,9 +6687,11 @@ paths:
         verifier, (3) observe that new deliveries verify, (4) accept
         the old secret is dead.
 
-        Mode-scoped: a live-mode bearer cannot rotate a test-mode
-        endpoint's secret (and vice versa) - the request returns 404.
+        Mode-scoped: a request in live mode cannot rotate a test-mode
+        endpoint's secret, and the reverse. Such a request returns 404.
       operationId: rotateWebhookEndpointSecret
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -6266,14 +6756,16 @@ paths:
             predates envelope-encrypted secrets (pre-MDB rollout).
             Resolve via rotate-secret, which populates envelope columns.
 
-        Mode-scoped: a live-mode bearer cannot replay a test-mode
-        delivery (and vice versa) - the request returns 404 with no
-        leak of which scope the row actually lives in.
+        Mode-scoped: a request in live mode cannot replay a test-mode
+        delivery, and the reverse. Such a request returns 404 and does
+        not reveal which mode the row belongs to.
 
         Delivery itself is asynchronous - the response 202 confirms a
         new outbox row was written; the merchant observes completion at
         their HTTP endpoint (or via the delivery-history dashboard).
       operationId: replayWebhookDelivery
+      security:
+        - dashboardSession: []
       parameters:
         - $ref: "#/components/parameters/WebhookEndpointID"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -6341,10 +6833,11 @@ webhooks:
     post:
       summary: Sent when a payment reaches its settled terminal state.
       description: |
-        Body is signed with HMAC-SHA256 over the raw bytes using the
-        endpoint's `whsec_*` secret. The hex signature is carried in
+        Signed with HMAC-SHA256 using the endpoint's `whsec_*` secret
+        over the `X-ChainMore-Timestamp` header value, a dot, and the
+        exact raw body bytes. The lowercase hex signature is carried in
         the `X-ChainMore-Signature` header. Consumers MUST use a
-        timing-safe comparison.
+        timing-safe comparison and reject stale timestamps.
       requestBody:
         required: true
         content:
@@ -6355,12 +6848,79 @@ webhooks:
           description: Delivery acknowledged.
   payment.failed:
     post:
-      summary: Sent when a payment reaches a failed terminal state.
+      summary: Reserved. ChainMore does not send this event today.
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.expired:
+    post:
+      summary: Sent when a stablecoin wallet payment expires unpaid.
+      description: |
+        `state` is `expired`; `failure_code` names the reason. Sent only
+        to endpoints that list `payment.expired` by name. Status: not yet
+        enabled on the production gateway.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.late_payment_received:
+    post:
+      summary: Sent when a further on-chain transfer is found for a payment that is already booked.
+      description: |
+        For example, the customer's authorization was executed twice.
+        One event per further transfer; `state` is
+        `late_payment_received`. `amount` is the amount the payment
+        requested; `transfer` names the further transfer (chain,
+        transaction, log) and what it moved to the merchant, in the
+        token's units on that chain. Sent only to endpoints that list
+        `payment.late_payment_received` by name. Status: not yet enabled
+        on the production gateway.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.delivery_delayed:
+    post:
+      summary: Sent when the delivery of a cross-chain stablecoin payment failed and is held for clarification.
+      description: |
+        The payment was received on the source chain, but the cross-chain
+        message that delivers it to the merchant's account failed or is
+        blocked on the destination chain. The destination chain and the
+        message provider's status both say so. `state` is
+        `delivery_delayed`. The payment is not ended and nothing is sent
+        again: if the delivery still arrives, `payment.settled` follows.
+        At most one such event per payment. Sent only to endpoints that
+        list `payment.delivery_delayed` by name. Status: not yet enabled
+        on the production gateway.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment_intent.settled:
+    post:
+      summary: Sent when a payment intent settles.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentIntentWebhookEvent" }
       responses:
         '2XX':
           description: Delivery acknowledged.

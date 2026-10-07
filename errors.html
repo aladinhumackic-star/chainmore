@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Error codes | ChainMore</title>
+  <meta name="description" content="Every error code the ChainMore API returns, what it means and what to do.">
+  <link rel="canonical" href="https://chainmore.io/errors">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root{color-scheme:light;--navy:#0f172a;--cyan:#00bfe6;--muted:#526278;--line:#dce4ee}
+    *{box-sizing:border-box}html{scroll-padding-top:88px}body{margin:0;color:var(--navy);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f9fc}
+    a{color:#007c99;text-underline-offset:4px}a:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+    header{position:sticky;top:0;z-index:50;background:var(--navy);color:white}
+    .bar{max-width:1040px;margin:auto;min-height:64px;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:10px;color:white;text-decoration:none;font-size:20px;font-weight:700}.brand img{width:28px}.bar nav{display:flex;gap:20px}.bar nav a{color:#cbd5e1;text-decoration:none;font-size:14px}
+    main{max-width:1040px;margin:auto;padding:40px 24px 64px}
+    h1{font-size:clamp(32px,5vw,48px);line-height:1.1;margin:0 0 12px}h2{font-size:24px;margin:40px 0 8px}h3{font-size:17px;margin:0 0 6px}
+    .lead{color:var(--muted);max-width:680px}
+    pre{overflow:auto;background:#101a2c;color:#e2e8f0;border-radius:10px;padding:18px;font-size:13px}
+    code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    .index{display:flex;flex-wrap:wrap;gap:8px 18px;margin:24px 0 0;font-size:14px}
+    .code{background:white;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:12px 0;scroll-margin-top:88px}
+    .code:target,.code.current{border-color:var(--cyan);box-shadow:0 0 0 3px #d9f8ff}
+    .code p{margin:6px 0}.meta{color:var(--muted);font-size:14px}
+    footer{padding:28px 24px;background:var(--navy);color:#94a3b8;font-size:13px}footer div{max-width:1040px;margin:auto;display:flex;gap:20px;flex-wrap:wrap}footer a{color:#cbd5e1}
+  </style>
+</head>
+<body>
+<header><div class="bar"><a class="brand" href="/"><img src="/assets/chainmore-mark.svg" alt="">ChainMore</a><nav><a href="/docs">Docs</a><a href="/docs#reference">API reference</a></nav></div></header>
+<main>
+<h1>Error codes</h1>
+<p class="lead">Every error from the ChainMore API has a stable <code>code</code>. Match on the code, not on the text. Keep the <code>correlation_id</code> and send it to support@chainmore.io if you need help.</p>
+<pre><code>{
+  "title": "endpoint disabled",
+  "status": 400,
+  "detail": "this webhook endpoint is disabled; enable it before sending a test event",
+  "code": "endpoint_disabled",
+  "docs_url": "https://chainmore.io/errors/endpoint-disabled",
+  "correlation_id": "corr_4f1c9a0b2d7e6f38a1b2c3d4"
+}</code></pre>
+<nav class="index" aria-label="Error groups">
+  <a href="#group-auth">Authentication</a>
+  <a href="#group-lifecycle">Lifecycle &amp; State</a>
+  <a href="#group-method">HTTP Method</a>
+  <a href="#group-not_found">Not Found</a>
+  <a href="#group-rate_limit">Rate Limit</a>
+  <a href="#group-server">Server-Side Failure</a>
+  <a href="#group-validation">Validation</a>
+</nav>
+<section class="group" id="group-auth">
+  <h2>Authentication</h2>
+  <article class="code" id="cross-merchant-forbidden">
+    <h3><code>cross_merchant_forbidden</code></h3>
+    <p class="meta">cross-merchant access forbidden · HTTP 403</p>
+    <p>Your credentials resolved successfully, but the resource identified in the request URL or body belongs to a different merchant. ChainMore enforces strict merchant-scope at the service boundary: credentials (API key or OIDC JWT) can only act on resources owned by the merchant they authenticate for.</p>
+    <p><strong>What to do:</strong> Check that the resource id in the URL or body is one your merchant owns (listed under <code>GET /v1/dashboard/...</code>). If you operate multiple merchants, use the credentials scoped to the owning merchant. This is a boundary enforcement, not a transient failure, retrying with the same credentials and resource will always be refused.</p>
+  </article>
+  <article class="code" id="dashboard-role-forbidden">
+    <h3><code>dashboard_role_forbidden</code></h3>
+    <p class="meta">dashboard role forbidden · HTTP 403</p>
+    <p>Your OIDC session resolved to the correct merchant, but your dashboard member role is not allowed to perform this action.</p>
+    <p><strong>What to do:</strong> Ask a merchant owner or administrator to perform the action or update your dashboard role. Read-only users can still view the dashboard surfaces their role permits.</p>
+  </article>
+  <article class="code" id="jwt-expired">
+    <h3><code>jwt_expired</code></h3>
+    <p class="meta">jwt expired · HTTP 401 · safe to retry</p>
+    <p>The OIDC JWT presented as bearer has an <code>exp</code> (expiry) claim in the past, even after the configured clock-skew tolerance. Access tokens are short-lived (typically a few minutes); the client is expected to refresh.</p>
+    <p><strong>What to do:</strong> Use your refresh token at Keycloak&#39;s token endpoint to mint a new access token, then retry. If you cannot refresh (browser closed, session ended), re-authenticate the user via the OIDC login flow.</p>
+  </article>
+  <article class="code" id="jwt-invalid">
+    <h3><code>jwt_invalid</code></h3>
+    <p class="meta">jwt invalid · HTTP 401</p>
+    <p>The OIDC JWT presented as bearer failed validation. Possible reasons: bad signature, wrong <code>iss</code> (issuer), wrong <code>aud</code> (audience), malformed token, or a claim value that does not match this environment&#39;s expected set. ID-tokens presented to the API are rejected here, only OIDC access tokens are accepted.</p>
+    <p><strong>What to do:</strong> Re-authenticate via the configured Keycloak realm, ensure your OIDC client is configured to request an access token (not an ID token) with <code>aud = chainmore-gateway</code>, and try again. For programmatic integration, use the API-key path instead of JWTs.</p>
+  </article>
+  <article class="code" id="membership-missing">
+    <h3><code>membership_missing</code></h3>
+    <p class="meta">merchant membership missing · HTTP 403</p>
+    <p>The OIDC JWT is valid, but the authenticated user is not a member of any active merchant in this environment. A JWT identity must resolve to exactly one active row in the <code>merchant_members</code> table (keyed by issuer + subject) to authorize dashboard or control-plane actions.</p>
+    <p><strong>What to do:</strong> Contact your ChainMore operator to be added to a merchant as a member, or sign in with a different user that has an active merchant membership. This is a boundary refusal, the JWT itself is correct; the authorization binding is what&#39;s missing.</p>
+  </article>
+  <article class="code" id="unauthorized">
+    <h3><code>unauthorized</code></h3>
+    <p class="meta">unauthorized · HTTP 401</p>
+    <p>The Authorization header was missing, malformed, or the bearer token did not resolve to an active API key.</p>
+    <p><strong>What to do:</strong> Pass <code>Authorization: Bearer &lt;api_key&gt;</code> with a live, un-revoked key. Keys are merchant-scoped and mode-scoped; test-mode keys cannot see live-mode resources.</p>
+  </article>
+  <article class="code" id="wrong-auth-kind">
+    <h3><code>wrong_auth_kind</code></h3>
+    <p class="meta">wrong credential kind for this surface · HTTP 401</p>
+    <p>The bearer credential is the wrong kind for the route you called. Control-plane routes (under <code>/v1/dashboard</code>, key/endpoint management, account settings) accept only OIDC access tokens minted by the configured Keycloak realm. Machine routes (payment creation, attempt registration, dispatch) accept only server API keys (<code>cm_test_…</code> / <code>cm_live_…</code>). A JWT presented to a machine route, or an API-key presented to a control-plane route, is refused at the dispatcher before the resolver runs, so this code names the credential-shape mismatch, not a malformed token.</p>
+    <p><strong>What to do:</strong> Switch to the credential kind expected by the surface: use an API key with <code>cm_test_…</code> or <code>cm_live_…</code> prefix for server-to-server payment routes; use a Keycloak-issued OIDC access token (carrying <code>aud=chainmore-gateway</code>) for dashboard / control-plane routes. The webhook test endpoint is the one route that accepts either kind.</p>
+  </article>
+</section>
+<section class="group" id="group-lifecycle">
+  <h2>Lifecycle &amp; State</h2>
+  <article class="code" id="attempt-binding-mismatch">
+    <h3><code>attempt_binding_mismatch</code></h3>
+    <p class="meta">attempt binding mismatch · HTTP 409</p>
+    <p>The supplied attempt id does not match the payment/leg the request is targeting.</p>
+    <p><strong>What to do:</strong> Re-fetch the payment&#39;s current attempts and re-issue the request against a matching (payment_id, attempt_id) pair.</p>
+  </article>
+  <article class="code" id="cctp-attestation-pending">
+    <h3><code>cctp_attestation_pending</code></h3>
+    <p class="meta">processing · HTTP 200 · safe to retry</p>
+    <p>The burn is confirmed; we&#39;re waiting for Circle&#39;s attestation before minting on your destination chain.</p>
+    <p><strong>What to do:</strong> No action needed. Attestation typically arrives within 30 seconds for Fast Transfer, longer for standard finality.</p>
+  </article>
+  <article class="code" id="cctp-awaiting-deposit">
+    <h3><code>cctp_awaiting_deposit</code></h3>
+    <p class="meta">awaiting payment · HTTP 200</p>
+    <p>We&#39;ve created your payment intent and are waiting for the customer to send USDC. Until they do, the intent stays in this state.</p>
+    <p><strong>What to do:</strong> Share the checkout link or QR code with the customer. The intent expires automatically if no deposit arrives within the configured window.</p>
+  </article>
+  <article class="code" id="cctp-burn-pending">
+    <h3><code>cctp_burn_pending</code></h3>
+    <p class="meta">processing · HTTP 200 · safe to retry</p>
+    <p>The customer&#39;s payment transaction has been seen on the source chain. We&#39;re waiting for the burn to confirm before bridging to your destination chain.</p>
+    <p><strong>What to do:</strong> No action needed. The transaction will progress automatically. Typically less than a minute on Base/Arbitrum/Polygon, longer on Ethereum mainnet.</p>
+  </article>
+  <article class="code" id="cctp-customer-sanctioned">
+    <h3><code>cctp_customer_sanctioned</code></h3>
+    <p class="meta">customer wallet on sanctions list · HTTP 403</p>
+    <p>The customer wallet attempting to pay has been flagged by AML screening as on a sanctions list (OFAC, UN, EU). We refuse the intent at creation to comply with industry-standard practice.</p>
+    <p><strong>What to do:</strong> This is a hard refusal, no override available. Direct the customer to a different wallet, or contact support if you believe this is a false positive.</p>
+  </article>
+  <article class="code" id="cctp-manual-review">
+    <h3><code>cctp_manual_review</code></h3>
+    <p class="meta">under review · HTTP 200</p>
+    <p>An operator is investigating this intent. This typically happens after multiple automatic retries failed or when an unusual condition (reorg, sanctions, or attestation timeout) needs human judgment.</p>
+    <p><strong>What to do:</strong> No action needed. The operator will either retry the route until it settles or mark the intent failed-safely with an explanation. Any customer compensation or refund path is handled separately through a reviewed operator process when that capability is available.</p>
+  </article>
+  <article class="code" id="cctp-merchant-blocked">
+    <h3><code>cctp_merchant_blocked</code></h3>
+    <p class="meta">merchant address blocklisted · HTTP 400</p>
+    <p>The destination merchant address is on Circle&#39;s USDC blocklist. Mints to blocklisted addresses are rejected at the protocol level. This is rare and usually indicates a sanctions-list match or chain-attribution issue.</p>
+    <p><strong>What to do:</strong> Update the merchant settlement address in your dashboard to a different wallet, or contact Circle to resolve the blocklist entry. We cannot bypass this, it is enforced by the USDC token contract itself.</p>
+  </article>
+  <article class="code" id="cctp-merchant-sanctioned">
+    <h3><code>cctp_merchant_sanctioned</code></h3>
+    <p class="meta">merchant settlement address on sanctions list · HTTP 400</p>
+    <p>The merchant&#39;s destination wallet has been flagged by AML screening as on a sanctions list. This blocks intent creation until the address is updated or the screening result is overridden.</p>
+    <p><strong>What to do:</strong> Update the settlement address in your dashboard to a different wallet, or contact support to file a false-positive review.</p>
+  </article>
+  <article class="code" id="cctp-mint-pending">
+    <h3><code>cctp_mint_pending</code></h3>
+    <p class="meta">processing · HTTP 200 · safe to retry</p>
+    <p>Attestation received. We&#39;re submitting the mint transaction on the destination chain right now.</p>
+    <p><strong>What to do:</strong> No action needed. The mint settles within seconds of attestation.</p>
+  </article>
+  <article class="code" id="cctp-source-reorged">
+    <h3><code>cctp_source_reorged</code></h3>
+    <p class="meta">transaction reorganized, re-submitting · HTTP 200 · safe to retry</p>
+    <p>The customer&#39;s deposit transaction was dropped from the canonical source chain due to a chain reorganization. The customer needs to re-sign.</p>
+    <p><strong>What to do:</strong> The Hosted Checkout will automatically prompt the customer to re-submit. No merchant action required.</p>
+  </article>
+  <article class="code" id="cctp-stuck-attestation">
+    <h3><code>cctp_stuck_attestation</code></h3>
+    <p class="meta">delayed, attestation taking longer than expected · HTTP 200 · safe to retry</p>
+    <p>The source burn is confirmed, but Circle has not signed the attestation within the expected window. Destination settlement cannot proceed until the attestation arrives.</p>
+    <p><strong>What to do:</strong> We&#39;re monitoring this automatically. If attestation doesn&#39;t resolve within 30 minutes (Fast Transfer) or 60 minutes (standard finality), the intent will move to manual review.</p>
+  </article>
+  <article class="code" id="cctp-stuck-mint">
+    <h3><code>cctp_stuck_mint</code></h3>
+    <p class="meta">delayed, mint transaction failed, retrying · HTTP 200 · safe to retry</p>
+    <p>We received the attestation, but the destination receive-and-settle transaction reverted or could not be confirmed. The attestation is tied to the selected settlement route and can normally be retried through that route.</p>
+    <p><strong>What to do:</strong> We retry automatically with adjusted gas and the same settlement route. If multiple retries fail, the intent moves to manual review for route-specific investigation. Any customer compensation or refund path is a separate reviewed process, not an automatic retry outcome.</p>
+  </article>
+  <article class="code" id="checkout-link-already-bound">
+    <h3><code>checkout_link_already_bound</code></h3>
+    <p class="meta">checkout link already bound · HTTP 409</p>
+    <p>The customer already chose a different payment method on this link and a payment exists on that rail. A link binds exactly once.</p>
+    <p><strong>What to do:</strong> Continue on the checkout the link already points to (GET the link view returns its checkout_token), or create a new link for a different method.</p>
+  </article>
+  <article class="code" id="checkout-link-expired">
+    <h3><code>checkout_link_expired</code></h3>
+    <p class="meta">checkout link expired · HTTP 410</p>
+    <p>The customer did not choose a payment method before the link&#39;s expiry. Nothing was created on any rail.</p>
+    <p><strong>What to do:</strong> Create a fresh checkout link and send the customer the new URL.</p>
+  </article>
+  <article class="code" id="checkout-link-method-unavailable">
+    <h3><code>checkout_link_method_unavailable</code></h3>
+    <p class="meta">payment method not available on this link · HTTP 409</p>
+    <p>The chosen method is not in the link&#39;s available_payment_methods: the currency does not fit the rail (USD for USDT and USDC, EUR for card), the merchant has no settlement account for it, or the rail is not mounted.</p>
+    <p><strong>What to do:</strong> Offer only the methods the link view lists. Merchants: configure the settlement account (USDT default destination, usdc block) or price in the rail&#39;s currency.</p>
+  </article>
+  <article class="code" id="dispatch-precondition-failed">
+    <h3><code>dispatch_precondition_failed</code></h3>
+    <p class="meta">dispatch precondition failed · HTTP 409</p>
+    <p>Dispatch refused because a precondition (admission state, relay health) is unmet.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific precondition; some failures resolve on their own (relay health recovery) and are retry-safe, others name a structural reason.</p>
+  </article>
+  <article class="code" id="endpoint-disabled">
+    <h3><code>endpoint_disabled</code></h3>
+    <p class="meta">endpoint disabled · HTTP 400</p>
+    <p>The webhook endpoint is disabled; a disabled endpoint cannot receive new deliveries (including test events and replays).</p>
+    <p><strong>What to do:</strong> Re-enable the endpoint via PATCH /v1/webhook_endpoints/{id} with <code>{&#34;enabled&#34;: true}</code> before retrying.</p>
+  </article>
+  <article class="code" id="endpoint-secret-missing-envelope">
+    <h3><code>endpoint_secret_missing_envelope</code></h3>
+    <p class="meta">endpoint secret unavailable · HTTP 400</p>
+    <p>The endpoint&#39;s signing secret was enrolled before the envelope-encrypted secret rollout and cannot be decrypted by this gateway build.</p>
+    <p><strong>What to do:</strong> Call POST /v1/webhook_endpoints/{id}/rotate-secret once; the rotate writes a fresh envelope-encrypted secret and returns the new plaintext value.</p>
+  </article>
+  <article class="code" id="exec-dispatch-decision-not-found">
+    <h3><code>exec_dispatch_decision_not_found</code></h3>
+    <p class="meta">dispatch decision not found · HTTP 409</p>
+    <p>The <code>dispatch_decision_id</code> supplied on StartAttempt did not resolve to a decision row.</p>
+    <p><strong>What to do:</strong> Re-fetch the decision (GET /v1/dispatch/decisions/{id}) to confirm it exists, or re-call POST /v1/dispatch/decide and use the fresh id.</p>
+  </article>
+  <article class="code" id="exec-dispatch-not-allowed">
+    <h3><code>exec_dispatch_not_allowed</code></h3>
+    <p class="meta">dispatch not allowed · HTTP 409</p>
+    <p>StartAttempt was refused because the bound dispatch decision is not in an <code>allowed</code> state; the dispatcher&#39;s primary refusal is surfaced in <code>detail</code>.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the dispatcher&#39;s primary code and consult the dispatcher section of the OpenAPI spec. Some refusals (relay-health, admission) resolve on their own and are retry-safe after re-deciding.</p>
+  </article>
+  <article class="code" id="exec-no-dispatch-decision">
+    <h3><code>exec_no_dispatch_decision</code></h3>
+    <p class="meta">dispatch decision id missing · HTTP 409</p>
+    <p>StartAttempt was refused because the request did not include a <code>dispatch_decision_id</code>; the dispatch gate requires every attempt to bind to a decision row.</p>
+    <p><strong>What to do:</strong> Call POST /v1/dispatch/decide for this (payment, route-candidate) pair first, then pass the returned decision id as <code>dispatch_decision_id</code> on StartAttempt.</p>
+  </article>
+  <article class="code" id="invalid-state">
+    <h3><code>invalid_state</code></h3>
+    <p class="meta">invalid state · HTTP 409</p>
+    <p>The resource is not in a state that permits this operation.</p>
+    <p><strong>What to do:</strong> Re-fetch the resource to read its current state, and issue the action that&#39;s legal from that state.</p>
+  </article>
+  <article class="code" id="invalid-transition">
+    <h3><code>invalid_transition</code></h3>
+    <p class="meta">invalid transition · HTTP 409</p>
+    <p>The state transition implied by this action is not a legal edge in the resource&#39;s state machine.</p>
+    <p><strong>What to do:</strong> Consult the state-machine diagram for this resource family and drive only legal transitions.</p>
+  </article>
+  <article class="code" id="replay-of-test-event-forbidden">
+    <h3><code>replay_of_test_event_forbidden</code></h3>
+    <p class="meta">replay of test event forbidden · HTTP 400</p>
+    <p>Test events cannot be replayed from delivery history; the replay path is reserved for real deliveries.</p>
+    <p><strong>What to do:</strong> Re-trigger a fresh test event with POST /v1/webhook_endpoints/{id}/test, it fires a synthetic <code>payment.settled</code> each time it&#39;s called.</p>
+  </article>
+  <article class="code" id="routing-precondition-failed">
+    <h3><code>routing_precondition_failed</code></h3>
+    <p class="meta">routing precondition failed · HTTP 409</p>
+    <p>Routing refused because a precondition (pricing freshness, source-balance, path availability) is unmet.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific precondition and retry once it&#39;s resolved (for example, re-fetch pricing and re-submit).</p>
+  </article>
+  <article class="code" id="session-expired">
+    <h3><code>session_expired</code></h3>
+    <p class="meta">checkout session expired · HTTP 400</p>
+    <p>The hosted checkout session has passed its expiry timestamp and can no longer be progressed.</p>
+    <p><strong>What to do:</strong> Create a fresh checkout session and redirect the payer to the new URL.</p>
+  </article>
+  <article class="code" id="start-attempt-precondition-failed">
+    <h3><code>start_attempt_precondition_failed</code></h3>
+    <p class="meta">start-attempt precondition failed · HTTP 409</p>
+    <p>A precondition of start-attempt (e.g. pricing freshness, routing validation) is unmet.</p>
+    <p><strong>What to do:</strong> Re-fetch the payment to see the current precondition and retry once the precondition is satisfied.</p>
+  </article>
+  <article class="code" id="usdt0-source-unobserved">
+    <h3><code>usdt0_source_unobserved</code></h3>
+    <p class="meta">transaction not visible yet · HTTP 409 · safe to retry</p>
+    <p>The customer&#39;s wallet reported a USDT transaction hash that the source-chain observer cannot see yet. Nothing has been recorded for it.</p>
+    <p><strong>What to do:</strong> Retry the same hash in a few seconds. The hosted checkout does this automatically until the transaction is visible or the reserved step expires; a hash that never becomes visible binds nothing.</p>
+  </article>
+  <article class="code" id="validation-precondition-failed">
+    <h3><code>validation_precondition_failed</code></h3>
+    <p class="meta">validation precondition failed · HTTP 409</p>
+    <p>Pre-flight validation refused because a precondition on the payment&#39;s current state is unmet.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific precondition; most commonly re-fetch the payment and re-issue once it has advanced to a compatible state.</p>
+  </article>
+</section>
+<section class="group" id="group-method">
+  <h2>HTTP Method</h2>
+  <article class="code" id="method-not-allowed">
+    <h3><code>method_not_allowed</code></h3>
+    <p class="meta">method not allowed · HTTP 405</p>
+    <p>The route exists but the HTTP method you used is not one of its supported verbs.</p>
+    <p><strong>What to do:</strong> Inspect the <code>Allow</code> response header for the list of accepted methods on this path.</p>
+  </article>
+</section>
+<section class="group" id="group-not_found">
+  <h2>Not Found</h2>
+  <article class="code" id="checkout-link-not-found">
+    <h3><code>checkout_link_not_found</code></h3>
+    <p class="meta">checkout link not found · HTTP 404</p>
+    <p>No checkout link matches the token or id. Link tokens start with cl_ and are shown once in the create response.</p>
+    <p><strong>What to do:</strong> Check the token in the URL; create a new link if it was lost.</p>
+  </article>
+  <article class="code" id="not-found">
+    <h3><code>not_found</code></h3>
+    <p class="meta">resource not found · HTTP 404</p>
+    <p>The resource identified by the URL does not exist, or is not visible to your API key.</p>
+    <p><strong>What to do:</strong> Re-check the id in the URL. If you&#39;re using test-mode keys, test-mode and live-mode resources are strictly isolated; a resource created in one mode is invisible to the other.</p>
+  </article>
+</section>
+<section class="group" id="group-rate_limit">
+  <h2>Rate Limit</h2>
+  <article class="code" id="rate-limited">
+    <h3><code>rate_limited</code></h3>
+    <p class="meta">rate limited · HTTP 429 · safe to retry</p>
+    <p>You have exceeded the per-API-key request budget for this endpoint.</p>
+    <p><strong>What to do:</strong> Back off using exponential jitter and retry. The <code>Retry-After</code> header (when present) names the earliest safe retry time in seconds.</p>
+  </article>
+</section>
+<section class="group" id="group-server">
+  <h2>Server-Side Failure</h2>
+  <article class="code" id="cctp-capacity-unobserved">
+    <h3><code>cctp_capacity_unobserved</code></h3>
+    <p class="meta">treasury capacity cannot be observed · HTTP 503 · safe to retry</p>
+    <p>We cannot currently read what our own treasury holds, so we will not quote a price against it. This is deliberately a different answer from &#34;not enough&#34;: a reading we do not have is not a shortage, and treating the two the same once sent us refilling wallets that were already full while the real fault - a stopped observer - stayed invisible.</p>
+    <p><strong>What to do:</strong> No merchant action. The balance observer is behind or stopped; payments resume as soon as a fresh reading exists.</p>
+  </article>
+  <article class="code" id="cctp-coverage-unavailable">
+    <h3><code>cctp_coverage_unavailable</code></h3>
+    <p class="meta">gas coverage unavailable for this corridor · HTTP 503 · safe to retry</p>
+    <p>We advance the gas for both legs of this corridor and cannot cover them right now. No payment was created and nothing was charged. This is our side, not yours.</p>
+    <p><strong>What to do:</strong> Retry shortly. If it persists, the corridor is short of native gas and we are refilling it; another corridor may be available in the meantime.</p>
+  </article>
+  <article class="code" id="cctp-destination-gas-exhausted">
+    <h3><code>cctp_destination_gas_exhausted</code></h3>
+    <p class="meta">destination chain tx-sender out of gas · HTTP 503 · safe to retry</p>
+    <p>ChainMore&#39;s destination-chain sender does not currently have enough native gas (ETH/MATIC) to submit receive-and-settle transactions. The intent is queued and will resume after the sender is refilled or the route is reviewed.</p>
+    <p><strong>What to do:</strong> No merchant action needed. ChainMore monitors destination gas and keeps the intent queued until the tx-sender can be refilled or the route can be reviewed.</p>
+  </article>
+  <article class="code" id="cctp-provider-degraded">
+    <h3><code>cctp_provider_degraded</code></h3>
+    <p class="meta">CCTP service degraded, new intents paused · HTTP 503 · safe to retry</p>
+    <p>Circle&#39;s CCTP attestation service or one of our destination-chain RPC providers is reporting reduced availability. Per your merchant policy, we&#39;ve paused creating new intents until conditions normalize.</p>
+    <p><strong>What to do:</strong> No action needed. Existing intents continue to settle. New intents will be accepted automatically once the underlying provider recovers.</p>
+  </article>
+  <article class="code" id="checkout-operation-failed">
+    <h3><code>checkout_operation_failed</code></h3>
+    <p class="meta">checkout operation failed · HTTP 500</p>
+    <p>A checkout-service operation (init-session, bind-wallet, submit, cancel, get-state, widget-session) hit an unexpected server-side failure that did not match any of the typed checkout sentinels.</p>
+    <p><strong>What to do:</strong> Retry after a short delay. If the failure persists, contact support with the <code>correlation_id</code> and the specific operation path.</p>
+  </article>
+  <article class="code" id="create-endpoint-failed">
+    <h3><code>create_endpoint_failed</code></h3>
+    <p class="meta">create-endpoint failed · HTTP 500</p>
+    <p>The create-endpoint write hit an unexpected server-side failure; no row was persisted.</p>
+    <p><strong>What to do:</strong> Retry; the operation is safe to repeat. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="create-key-failed">
+    <h3><code>create_key_failed</code></h3>
+    <p class="meta">create-key failed · HTTP 500</p>
+    <p>The create-key write hit an unexpected server-side failure; no row was persisted.</p>
+    <p><strong>What to do:</strong> Retry; the operation is safe to repeat. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="dashboard-operation-failed">
+    <h3><code>dashboard_operation_failed</code></h3>
+    <p class="meta">dashboard operation failed · HTTP 500</p>
+    <p>A dashboard read-model operation hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent. If the failure persists, contact support with the <code>correlation_id</code> and the dashboard route that failed.</p>
+  </article>
+  <article class="code" id="disable-endpoint-failed">
+    <h3><code>disable_endpoint_failed</code></h3>
+    <p class="meta">disable-endpoint failed · HTTP 500</p>
+    <p>The disable-endpoint write hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; disable is idempotent. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="dispatch-failed">
+    <h3><code>dispatch_failed</code></h3>
+    <p class="meta">dispatch failed · HTTP 500</p>
+    <p>Dispatch stage returned an error on this payment leg.</p>
+    <p><strong>What to do:</strong> Safe to retry if <code>retryable: true</code>. If the failure persists, the payment will surface the specific dispatch rejection in its dashboard view.</p>
+  </article>
+  <article class="code" id="dispatch-lookup-failed">
+    <h3><code>dispatch_lookup_failed</code></h3>
+    <p class="meta">dispatch lookup failed · HTTP 500</p>
+    <p>Dispatch read-side lookup hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent.</p>
+  </article>
+  <article class="code" id="handouts-paused">
+    <h3><code>handouts_paused</code></h3>
+    <p class="meta">new payment steps are paused · HTTP 503</p>
+    <p>ChainMore paused handing out new payment steps. Payments already under way are still observed and completed. Nothing was handed out for signing.</p>
+    <p><strong>What to do:</strong> Retry later. A payment already sent from the wallet needs no action; its status updates on its own.</p>
+  </article>
+  <article class="code" id="list-endpoints-failed">
+    <h3><code>list_endpoints_failed</code></h3>
+    <p class="meta">list-endpoints failed · HTTP 500</p>
+    <p>The list-endpoints read hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="list-keys-failed">
+    <h3><code>list_keys_failed</code></h3>
+    <p class="meta">list-keys failed · HTTP 500</p>
+    <p>The list-keys read hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="not-implemented">
+    <h3><code>not_implemented</code></h3>
+    <p class="meta">not implemented · HTTP 501</p>
+    <p>This route is reserved in the OpenAPI spec but not yet wired on this gateway build.</p>
+    <p><strong>What to do:</strong> Check the ChainMore changelog or the OpenAPI spec&#39;s <code>x-status</code> extension to see when the route ships.</p>
+  </article>
+  <article class="code" id="payment-lookup-failed">
+    <h3><code>payment_lookup_failed</code></h3>
+    <p class="meta">payment lookup failed · HTTP 500</p>
+    <p>Payment read-side lookup hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent.</p>
+  </article>
+  <article class="code" id="pending-confirmation">
+    <h3><code>pending_confirmation</code></h3>
+    <p class="meta">the payment state is not yet confirmed · HTTP 503</p>
+    <p>The data this step rests on is not yet confirmed durable on ChainMore&#39;s side. Nothing was handed out for signing and nothing was lost.</p>
+    <p><strong>What to do:</strong> Read the payment or session status after a short wait. Do not repeat the request; the status says what to do next.</p>
+  </article>
+  <article class="code" id="rail-not-ready">
+    <h3><code>rail_not_ready</code></h3>
+    <p class="meta">the payment rail on this network is not ready · HTTP 503</p>
+    <p>Read with the wallet, before any paid action: the adapter on the chosen network is paused, trusts another authorizer, enforces another fee destination, or already settled this order. Nothing was planned or signed.</p>
+    <p><strong>What to do:</strong> Nothing for the customer to do. The operator fixes the adapter or the runtime configuration named in the detail.</p>
+  </article>
+  <article class="code" id="register-direct-tx-failed">
+    <h3><code>register_direct_tx_failed</code></h3>
+    <p class="meta">register-direct-tx failed · HTTP 500</p>
+    <p>Registering a direct (non-HTLC) transaction hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific refusal; retry-safe if <code>retryable: true</code>.</p>
+  </article>
+  <article class="code" id="replay-delivery-failed">
+    <h3><code>replay_delivery_failed</code></h3>
+    <p class="meta">replay-delivery failed · HTTP 500</p>
+    <p>The replay-delivery write hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry after a short delay; if the failure persists, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="revoke-key-failed">
+    <h3><code>revoke_key_failed</code></h3>
+    <p class="meta">revoke-key failed · HTTP 500</p>
+    <p>The revoke-key write hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; revoke is idempotent. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="rotate-endpoint-secret-failed">
+    <h3><code>rotate_endpoint_secret_failed</code></h3>
+    <p class="meta">rotate-secret failed · HTTP 500</p>
+    <p>The rotate-secret operation hit an unexpected server-side failure; the endpoint row is guaranteed to be unchanged because the mint runs before any UPDATE.</p>
+    <p><strong>What to do:</strong> Retry; the operation is safe to repeat. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="rotate-key-failed">
+    <h3><code>rotate_key_failed</code></h3>
+    <p class="meta">rotate-key failed · HTTP 500</p>
+    <p>The rotate-key write hit an unexpected server-side failure; the mint runs before any UPDATE, so the key row is guaranteed unchanged.</p>
+    <p><strong>What to do:</strong> Retry; the operation is safe to repeat. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="routing-lookup-failed">
+    <h3><code>routing_lookup_failed</code></h3>
+    <p class="meta">routing lookup failed · HTTP 500</p>
+    <p>Routing read-side lookup hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent.</p>
+  </article>
+  <article class="code" id="routing-plan-failed">
+    <h3><code>routing_plan_failed</code></h3>
+    <p class="meta">routing plan failed · HTTP 500</p>
+    <p>Routing could not build a plan for this payment.</p>
+    <p><strong>What to do:</strong> Inspect <code>detail</code> for the structural reason (e.g. no path to canonical asset, pricing stale). Some failures become transient-retry-safe; others require a different payment shape.</p>
+  </article>
+  <article class="code" id="server-misconfigured">
+    <h3><code>server_misconfigured</code></h3>
+    <p class="meta">server misconfigured · HTTP 500</p>
+    <p>A gateway wiring precondition failed, the request reached a handler that expected middleware state that isn&#39;t set.</p>
+    <p><strong>What to do:</strong> This is a server-side bug, not a client bug; retry the request and, if it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="start-attempt-failed">
+    <h3><code>start_attempt_failed</code></h3>
+    <p class="meta">start-attempt failed · HTTP 500</p>
+    <p>The execution service rejected start-attempt for a server-side reason (routing, dispatch, or relay).</p>
+    <p><strong>What to do:</strong> Inspect <code>detail</code> for the specific subsystem that refused; retry-safe requests carry <code>retryable: true</code>.</p>
+  </article>
+  <article class="code" id="test-event-failed">
+    <h3><code>test_event_failed</code></h3>
+    <p class="meta">test-event send failed · HTTP 500</p>
+    <p>The test-event enqueue hit an unexpected server-side failure (encrypt, pg, or an untagged error from the store).</p>
+    <p><strong>What to do:</strong> Retry after a short delay; if the failure persists, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="update-endpoint-failed">
+    <h3><code>update_endpoint_failed</code></h3>
+    <p class="meta">update-endpoint failed · HTTP 500</p>
+    <p>The update-endpoint write hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; the operation is idempotent. If it keeps failing, contact support with the <code>correlation_id</code>.</p>
+  </article>
+  <article class="code" id="usdt0-upstream-unavailable">
+    <h3><code>usdt0_upstream_unavailable</code></h3>
+    <p class="meta">chain endpoint unavailable · HTTP 503 · safe to retry</p>
+    <p>An Ethereum or Arbitrum RPC endpoint did not answer a block-head, base-fee or log lookup while preparing or advancing a USDT0 step. Nothing was planned, bound or recorded.</p>
+    <p><strong>What to do:</strong> Retry the same call in a few seconds. The hosted checkout retries on its own; a persistent refusal means the configured endpoint is down and the operator has to switch providers.</p>
+  </article>
+  <article class="code" id="validation-failed">
+    <h3><code>validation_failed</code></h3>
+    <p class="meta">validation failed · HTTP 500</p>
+    <p>Pre-flight validation rejected the payment for a server-side reason.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific refusal; some failures are transient and retry-safe, others name a structural issue with the payment shape.</p>
+  </article>
+  <article class="code" id="validation-lookup-failed">
+    <h3><code>validation_lookup_failed</code></h3>
+    <p class="meta">validation lookup failed · HTTP 500</p>
+    <p>Validation read-side lookup hit an unexpected server-side failure.</p>
+    <p><strong>What to do:</strong> Retry; reads are idempotent.</p>
+  </article>
+</section>
+<section class="group" id="group-validation">
+  <h2>Validation</h2>
+  <article class="code" id="cctp-amount-below-minimum">
+    <h3><code>cctp_amount_below_minimum</code></h3>
+    <p class="meta">amount below this corridor&#39;s minimum · HTTP 400</p>
+    <p>The payment is smaller than what it costs to move it on this corridor. Both gas legs are sponsored, so an invoice below that cost would be settled at a loss on every payment rather than occasionally. The refusal names the smallest amount that would have worked at the moment it was priced.</p>
+    <p><strong>What to do:</strong> Raise the amount to at least the stated minimum, or choose a corridor with lower network cost. Gas prices move, so the minimum is a reading rather than a fixed floor; re-pricing a few minutes later can give a different one.</p>
+  </article>
+  <article class="code" id="checkout-terms-changed">
+    <h3><code>checkout_terms_changed</code></h3>
+    <p class="meta">the accepted payment terms no longer hold · HTTP 409</p>
+    <p>The customer accepted a quoted route on a checkout link; when the payment was planned again the fee, amount, financing, wallet actions or fee bounds no longer matched the accepted terms beyond their headroom. Nothing was signed on stale terms.</p>
+    <p><strong>What to do:</strong> Start a new checkout from the merchant so the route is quoted and reviewed again.</p>
+  </article>
+  <article class="code" id="create-payment-failed">
+    <h3><code>create_payment_failed</code></h3>
+    <p class="meta">create-payment failed · HTTP 400</p>
+    <p>Create-payment was rejected at the execution boundary.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific rejection reason (e.g. unsupported case, missing canonical asset) and re-send with the correction.</p>
+  </article>
+  <article class="code" id="delivery-endpoint-mismatch">
+    <h3><code>delivery_endpoint_mismatch</code></h3>
+    <p class="meta">delivery belongs to a different endpoint · HTTP 400</p>
+    <p>The delivery id in the URL does not belong to the endpoint id in the URL.</p>
+    <p><strong>What to do:</strong> List deliveries under the endpoint you intend to replay against (GET /v1/webhook_endpoints/{id}/deliveries) and re-issue the replay with a matching (endpoint_id, delivery_id) pair.</p>
+  </article>
+  <article class="code" id="exec-dispatch-binding-mismatch">
+    <h3><code>exec_dispatch_binding_mismatch</code></h3>
+    <p class="meta">dispatch binding mismatch · HTTP 409</p>
+    <p>StartAttempt&#39;s (payment_id, route_candidate_id, route_validation_id) tuple does not match the decision row identified by <code>dispatch_decision_id</code>.</p>
+    <p><strong>What to do:</strong> Ensure the StartAttempt binding ids come from the same Plan → Validate → Decide chain; do not mix ids across independent runs.</p>
+  </article>
+  <article class="code" id="idempotency-required">
+    <h3><code>idempotency_required</code></h3>
+    <p class="meta">idempotency key required · HTTP 400</p>
+    <p>This write endpoint requires an <code>Idempotency-Key</code> header so that duplicate deliveries do not create duplicate resources.</p>
+    <p><strong>What to do:</strong> Generate a UUID per logical request, send it as <code>Idempotency-Key: &lt;uuid&gt;</code>, and reuse the same value for any retry of that logical request.</p>
+  </article>
+  <article class="code" id="invalid-authorization-mode">
+    <h3><code>invalid_authorization_mode</code></h3>
+    <p class="meta">invalid authorization mode · HTTP 400</p>
+    <p>The <code>authorization_mode</code> on this request is not one of the values supported by the execution surface.</p>
+    <p><strong>What to do:</strong> Use one of the documented authorization modes (e.g. <code>direct</code>, <code>htlc</code>); see the CreatePayment section of the OpenAPI spec.</p>
+  </article>
+  <article class="code" id="invalid-json">
+    <h3><code>invalid_json</code></h3>
+    <p class="meta">invalid JSON body · HTTP 400</p>
+    <p>The request body was not parseable as JSON.</p>
+    <p><strong>What to do:</strong> Re-send with a well-formed JSON body; ensure <code>Content-Type: application/json</code> and no trailing commas or unquoted keys.</p>
+  </article>
+  <article class="code" id="invalid-request">
+    <h3><code>invalid_request</code></h3>
+    <p class="meta">invalid request · HTTP 400</p>
+    <p>The request was rejected because a required field was missing, malformed, or out of range.</p>
+    <p><strong>What to do:</strong> Read <code>detail</code> for the specific field that failed validation, and re-send with the corrected body.</p>
+  </article>
+  <article class="code" id="merchant-limit-reached">
+    <h3><code>merchant_limit_reached</code></h3>
+    <p class="meta">the payment exceeds the merchant&#39;s limits · HTTP 409</p>
+    <p>The payment would exceed a limit the merchant has, or the merchant is not yet set up with the limits live payments need. Nothing was handed out for signing.</p>
+    <p><strong>What to do:</strong> The merchant contacts ChainMore to review its limits. The customer may pay a smaller amount or later.</p>
+  </article>
+  <article class="code" id="wallet-account-unsupported">
+    <h3><code>wallet_account_unsupported</code></h3>
+    <p class="meta">this wallet account cannot pay on this network · HTTP 400</p>
+    <p>The connected account has code on this network (a contract account or an EIP-7702 delegated account) and the payment path there cannot take the account&#39;s own authorization. Nothing was planned or signed.</p>
+    <p><strong>What to do:</strong> Pay from this account on a network where it is a plain account, or from a plain account on this network.</p>
+  </article>
+  <article class="code" id="wallet-call-would-revert">
+    <h3><code>wallet_call_would_revert</code></h3>
+    <p class="meta">the payment call would fail on the network · HTTP 409</p>
+    <p>The exact payment call was simulated from the wallet before it was handed out and reverts on the network. The detail names the contract&#39;s reason. Nothing was signed.</p>
+    <p><strong>What to do:</strong> Prepare the payment again; if it repeats, the reason in the detail tells the operator what to fix.</p>
+  </article>
+  <article class="code" id="wallet-chain-not-accepted">
+    <h3><code>wallet_chain_not_accepted</code></h3>
+    <p class="meta">merchant does not accept USDT from this network · HTTP 400</p>
+    <p>Every USDT payout target the merchant declared is on a network the connected wallet cannot pay on (a Tron wallet for an EVM-only merchant, or the reverse). Nothing was planned or signed. The detail lists the networks the merchant accepts, comma-separated.</p>
+    <p><strong>What to do:</strong> Pay from a wallet on one of the listed networks, or ask the merchant to declare a payout target on yours.</p>
+  </article>
+  <article class="code" id="wallet-insufficient-native-gas">
+    <h3><code>wallet_insufficient_native_gas</code></h3>
+    <p class="meta">not enough gas in wallet · HTTP 400</p>
+    <p>The connected wallet doesn&#39;t have enough native token (ETH, MATIC, etc.) to pay the source-chain transaction fee. The fee is small (typically under $1) but must be in the chain&#39;s native token.</p>
+    <p><strong>What to do:</strong> Top up a small amount of the source chain&#39;s native token, or use a wallet with built-in gas-sponsorship.</p>
+  </article>
+  <article class="code" id="wallet-insufficient-usdc">
+    <h3><code>wallet_insufficient_usdc</code></h3>
+    <p class="meta">not enough USDC in wallet · HTTP 400</p>
+    <p>The connected wallet&#39;s USDC balance is below the requested amount on the source chain.</p>
+    <p><strong>What to do:</strong> Top up USDC in your wallet, via an exchange withdrawal, a bridge from another chain, or an on-ramp partner like MoonPay or Coinbase.</p>
+  </article>
+  <article class="code" id="wallet-insufficient-usdt">
+    <h3><code>wallet_insufficient_usdt</code></h3>
+    <p class="meta">not enough USDT in wallet · HTTP 400</p>
+    <p>The connected wallet holds less USDT than the payment amount at the quoted block. Nothing was planned or signed.</p>
+    <p><strong>What to do:</strong> Top up USDT in the wallet or pay from a wallet that holds the amount, then prepare the payment again.</p>
+  </article>
+  <article class="code" id="wallet-not-connected">
+    <h3><code>wallet_not_connected</code></h3>
+    <p class="meta">wallet not connected · HTTP 400</p>
+    <p>No wallet is connected to the Hosted Checkout. The customer needs to click Connect Wallet before we can determine compatibility.</p>
+    <p><strong>What to do:</strong> Click the Connect Wallet button. ChainMore supports MetaMask, Coinbase Wallet, Rainbow, and any WalletConnect v2-compatible wallet.</p>
+  </article>
+  <article class="code" id="wallet-unsupported">
+    <h3><code>wallet_unsupported</code></h3>
+    <p class="meta">wallet not recommended for this payment · HTTP 400</p>
+    <p>The connected wallet is recognized but not in our supported-wallets list for this payment type. It may work but we cannot guarantee a clean experience.</p>
+    <p><strong>What to do:</strong> We recommend MetaMask, Coinbase Wallet, or Rainbow for this payment. You can continue with your current wallet, we&#39;ll do our best, or switch to a recommended one for the cleanest experience.</p>
+  </article>
+  <article class="code" id="wallet-wrong-chain">
+    <h3><code>wallet_wrong_chain</code></h3>
+    <p class="meta">wallet on wrong chain, we&#39;ll switch for you · HTTP 400 · safe to retry</p>
+    <p>The connected wallet is on a chain that doesn&#39;t match this payment intent&#39;s source chain. Most wallets support a one-click chain switch.</p>
+    <p><strong>What to do:</strong> Click Continue and approve the network-switch prompt in your wallet. Once switched, we&#39;ll proceed with the payment.</p>
+  </article>
+</section>
+<p class="lead">New codes can be added at any time. Treat an unknown code as a general error, not as a broken response.</p>
+</main>
+<footer><div><span>© 2026 Chainmore OÜ</span><a href="/">Homepage</a><a href="/docs">Docs</a><a href="/security">Security</a><a href="/#contact">Contact</a></div></footer>
+<script>
+  // /errors/<slug> is served by this page; jump to the code it names.
+  (function () {
+    var slug = decodeURIComponent(location.pathname.replace(/^\/errors\/?/, "").replace(/\/$/, ""));
+    if (!slug || location.hash) return;
+    var el = document.getElementById(slug);
+    if (!el) return;
+    el.classList.add("current");
+    el.scrollIntoView();
+  })();
+</script>
+</body>
+</html>

@@ -97,9 +97,9 @@
         <div class="flex items-start gap-4">
           <span class="pill-dot pill-dot-ok flex-shrink-0 mt-1.5"></span>
           <div class="flex-1">
-            <div class="text-2xl md:text-3xl font-bold text-emerald-700 mb-1">All public surfaces operational.</div>
+            <div class="text-2xl md:text-3xl font-bold text-emerald-700 mb-1">All public surfaces are running.</div>
             <div class="text-sm text-emerald-800/80">
-              No active incidents. Production dashboards and gateway are pre-launch and not yet in scope of this status page; their rows below switch from <strong>Pre-launch</strong> to a real status the day they go live.
+              No active incidents. The team updates this page by hand when something changes; it is not a live monitor.
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@
 
       <!-- Service status -->
       <h2>Services</h2>
-      <p>The public ChainMore surfaces and their current state. Pre-launch surfaces are listed so you can see the rollout map at a glance.</p>
+      <p>The public ChainMore surfaces and their current state. Merchants get access after a review; until then the dashboard, API and checkout are in early access.</p>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-4">
         <div class="overflow-x-auto">
@@ -130,20 +130,26 @@
               <tr>
                 <td class="svc-name">Merchant dashboard</td>
                 <td class="svc-uri">app.chainmore.io</td>
-                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
-                <td>Production deploy not yet scheduled. Local development runs from the ChainMore app stack.</td>
+                <td><span class="pill pill-ok"><span class="pill-dot pill-dot-ok"></span>Early access</span></td>
+                <td>For merchants with access. New merchants request access at app.chainmore.io/get-started.</td>
               </tr>
               <tr>
                 <td class="svc-name">Gateway API</td>
                 <td class="svc-uri">api.chainmore.io</td>
-                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
-                <td>Payment-orchestration HTTP API. Goes live with the first paying merchant.</td>
+                <td><span class="pill pill-ok"><span class="pill-dot pill-dot-ok"></span>Early access</span></td>
+                <td>HTTP API for merchants with an API key.</td>
               </tr>
               <tr>
-                <td class="svc-name">Identity provider</td>
+                <td class="svc-name">Hosted checkout</td>
+                <td class="svc-uri">checkout.chainmore.io</td>
+                <td><span class="pill pill-ok"><span class="pill-dot pill-dot-ok"></span>Early access</span></td>
+                <td>Payment page for the merchant's customers.</td>
+              </tr>
+              <tr>
+                <td class="svc-name">Sign-in</td>
                 <td class="svc-uri">auth.chainmore.io</td>
-                <td><span class="pill pill-pre"><span class="pill-dot pill-dot-pre"></span>Pre-launch</span></td>
-                <td>OIDC issuer (Keycloak). Goes live with the dashboards.</td>
+                <td><span class="pill pill-ok"><span class="pill-dot pill-dot-ok"></span>Running</span></td>
+                <td>Sign-in for the merchant dashboard.</td>
               </tr>
             </tbody>
           </table>
@@ -164,9 +170,9 @@
 
       <!-- 90-day history -->
       <h2>Last 90 days</h2>
-      <p>The Processor maintains a rolling 90-day history of resolved incidents. Tracking starts on the day the first paying merchant is onboarded; the gateway and dashboards are not yet in scope, so this section will populate from go-live.</p>
+      <p>Resolved incidents of the last 90 days are listed here.</p>
       <div class="timeline-empty mt-4">
-        No incidents to report. The marketing site (the only currently-operational public surface) has had no recorded outages.
+        No incidents to report.
       </div>
 
       <!-- Severity reference -->
@@ -183,7 +189,7 @@
       <h2>Get notified</h2>
       <p>Two paths, depending on what you want:</p>
       <ul class="list-disc pl-6 space-y-2 text-slate-700">
-        <li><strong>Per-incident email</strong>, send a request to <a href="mailto:support@chainmore.io?subject=Status%20updates%20subscription">support@chainmore.io</a> with subject "Status updates subscription". Active merchants are subscribed automatically as part of onboarding.</li>
+        <li><strong>Per-incident email</strong>, send a request to <a href="mailto:support@chainmore.io?subject=Status%20updates%20subscription">support@chainmore.io</a> with subject "Status updates subscription".</li>
         <li><strong>RSS / Atom feed</strong>, planned. Will publish at <code>/status.atom</code> when the first incident lands. Until then there is nothing to subscribe to.</li>
       </ul>
 
@@ -192,7 +198,7 @@
       <p>No JavaScript, no external dependencies, no auto-polling. The status page is the document of last resort during an outage; the more moving parts it carries, the more likely it is to fail in the exact moment it matters. Updates are pushed by Operations as part of incident response (see <a href="/security">/security</a> for the responsible-disclosure path and the incident-response runbook the ops team works from).</p>
 
       <hr class="border-t border-slate-200 my-10">
-      <p class="text-sm text-slate-500"><em>Last updated: 2026-04-30, 19:50 UTC. Independent of primary stack: hosted on Netlify (marketing infrastructure), not on the production hosting target for the dashboards or gateway.</em></p>
+      <p class="text-sm text-slate-500"><em>Last updated: 2026-10-07. Independent of primary stack: hosted on Netlify (marketing infrastructure), not on the production hosting target for the dashboards or gateway.</em></p>
     </article>
   </main>
 

@@ -14,6 +14,9 @@
 /security        /security.html         200
 /status          /status.html           200
 /docs            /docs.html             200
+# docs_url of every API error: https://chainmore.io/errors/<slug>
+/errors          /errors.html           200
+/errors/*        /errors.html           200
 
 
 # Retired public pages: no rates or implementation explainer remain.
