@@ -45,12 +45,21 @@ export const FALLBACK_TEXT =
   "For a tailored quote, contact the team at chainmore.io/#contact. Platform facts are on chainmore.io/security and /status. " +
   "For anything specific, email support@chainmore.io. A human replies within two business days.";
 
-export function guardReply(raw: string): GuardResult {
+// Inside fenced code, "$1" to "$9" are placeholders (SQL, shell, regex),
+// not prices. Only the dashboard Concierge for signed-in merchants may
+// use them; every other rule applies unchanged.
+const CODE_FENCE = /```[^\n]*\n[\s\S]*?(?:\n\s*```|$)/g;
+const CODE_PLACEHOLDER = /\$[1-9](?![\d.,])/g;
+
+export function guardReply(raw: string, opts: { allowCodePlaceholders?: boolean } = {}): GuardResult {
   const text = String(raw ?? "").trim();
   if (!text) return { ok: false, text: FALLBACK_TEXT, hits: ["empty"] };
+  const scanned = opts.allowCodePlaceholders
+    ? text.replace(CODE_FENCE, (block) => block.replace(CODE_PLACEHOLDER, "#"))
+    : text;
   const hits: string[] = [];
   for (const rule of FORBIDDEN) {
-    if (rule.re.test(text)) hits.push(rule.name);
+    if (rule.re.test(scanned)) hits.push(rule.name);
   }
   if (hits.length > 0) return { ok: false, text: FALLBACK_TEXT, hits };
   return { ok: true, text, hits };

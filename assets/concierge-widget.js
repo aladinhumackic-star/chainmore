@@ -81,29 +81,63 @@
   }
 
   // Light Markdown: paragraphs, line breaks, bold (**x**), inline links
-  // for chainmore.io pages, and bullet lists. Intentionally minimal so
-  // there's no surface area for HTML/script injection through model
-  // output. Everything is escaped first; only known patterns are
-  // turned back into HTML.
+  // for chainmore.io pages, bullet lists, inline code and fenced code
+  // blocks. Intentionally minimal so there's no surface area for
+  // HTML/script injection through model output. Everything is escaped
+  // first; only known patterns are turned back into HTML. Code is cut
+  // out before the other rules run, so bold and links never touch it.
   function renderMarkdown(s) {
-    var safe = escapeHtml(s);
+    var source = String(s).replace(/\u0000/g, '');
+    var code   = [];
+    function stash(html) {
+      code.push(html);
+      return '\u0000' + (code.length - 1) + '\u0000';
+    }
+
+    // Fenced code blocks. An unclosed fence (still streaming) runs to
+    // the end of the text.
+    source = source.replace(
+      /(^|\n)([ \t]*)```[ \t]*([a-z0-9_+\-]*)[^\n]*\n([\s\S]*?)(?:\n[ \t]*```[ \t]*(?=\n|$)|$)/gi,
+      function (m, lead, indent, lang, body) {
+        if (indent) {
+          body = body.split('\n').map(function (l) {
+            return l.indexOf(indent) === 0 ? l.slice(indent.length) : l;
+          }).join('\n');
+        }
+        var label = lang ? '<span class="cm-code__lang">' + escapeHtml(lang) + '</span>' : '<span class="cm-code__lang"></span>';
+        return lead + '\n\n' + stash(
+          '<div class="cm-code">' +
+            '<div class="cm-code__bar">' + label +
+              '<button type="button" class="cm-code__copy" data-cm-copy="1">Copy</button>' +
+            '</div>' +
+            '<pre><code>' + escapeHtml(body.replace(/\n+$/, '')) + '</code></pre>' +
+          '</div>'
+        ) + '\n\n';
+      },
+    );
+
+    // Inline code `x`.
+    source = source.replace(/`([^`\n]+)`/g, function (m, body) {
+      return stash('<code>' + escapeHtml(body) + '</code>');
+    });
+
+    var safe = escapeHtml(source);
 
     // Bold **x**
     safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
-    // Auto-link chainmore.io URLs (no protocol, no surprises).
+    // Auto-link full http(s) URLs first, then bare chainmore.io paths
+    // that are not already inside a link.
     safe = safe.replace(
-      /(chainmore\.io\/[a-z0-9\/\-\._#?=&]*[a-z0-9\/])/gi,
-      function (m) {
-        return '<a href="https://' + m + '" target="_blank" rel="noopener noreferrer">' + m + '</a>';
-      },
-    );
-
-    // Auto-link full http(s) URLs (rare in answers but defensive).
-    safe = safe.replace(
-      /(https?:\/\/[a-z0-9\.\-_]+\.[a-z]{2,}[a-z0-9\/\-\._#?=&]*[a-z0-9\/]?)/gi,
+      /(https?:\/\/[a-z0-9\.\-_]+\.[a-z]{2,}(?:[a-z0-9\/\-\._#?=&;]*[a-z0-9\/])?)/gi,
       function (m) {
         return '<a href="' + m + '" target="_blank" rel="noopener noreferrer">' + m + '</a>';
+      },
+    );
+    safe = safe.replace(
+      /(^|[^\/a-z0-9\.\-">])(chainmore\.io\/[a-z0-9\/\-\._#?=&]*[a-z0-9\/])/gi,
+      function (m, lead, url) {
+        return lead + '<a href="https://' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
       },
     );
 
@@ -124,16 +158,37 @@
     }
     if (inList) out.push('</ul>');
 
-    // Paragraphs.
+    // Paragraphs. A block that is only a code block stays unwrapped.
     var joined = out.join('\n')
       .split(/\n{2,}/)
       .map(function (block) {
+        block = block.replace(/^\n+|\n+$/g, '');
+        if (!block) return '';
         if (/^<(ul|ol|h\d|blockquote|pre)/.test(block)) return block;
+        if (/^\u0000\d+\u0000$/.test(block) && code[+block.slice(1, -1)].indexOf('<div') === 0) return block;
         return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
       })
       .join('');
 
-    return joined;
+    return joined.replace(/\u0000(\d+)\u0000/g, function (m, n) { return code[+n]; });
+  }
+
+  // Copy buttons on code blocks. One delegated listener on the message
+  // list, so re-rendering during streaming needs no rebinding.
+  function copyCode(button) {
+    var box  = button.parentNode && button.parentNode.parentNode;
+    var pre  = box && box.querySelector('code');
+    if (!pre) return;
+    var text = pre.textContent;
+    function done(label) {
+      button.textContent = label;
+      setTimeout(function () { button.textContent = 'Copy'; }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Select and copy'); });
+    } else {
+      done('Select and copy');
+    }
   }
 
   // Mount
@@ -230,7 +285,15 @@
       ]),
     ]);
 
-    var messages = el('div', { class: 'cm-concierge-messages', role: 'log', 'aria-live': 'polite' });
+    var messages = el('div', {
+      class: 'cm-concierge-messages',
+      role: 'log',
+      'aria-live': 'polite',
+      onclick: function (e) {
+        var t = e.target;
+        if (t && t.getAttribute && t.getAttribute('data-cm-copy')) copyCode(t);
+      },
+    });
 
     var inputWrap = el('form', {
       class: 'cm-concierge-input',
@@ -574,6 +637,7 @@
     window.__chainmoreConciergeTestHooks.clearSessionToken = clearSessionToken;
     window.__chainmoreConciergeTestHooks.refreshSessionToken = refreshSessionToken;
     window.__chainmoreConciergeTestHooks.postConciergeWithSessionRetry = postConciergeWithSessionRetry;
+    window.__chainmoreConciergeTestHooks.renderMarkdown = renderMarkdown;
   }
 
   if (document.readyState === 'loading') {

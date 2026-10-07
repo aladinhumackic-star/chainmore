@@ -238,6 +238,88 @@
   font-weight: 600;
 }
 
+.cm-msg--assistant {
+  min-width: 0;
+}
+.cm-msg__bubble {
+  min-width: 0;
+}
+.cm-msg__bubble code {
+  font: 400 .84em/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--cm-c-slate-100);
+  border: 1px solid var(--cm-c-slate-200);
+  border-radius: 5px;
+  padding: .05rem .3rem;
+  overflow-wrap: anywhere;
+}
+.cm-msg--user .cm-msg__bubble code {
+  background: rgba(255, 255, 255, .18);
+  border-color: rgba(255, 255, 255, .3);
+  color: var(--cm-c-white);
+}
+.cm-code {
+  margin: .55rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--cm-c-slate-900);
+  border: 1px solid var(--cm-c-slate-800);
+}
+.cm-code:first-child {
+  margin-top: 0;
+}
+.cm-code:last-child {
+  margin-bottom: 0;
+}
+.cm-code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .3rem .4rem .3rem .7rem;
+  background: var(--cm-c-slate-800);
+  font: 500 .72rem/1 Inter, sans-serif;
+  color: var(--cm-c-slate-200);
+  text-transform: lowercase;
+}
+.cm-code__copy {
+  appearance: none;
+  border: 1px solid var(--cm-c-slate-700);
+  background: transparent;
+  color: var(--cm-c-slate-200);
+  font: 500 .72rem/1 Inter, sans-serif;
+  padding: .3rem .55rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cm-code__copy:hover {
+  background: var(--cm-c-slate-700);
+  color: var(--cm-c-white);
+}
+.cm-code__copy:focus-visible {
+  outline: 2px solid var(--cm-c-cyan-500);
+  outline-offset: 1px;
+}
+.cm-code pre {
+  margin: 0;
+  padding: .7rem .8rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cm-msg__bubble .cm-code code {
+  display: block;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: .78rem;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-wrap: normal;
+  tab-size: 2;
+}
+
 .cm-msg--user .cm-msg__bubble {
   background: linear-gradient(135deg, var(--cm-c-cyan-500), var(--cm-c-cyan-600));
   color: var(--cm-c-white);
@@ -388,4 +470,8 @@
     animation: none !important;
     opacity: .55;
   }
+}
+
+.cm-msg__bubble:has(.cm-code) {
+  width: 100%;
 }

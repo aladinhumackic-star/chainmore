@@ -54,6 +54,15 @@ export const SESSION_RATE_RULES: RateRule[] = [
   { name: "hour", windowMs: 60 * 60 * 1000, max: 16 },
 ];
 
+// Signed-in merchants in the dashboard. Their requests all come from the
+// dashboard server, so the limit is per user. The dashboard server also caps
+// questions per merchant account and in total per day.
+export const MEMBER_RATE_RULES: RateRule[] = [
+  { name: "burst", windowMs: 60 * 1000, max: 8 },
+  { name: "hour", windowMs: 60 * 60 * 1000, max: 40 },
+  { name: "day", windowMs: 24 * 60 * 60 * 1000, max: 150 },
+];
+
 const encoder = new TextEncoder();
 
 function bytesToBase64Url(bytes: Uint8Array): string {

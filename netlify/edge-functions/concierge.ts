@@ -20,19 +20,30 @@ import {
   CONCIERGE_MAX_REQUEST_BYTES,
   CONCIERGE_SESSION_HEADER,
   IP_RATE_RULES,
+  MEMBER_RATE_RULES,
   SESSION_RATE_RULES,
   consumeRateLimit,
   rateLimitKey,
   verifyConciergeSessionToken,
 } from "../lib/concierge-abuse.ts";
 import { guardReply } from "../lib/concierge-guard.ts";
-import { SYSTEM_PROMPT } from "../lib/concierge-prompt.ts";
-import { buildConciergeResponsesPayload, rejectsTextVerbosity, withoutTextVerbosity } from "../lib/concierge-openai.ts";
+import { sseAfter } from "../lib/concierge-sse.ts";
+import { verifyMemberToken } from "../lib/concierge-member.ts";
+import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, SYSTEM_PROMPT, memberContextNote } from "../lib/concierge-prompt.ts";
+import { REDACTION_NOTE, redact } from "../lib/concierge-redact.ts";
+import { INTEGRATION_TURN_NOTE, codeOutsideScope, isMemberIntegrationTurn, outOfScopeReply } from "../lib/concierge-integration.ts";
+import { buildConciergeResponsesPayload, cutOffByBudget, cutOffNote, rejectsTextVerbosity, withoutTextVerbosity } from "../lib/concierge-openai.ts";
 import { deterministicConciergeReply } from "../lib/concierge-sales.ts";
 
 const MAX_MESSAGES = 20;
 const MAX_USER_CHARS = 2_000;
 const MAX_HISTORY_CHARS = 20_000;
+// Signed-in merchants paste whole handlers and logs while debugging.
+const MEMBER_MAX_USER_CHARS = 20_000;
+const MEMBER_MAX_HISTORY_CHARS = 60_000;
+const MEMBER_MAX_REQUEST_BYTES = 160 * 1024;
+// A long integration answer with medium reasoning can take a few minutes.
+const UPSTREAM_TIMEOUT_MS = 180_000;
 const ALLOWED_HOSTS = ["chainmore.io", "www.chainmore.io", "localhost:8888", "localhost"];
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -82,9 +93,9 @@ function rateLimitSSE(retryAfterSeconds: number): Response {
   );
 }
 
-async function readJsonBody(req: Request): Promise<{ ok: true; body: { messages?: unknown } } | { ok: false; status: number; message: string }> {
+async function readJsonBody(req: Request, maxBytes = CONCIERGE_MAX_REQUEST_BYTES): Promise<{ ok: true; body: { messages?: unknown; context?: unknown } } | { ok: false; status: number; message: string }> {
   const contentLength = Number(req.headers.get("content-length") || "0");
-  if (contentLength > CONCIERGE_MAX_REQUEST_BYTES) {
+  if (contentLength > maxBytes) {
     return { ok: false, status: 413, message: "Request too large." };
   }
 
@@ -98,7 +109,7 @@ async function readJsonBody(req: Request): Promise<{ ok: true; body: { messages?
     if (done) break;
     if (!value) continue;
     total += value.byteLength;
-    if (total > CONCIERGE_MAX_REQUEST_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       return { ok: false, status: 413, message: "Request too large." };
     }
@@ -121,7 +132,7 @@ async function readJsonBody(req: Request): Promise<{ ok: true; body: { messages?
 
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 
-function sanitize(messages: unknown): ChatMessage[] | null {
+function sanitize(messages: unknown, maxUserChars = MAX_USER_CHARS, maxHistoryChars = MAX_HISTORY_CHARS): ChatMessage[] | null {
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
     return null;
   }
@@ -130,13 +141,18 @@ function sanitize(messages: unknown): ChatMessage[] | null {
   for (const m of messages) {
     const role = m?.role === "assistant" ? "assistant" : m?.role === "user" ? "user" : null;
     if (!role || typeof m?.content !== "string") return null;
-    const content = m.content.replace(CONTROL_CHARS, "").trim().slice(0, MAX_USER_CHARS);
+    const content = m.content.replace(CONTROL_CHARS, "").trim().slice(0, maxUserChars);
     if (!content) continue;
     total += content.length;
     out.push({ role, content });
   }
-  if (out.length === 0 || total > MAX_HISTORY_CHARS) return null;
+  if (out.length === 0) return null;
   if (out[out.length - 1].role !== "user") return null;
+  // A long conversation keeps its newest turns instead of failing.
+  while (total > maxHistoryChars && out.length > 1) {
+    total -= out.shift()!.content.length;
+  }
+  if (total > maxHistoryChars) return null;
   return out;
 }
 
@@ -145,7 +161,8 @@ export default async (req: Request, ctx: Context) => {
     return sse([{ type: "error", message: "Method not allowed." }], 405);
   }
 
-  if (!hasAllowedBrowserSource(req)) {
+  // A request without a member token must come from the public site.
+  if (!req.headers.has("authorization") && !hasAllowedBrowserSource(req)) {
     return sse([{ type: "error", message: "Request not allowed." }], 403);
   }
 
@@ -171,23 +188,41 @@ export default async (req: Request, ctx: Context) => {
     );
   }
 
-  const binding = clientBinding(req, ctx);
-  const session = await verifyConciergeSessionToken(req.headers.get(CONCIERGE_SESSION_HEADER), abuseSecret, binding);
-  if (!session.ok || !session.payload) {
-    return sse([{ type: "error", message: "Session expired. Please refresh this page and try again." }], 403);
+  // Two ways in. The dashboard server forwards the signed-in merchant's ID
+  // token (Integration Concierge); the public widget on chainmore.io uses
+  // the browser origin plus the short-lived anonymous session token.
+  let member = false;
+  if (req.headers.has("authorization")) {
+    const bearer = /^Bearer\s+(\S+)$/i.exec(req.headers.get("authorization") || "")?.[1];
+    const check = await verifyMemberToken(bearer);
+    if (!check.ok) {
+      console.warn("[concierge] member token refused", check.reason);
+      return sse([{ type: "error", message: "Your sign-in has expired. Reload the dashboard and try again." }], 401);
+    }
+    const memberLimit = consumeRateLimit(buckets, rateLimitKey("member", check.subject), MEMBER_RATE_RULES);
+    if (!memberLimit.ok) return rateLimitSSE(memberLimit.retryAfterSeconds);
+    member = true;
+  } else {
+    const binding = clientBinding(req, ctx);
+    const session = await verifyConciergeSessionToken(req.headers.get(CONCIERGE_SESSION_HEADER), abuseSecret, binding);
+    if (!session.ok || !session.payload) {
+      return sse([{ type: "error", message: "Session expired. Please refresh this page and try again." }], 403);
+    }
+
+    const ipLimit = consumeRateLimit(buckets, rateLimitKey("ip", binding.ip), IP_RATE_RULES);
+    if (!ipLimit.ok) return rateLimitSSE(ipLimit.retryAfterSeconds);
+
+    const sessionLimit = consumeRateLimit(buckets, rateLimitKey("session", session.payload.nonce), SESSION_RATE_RULES);
+    if (!sessionLimit.ok) return rateLimitSSE(sessionLimit.retryAfterSeconds);
   }
 
-  const ipLimit = consumeRateLimit(buckets, rateLimitKey("ip", binding.ip), IP_RATE_RULES);
-  if (!ipLimit.ok) return rateLimitSSE(ipLimit.retryAfterSeconds);
-
-  const sessionLimit = consumeRateLimit(buckets, rateLimitKey("session", session.payload.nonce), SESSION_RATE_RULES);
-  if (!sessionLimit.ok) return rateLimitSSE(sessionLimit.retryAfterSeconds);
-
-  const body = await readJsonBody(req);
+  const body = await readJsonBody(req, member ? MEMBER_MAX_REQUEST_BYTES : CONCIERGE_MAX_REQUEST_BYTES);
   if (!body.ok) {
     return sse([{ type: "error", message: body.message }], body.status);
   }
-  const messages = sanitize(body.body.messages);
+  const messages = member
+    ? sanitize(body.body.messages, MEMBER_MAX_USER_CHARS, MEMBER_MAX_HISTORY_CHARS)
+    : sanitize(body.body.messages);
   if (!messages) return sse([{ type: "error", message: "Bad request." }], 400);
 
   const deterministicReply = deterministicConciergeReply(messages);
@@ -197,22 +232,44 @@ export default async (req: Request, ctx: Context) => {
     return sse([{ type: "delta", text: guarded.text }, { type: "done" }]);
   }
 
+  // Secrets and personal data never reach the model provider
+  // (concierge-redact.ts). The scope check below still reads the cleaned text.
+  const removed = new Set<string>();
+  for (const m of messages) {
+    const cleaned = redact(m.content);
+    m.content = cleaned.text;
+    cleaned.removed.forEach((label) => removed.add(label));
+  }
+  if (removed.size) console.warn("[concierge] removed from messages", [...removed]);
+
+  // Only signed-in merchants get the integration knowledge and the larger
+  // budget, and only for turns about connecting to ChainMore.
+  const integration = member && isMemberIntegrationTurn(messages);
+  const systemContent = [{ type: "input_text", text: SYSTEM_PROMPT }];
+  systemContent.push({ type: "input_text", text: member ? MEMBER_PROMPT : PUBLIC_INTEGRATION_NOTE });
+  const context = member ? memberContextNote(body.body.context) : null;
+  if (context) systemContent.push({ type: "input_text", text: context });
+  if (removed.size) systemContent.push({ type: "input_text", text: REDACTION_NOTE });
+  if (integration) systemContent.push({ type: "input_text", text: INTEGRATION_TURN_NOTE });
   const input = [
-    { role: "system", content: [{ type: "input_text", text: SYSTEM_PROMPT }] },
+    { role: "system", content: systemContent },
     ...messages.map((m) => ({
       role: m.role,
       content: [{ type: m.role === "user" ? "input_text" : "output_text", text: m.content }],
     })),
   ];
 
-  let reply = "";
-  try {
+  // The response starts now and keeps the connection alive; the reply
+  // follows once the guard has seen all of it (concierge-sse.ts).
+  const snag = { type: "error", message: "The Concierge hit a snag. Please try again." };
+  return sseAfter(async () => {
     const call = (payload: unknown) => fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
-    const payload = buildConciergeResponsesPayload(input);
+    const payload = buildConciergeResponsesPayload(input, { integration });
     let upstream = await call(payload);
     if (!upstream.ok && upstream.status === 400) {
       const detail = await upstream.text();
@@ -223,24 +280,30 @@ export default async (req: Request, ctx: Context) => {
     }
     if (!upstream.ok) {
       console.error("[concierge] upstream status", upstream.status);
-      return sse([{ type: "error", message: "The Concierge hit a snag. Please try again." }], 502);
+      return [snag];
     }
     const data = await upstream.json();
-    reply = typeof data.output_text === "string" && data.output_text
+    let reply = typeof data.output_text === "string" && data.output_text
       ? data.output_text
       : (data.output ?? [])
         .flatMap((o: { content?: Array<{ type?: string; text?: string }> }) => o?.content ?? [])
         .filter((c: { type?: string }) => c?.type === "output_text")
         .map((c: { text?: string }) => c?.text ?? "")
         .join("");
-  } catch (err) {
-    console.error("[concierge] upstream fetch error", err);
-    return sse([{ type: "error", message: "Connection issue. Please try again." }], 502);
-  }
+    if (reply.trim() && cutOffByBudget(data)) {
+      console.warn("[concierge] reply cut off by output budget", { integration });
+      reply = `${reply.trimEnd()}\n\n${cutOffNote(messages[messages.length - 1].content)}`;
+    }
 
-  // The law, not the advice: deterministic guard on the full reply.
-  const guarded = guardReply(reply);
-  if (!guarded.ok) console.warn("[concierge] guard blocked reply", guarded.hits);
+    // Scope is law too: no unrelated code leaves this function.
+    if (codeOutsideScope(reply)) {
+      console.warn("[concierge] reply blocked: code outside ChainMore scope", { member, integration });
+      reply = outOfScopeReply(messages[messages.length - 1].content);
+    }
 
-  return sse([{ type: "delta", text: guarded.text }, { type: "done" }]);
+    // The law, not the advice: deterministic guard on the full reply.
+    const guarded = guardReply(reply, { allowCodePlaceholders: member });
+    if (!guarded.ok) console.warn("[concierge] guard blocked reply", guarded.hits);
+    return [{ type: "delta", text: guarded.text }, { type: "done" }];
+  }, snag);
 };

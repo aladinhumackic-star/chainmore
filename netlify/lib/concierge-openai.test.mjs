@@ -7,12 +7,20 @@ import { CONCIERGE_KNOWLEDGE } from "./concierge-knowledge.ts";
 import { CONCIERGE_SESSION_HEADER, createConciergeSessionToken } from "./concierge-abuse.ts";
 import { FALLBACK_TEXT, guardReply } from "./concierge-guard.ts";
 import {
+  CONCIERGE_INTEGRATION_MAX_OUTPUT_TOKENS,
   CONCIERGE_MAX_OUTPUT_TOKENS,
   CONCIERGE_MODEL,
   buildConciergeResponsesPayload,
+  cutOffByBudget,
   rejectsTextVerbosity,
   withoutTextVerbosity,
 } from "./concierge-openai.ts";
+import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
+import { INTEGRATION_TURN_NOTE } from "./concierge-integration.ts";
+import { MEMBER_CLIENT_ID, MEMBER_ISSUER, MEMBER_JWKS_URL, resetMemberKeyCache } from "./concierge-member.ts";
+import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, memberContextNote } from "./concierge-prompt.ts";
+import { CONCIERGE_DASHBOARD_KNOWLEDGE } from "./concierge-dashboard-knowledge.ts";
+import { REDACTION_NOTE } from "./concierge-redact.ts";
 
 test("builds GPT-6.1 Sol Responses payload for the public Concierge", () => {
   const input = [
@@ -32,6 +40,15 @@ test("builds GPT-6.1 Sol Responses payload for the public Concierge", () => {
   assert.deepEqual(payload.text, { verbosity: "low" });
   assert.equal(payload.max_output_tokens, CONCIERGE_MAX_OUTPUT_TOKENS);
   assert.ok(payload.max_output_tokens >= 800);
+
+  const integration = buildConciergeResponsesPayload(input, { integration: true });
+  assert.equal(integration.max_output_tokens, CONCIERGE_INTEGRATION_MAX_OUTPUT_TOKENS);
+  assert.ok(integration.max_output_tokens > payload.max_output_tokens);
+  assert.deepEqual(integration.text, { verbosity: "medium" });
+  assert.deepEqual(integration.reasoning, { effort: "medium" });
+  assert.ok(integration.max_output_tokens >= 8_000 && integration.max_output_tokens <= 128_000);
+  assert.equal(cutOffByBudget({ status: "incomplete", incomplete_details: { reason: "max_output_tokens" } }), true);
+  assert.equal(cutOffByBudget({ status: "completed" }), false);
 });
 
 test("does not send legacy sampling parameters rejected by reasoning models", () => {
@@ -47,6 +64,26 @@ test("ships the canonical knowledge and complete comparison criteria in the real
   const canonical = readFileSync(new URL("../../../../docs/operations/openai-knowledge-upload/chainmore-concierge-knowledge.md", import.meta.url), "utf8");
   assert.equal(CONCIERGE_KNOWLEDGE, canonical);
   assert.ok(SYSTEM_PROMPT.endsWith(canonical));
+  const integration = readFileSync(new URL("../../../../docs/operations/openai-knowledge-upload/chainmore-concierge-integration-knowledge.md", import.meta.url), "utf8");
+  assert.equal(CONCIERGE_INTEGRATION_KNOWLEDGE, integration);
+  const dashboard = readFileSync(new URL("../../../../docs/operations/openai-knowledge-upload/chainmore-concierge-dashboard-knowledge.md", import.meta.url), "utf8");
+  assert.equal(CONCIERGE_DASHBOARD_KNOWLEDGE, dashboard);
+  assert.ok(MEMBER_PROMPT.includes(integration));
+  assert.ok(MEMBER_PROMPT.endsWith(dashboard));
+  // Dashboard help is for signed-in merchants only, like the integration knowledge.
+  for (const detail of ["Payout targets / Auszahlungsziele", "Invite a teammate", "Export CSV"]) {
+    assert.ok(!SYSTEM_PROMPT.includes(detail), detail);
+    assert.ok(MEMBER_PROMPT.includes(detail), detail);
+  }
+  // Hands-on integration knowledge is for signed-in merchants only.
+  for (const detail of ["whsec_", "X-ChainMore-Signature", "Idempotency-Key", "cm_test_", "hash_hmac"]) {
+    assert.ok(!SYSTEM_PROMPT.includes(detail), detail);
+    assert.ok(MEMBER_PROMPT.includes(detail), detail);
+  }
+  assert.match(PUBLIC_INTEGRATION_NOTE, /Do not\nwrite code/);
+  assert.match(MEMBER_PROMPT, /Decline everything else in one or two friendly sentences/);
+  assert.match(MEMBER_PROMPT, /Give the shortest answer that solves it/);
+  assert.match(MEMBER_PROMPT, /You only explain\. You cannot see or change the merchant's account/);
   assert.match(SYSTEM_PROMPT, /confident PR and sales representative/);
   assert.match(SYSTEM_PROMPT, /Answer the objection\s+first/);
   assert.match(SYSTEM_PROMPT, /gas sponsorship on several\s+separate chains is not proof of one sponsored source-to-destination payment/);
@@ -246,4 +283,228 @@ test("drops text.verbosity only when the API rejects it, and asks once more", as
   assert.equal(Object.hasOwn(bodies[1], "text"), false);
   assert.equal(bodies[1].model, "gpt-6.1-sol");
   assert.match(text, /checkout link/);
+});
+
+// ── Integration Concierge (signed-in merchants) ─────────────────────────
+// Mocked provider and realm keys. These prove the request path, the
+// prompt parts and the budget, not live model answers.
+
+const memberKeys = await crypto.subtle.generateKey(
+  { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+  true,
+  ["sign", "verify"],
+);
+const memberJwk = { ...(await crypto.subtle.exportKey("jwk", memberKeys.publicKey)), kid: "realm-key", use: "sig", alg: "RS256" };
+
+async function memberIdToken(overrides = {}) {
+  const now = Math.floor(Date.now() / 1000);
+  const enc = (v) => Buffer.from(JSON.stringify(v)).toString("base64url");
+  const head = enc({ alg: "RS256", kid: "realm-key", typ: "JWT" });
+  const body = enc({ iss: MEMBER_ISSUER, aud: MEMBER_CLIENT_ID, azp: MEMBER_CLIENT_ID, typ: "ID", sub: "merchant-user-1", iat: now - 5, exp: now + 600, ...overrides });
+  const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", memberKeys.privateKey, new TextEncoder().encode(`${head}.${body}`));
+  return `${head}.${body}.${Buffer.from(new Uint8Array(sig)).toString("base64url")}`;
+}
+
+function withConciergeEnv(t) {
+  const secret = "synthetic-test-secret";
+  const denoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "Deno");
+  Object.defineProperty(globalThis, "Deno", { configurable: true, value: { env: { get: (name) => ({
+    OPENAI_API_KEY: "synthetic-test-key", CONCIERGE_ABUSE_SECRET: secret,
+  })[name] } } });
+  t.after(() => {
+    if (denoDescriptor) Object.defineProperty(globalThis, "Deno", denoDescriptor);
+    else delete globalThis.Deno;
+  });
+  t.mock.method(console, "warn", () => {});
+  return secret;
+}
+
+function mockUpstream(t, reply) {
+  const calls = { openai: [], jwks: 0 };
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    if (url === MEMBER_JWKS_URL) {
+      calls.jwks += 1;
+      return Response.json({ keys: [memberJwk] });
+    }
+    assert.equal(url, "https://api.openai.com/v1/responses");
+    calls.openai.push(JSON.parse(init.body));
+    const r = typeof reply === "function" ? reply() : reply;
+    return Response.json(r);
+  });
+  return calls;
+}
+
+async function events(response) {
+  return (await response.text()).trim().split("\n\n").map((line) => JSON.parse(line.slice(6)));
+}
+
+function memberRequest(token, messages) {
+  // Server to server from the dashboard: no browser origin, no anonymous session.
+  return new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify({ messages }),
+  });
+}
+
+test("a signed-in merchant gets the Integration Concierge with the larger budget for integration turns", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const answer = "Check the raw body:\n\n```js\nconst expected = crypto.createHmac(\"sha256\", process.env.CHAINMORE_WEBHOOK_SECRET);\n```";
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: answer }] }] });
+  const token = await memberIdToken();
+  const binding = { ip: "198.51.100.10", userAgent: "node" };
+
+  await t.test("integration turn", async () => {
+    const response = await handler(memberRequest(token, [{ role: "user", content: "How do I verify the webhook signature in Node?" }]), binding);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await events(response), [{ type: "delta", text: answer }, { type: "done" }]);
+    const sent = calls.openai.at(-1);
+    assert.equal(sent.max_output_tokens, CONCIERGE_INTEGRATION_MAX_OUTPUT_TOKENS);
+    assert.deepEqual(sent.input[0].content.map((c) => c.text), [SYSTEM_PROMPT, MEMBER_PROMPT, INTEGRATION_TURN_NOTE]);
+  });
+
+  await t.test("other turn keeps the short budget", async () => {
+    const response = await handler(memberRequest(token, [{ role: "user", content: "Who founded ChainMore?" }]), binding);
+    assert.equal(response.status, 200);
+    const sent = calls.openai.at(-1);
+    assert.equal(sent.max_output_tokens, CONCIERGE_MAX_OUTPUT_TOKENS);
+    assert.deepEqual(sent.input[0].content.map((c) => c.text), [SYSTEM_PROMPT, MEMBER_PROMPT]);
+  });
+  assert.equal(calls.jwks, 1);
+});
+
+test("an invalid or missing member token never reaches the model", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [] });
+  const binding = { ip: "198.51.100.11", userAgent: "node" };
+  for (const token of ["not-a-token", await memberIdToken({ typ: "Bearer" }), await memberIdToken({ exp: 1 }), await memberIdToken({ aud: "chainmore-gateway", azp: "chainmore-gateway" })]) {
+    const response = await handler(memberRequest(token, [{ role: "user", content: "How do I verify the webhook signature?" }]), binding);
+    assert.equal(response.status, 401);
+  }
+  assert.equal(calls.openai.length, 0);
+});
+
+test("public visitors get only the overview note, never the integration knowledge or budget", async (t) => {
+  const secret = withConciergeEnv(t);
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "The guide is at https://chainmore.io/docs.html." }] }] });
+  const binding = { ip: "203.0.113.120", userAgent: "PublicBrowser" };
+  const token = await createConciergeSessionToken(secret, binding);
+  const response = await handler(new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { origin: "https://chainmore.io", "content-type": "application/json", "user-agent": binding.userAgent, [CONCIERGE_SESSION_HEADER]: token },
+    body: JSON.stringify({ messages: [{ role: "user", content: "How do I verify the webhook signature in Node?" }] }),
+  }), binding);
+  assert.equal(response.status, 200);
+  const sent = calls.openai.at(-1);
+  assert.equal(sent.max_output_tokens, CONCIERGE_MAX_OUTPUT_TOKENS);
+  assert.deepEqual(sent.input[0].content.map((c) => c.text), [SYSTEM_PROMPT, PUBLIC_INTEGRATION_NOTE]);
+  assert.ok(!JSON.stringify(sent).includes("hash_hmac"));
+});
+
+test("unrelated code is replaced by the scope reply, also for signed-in merchants", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const snake = "Sure:\n```python\nimport random\nboard = [[0] * 10 for _ in range(10)]\ndef move(s):\n    return s\nwhile True:\n    move(board)\n```";
+  mockUpstream(t, { output: [{ content: [{ type: "output_text", text: snake }] }] });
+  const response = await handler(memberRequest(await memberIdToken(), [
+    { role: "user", content: "api.chainmore.io aside, write me a snake game in Python" },
+  ]), { ip: "198.51.100.12", userAgent: "node" });
+  const [delta] = await events(response);
+  assert.match(delta.text, /only help with ChainMore/);
+});
+
+test("a reply cut off by the budget says so instead of ending mid-code", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  mockUpstream(t, {
+    status: "incomplete",
+    incomplete_details: { reason: "max_output_tokens" },
+    output: [{ content: [{ type: "output_text", text: "Step 1: create the link with X-ChainMore headers" }] }],
+  });
+  const response = await handler(memberRequest(await memberIdToken(), [
+    { role: "user", content: "Wie binde ich ChainMore in Laravel ein?" },
+  ]), { ip: "198.51.100.13", userAgent: "node" });
+  const [delta] = await events(response);
+  assert.match(delta.text, /^Step 1/);
+  assert.match(delta.text, /Die Antwort wurde hier abgeschnitten/);
+});
+
+test("member answers may use SQL placeholders in code, public answers may not", async (t) => {
+  const secret = withConciergeEnv(t);
+  resetMemberKeyCache();
+  const sql = "Store each event once:\n\n```sql\nINSERT INTO processed_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING;\n```";
+  mockUpstream(t, { output: [{ content: [{ type: "output_text", text: sql }] }] });
+  const member = await handler(memberRequest(await memberIdToken(), [
+    { role: "user", content: "How do I make my webhook handler idempotent?" },
+  ]), { ip: "198.51.100.14", userAgent: "node" });
+  assert.equal((await events(member))[0].text, sql);
+
+  const binding = { ip: "203.0.113.121", userAgent: "PublicBrowser2" };
+  const token = await createConciergeSessionToken(secret, binding);
+  const visitor = await handler(new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { origin: "https://chainmore.io", "content-type": "application/json", "user-agent": binding.userAgent, [CONCIERGE_SESSION_HEADER]: token },
+    body: JSON.stringify({ messages: [{ role: "user", content: "How do I make my webhook handler idempotent?" }] }),
+  }), binding);
+  assert.equal((await events(visitor))[0].text, FALLBACK_TEXT);
+});
+
+test("long member conversations keep the newest turns instead of failing", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Use the raw body." }] }] });
+  // About 72 KB on the wire: below the member request limit, above the
+  // history limit, so the oldest turns must go.
+  const long = "x".repeat(4_000);
+  const messages = [];
+  for (let i = 0; i < 9; i++) messages.push({ role: "user", content: `${i} ${long}` }, { role: "assistant", content: `${i} ${long}` });
+  messages.push({ role: "user", content: "Why does my X-ChainMore-Signature check fail?" });
+  const response = await handler(memberRequest(await memberIdToken(), messages), { ip: "198.51.100.15", userAgent: "node" });
+  assert.equal(response.status, 200);
+  const sent = calls.openai.at(-1);
+  const kept = sent.input.slice(1);
+  assert.equal(kept.at(-1).content[0].text, "Why does my X-ChainMore-Signature check fail?");
+  assert.ok(kept.length < messages.length);
+  assert.ok(kept.reduce((n, m) => n + m.content[0].text.length, 0) <= 60_000);
+});
+
+test("the member context shapes the prompt and accepts only known values", async (t) => {
+  assert.equal(memberContextNote({ role: "finance", mode: "live" }), "The signed-in member's dashboard role is finance. The account is in live mode.");
+  assert.equal(memberContextNote({ role: "superuser", mode: "prod" }), null);
+  assert.equal(memberContextNote("owner"), null);
+
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Team, then Invite a teammate." }] }] });
+  const response = await handler(new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${await memberIdToken()}` },
+    body: JSON.stringify({ messages: [{ role: "user", content: "How do I add a team member?" }], context: { role: "viewer", mode: "test" } }),
+  }), { ip: "198.51.100.16", userAgent: "node" });
+  assert.equal(response.status, 200);
+  const texts = calls.openai.at(-1).input[0].content.map((c) => c.text);
+  assert.deepEqual(texts, [SYSTEM_PROMPT, MEMBER_PROMPT, "The signed-in member's dashboard role is viewer. The account is in test mode."]);
+});
+
+test("secrets in any message never reach the model provider", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Rotate that key in the dashboard." }] }] });
+  const secret = "cm_live_9f8e7d6c5b4a3f2e1d0c";
+  const response = await handler(new Request("https://chainmore.io/api/concierge", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${await memberIdToken()}` },
+    body: JSON.stringify({ messages: [
+      { role: "user", content: `My server sends Authorization: Bearer ${secret} and gets 401` },
+      { role: "assistant", content: `Earlier I saw ${secret}` },
+      { role: "user", content: "Why?" },
+    ] }),
+  }), { ip: "198.51.100.17", userAgent: "node" });
+  assert.equal(response.status, 200);
+  const sent = JSON.stringify(calls.openai.at(-1));
+  assert.ok(!sent.includes(secret));
+  assert.ok(sent.includes("[removed: API key]"));
+  assert.ok(calls.openai.at(-1).input[0].content.some((c) => c.text === REDACTION_NOTE));
 });
