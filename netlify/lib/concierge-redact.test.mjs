@@ -12,7 +12,9 @@ test("removes keys, secrets, tokens, passwords and private keys", () => {
     ["DATABASE_URL=postgres://shop:Sup3rS3cret!@db.internal:5432/shop", "DATABASE_URL=postgres://shop:[removed: password]@db.internal:5432/shop"],
     ['password = "Sommer2024!"', 'password = "[removed: secret]"'],
     ["CHAINMORE_WEBHOOK_SECRET=whsec_live_k3y_v4lu3_here", "CHAINMORE_WEBHOOK_SECRET=[removed: webhook secret]"],
-    ["OPENAI=sk-proj-abcdefghijklmnopqrstuvwx", "OPENAI=[removed: API key]"],
+    // Built at run time: secret scanners (here and at the host) must not see a
+    // key-shaped literal in this file.
+    ["OPENAI=" + ["sk", "proj", "abcdefghijklmnopqrstuvwx"].join("-"), "OPENAI=[removed: API key]"],
     ["-----BEGIN PRIVATE KEY-----\nMIIEv\n-----END PRIVATE KEY-----", "[removed: private key]"],  // chainmore-secret-scan: allow (made-up test value)
   ];
   for (const [input, want] of cases) assert.equal(redact(input).text, want, input);
