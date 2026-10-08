@@ -46,3 +46,48 @@ test("reports what it removed and the note passes the output guard", () => {
   assert.deepEqual(redact("cm_test_abcdef1234567890 and a@b.de").removed.sort(), ["API key", "e-mail"]);
   assert.equal(guardReply(REDACTION_NOTE).ok, true);
 });
+
+// F-CONCIERGE-REDACT-2: a labelled secret written as a literal goes in full,
+// also when it is letters only, short or contains spaces; code that only
+// points at a secret stays.
+test("labelled secret literals go in full, whatever their letters, spaces or length", () => {
+  const phrase = Array(12).fill("syntheticword").join(" ");
+  const cases = [
+    ['password = "' + "velvet" + "meadow" + "orbit" + '"', 'password = "[removed: secret]"'],
+    ['mnemonic = "' + phrase + '"', 'mnemonic = "[removed: secret]"'],
+    ['client_secret = "' + "Demo" + ' 42"', 'client_secret = "[removed: secret]"'],
+    ['{"client_secret": "two words", "merchant_order_id": "order-1042"}', '{"client_secret": "[removed: secret]", "merchant_order_id": "order-1042"}'],
+    ["my password: " + "hunter", "my password: [removed: secret]"],
+    ["password=" + "hunter2", "password=[removed: secret]"],
+    ["mnemonic: " + phrase, "mnemonic: [removed: secret]"],
+    ["seed phrase: alpha beta gamma", "seed phrase: [removed: secret]"],
+    // The five literals of the FINAL 6049941756: case, underscores, capitals,
+    // brackets and dots inside quotes do not make a value code.
+    ['password = "' + "velvet" + "Meadow" + "Orbit" + '"', 'password = "[removed: secret]"'],
+    ['client_secret = "' + "velvet_meadow" + "_orbit" + '"', 'client_secret = "[removed: secret]"'],
+    ['password = "' + "VELVET" + "MEADOWORBIT" + '"', 'password = "[removed: secret]"'],
+    ['client_secret = "' + "velvet" + '(42)"', 'client_secret = "[removed: secret]"'],
+    ['client_secret = "' + "velvet.meadow" + '.orbit"', 'client_secret = "[removed: secret]"'],
+    // Without quotes a bare word is the value in YAML and .env files.
+    ["password: " + "velvet" + "MeadowOrbit", "password: [removed: secret]"],
+    ["API_KEY=" + "VELVET" + "MEADOW", "API_KEY=[removed: secret]"],
+  ];
+  for (const [input, want] of cases) assert.equal(redact(input).text, want, input);
+});
+
+test("code that only points at a secret stays", () => {
+  const keep = [
+    "webhook_secret: process.env.CHAINMORE_WEBHOOK_SECRET",
+    "secret: ${{ secrets.CHAINMORE_WEBHOOK_SECRET }}",
+    'secret: "${{ secrets.CHAINMORE_WEBHOOK_SECRET }}"',
+    'password = "${DB_PASSWORD}"',
+    'api_key: "<your API key>"',
+    "apiKey: config.chainmore.apiKey",
+    "client_secret = getClientSecret()",
+    "client_secret: SecretStr",
+    "password: required",
+    "Set password: string.",
+    'password = ""',
+  ];
+  for (const input of keep) assert.deepEqual(redact(input), { text: input, removed: [] }, input);
+});

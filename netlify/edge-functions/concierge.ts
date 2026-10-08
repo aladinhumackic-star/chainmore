@@ -28,7 +28,7 @@ import {
 } from "../lib/concierge-abuse.ts";
 import { guardReply } from "../lib/concierge-guard.ts";
 import { sseAfter } from "../lib/concierge-sse.ts";
-import { verifyMemberToken } from "../lib/concierge-member.ts";
+import { MEMBER_ADMISSION_HEADER, redeemMemberAdmission, verifyMemberToken } from "../lib/concierge-member.ts";
 import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, SYSTEM_PROMPT, memberContextNote, memberFallbackText } from "../lib/concierge-prompt.ts";
 import { REDACTION_NOTE, redact } from "../lib/concierge-redact.ts";
 import { INTEGRATION_TURN_NOTE, codeOutsideScope, isMemberIntegrationTurn, outOfScopeReply } from "../lib/concierge-integration.ts";
@@ -93,7 +93,7 @@ function rateLimitSSE(retryAfterSeconds: number): Response {
   );
 }
 
-async function readJsonBody(req: Request, maxBytes = CONCIERGE_MAX_REQUEST_BYTES): Promise<{ ok: true; body: { messages?: unknown; context?: unknown } } | { ok: false; status: number; message: string }> {
+async function readJsonBody(req: Request, maxBytes = CONCIERGE_MAX_REQUEST_BYTES): Promise<{ ok: true; body: { messages?: unknown }; raw: Uint8Array<ArrayBuffer> } | { ok: false; status: number; message: string }> {
   const contentLength = Number(req.headers.get("content-length") || "0");
   if (contentLength > maxBytes) {
     return { ok: false, status: 413, message: "Request too large." };
@@ -124,7 +124,7 @@ async function readJsonBody(req: Request, maxBytes = CONCIERGE_MAX_REQUEST_BYTES
   }
 
   try {
-    return { ok: true, body: JSON.parse(new TextDecoder().decode(all)) };
+    return { ok: true, body: JSON.parse(new TextDecoder().decode(all)), raw: all };
   } catch {
     return { ok: false, status: 400, message: "Bad request." };
   }
@@ -189,9 +189,12 @@ export default async (req: Request, ctx: Context) => {
   }
 
   // Two ways in. The dashboard server forwards the signed-in merchant's ID
-  // token (Integration Concierge); the public widget on chainmore.io uses
-  // the browser origin plus the short-lived anonymous session token.
+  // token together with a single-use admission for this request
+  // (Integration Concierge, concierge-member.ts); the public widget on
+  // chainmore.io uses the browser origin plus the short-lived anonymous
+  // session token.
   let member = false;
+  let memberSubject = "";
   if (req.headers.has("authorization")) {
     const bearer = /^Bearer\s+(\S+)$/i.exec(req.headers.get("authorization") || "")?.[1];
     const check = await verifyMemberToken(bearer);
@@ -202,6 +205,7 @@ export default async (req: Request, ctx: Context) => {
     const memberLimit = consumeRateLimit(buckets, rateLimitKey("member", check.subject), MEMBER_RATE_RULES);
     if (!memberLimit.ok) return rateLimitSSE(memberLimit.retryAfterSeconds);
     member = true;
+    memberSubject = check.subject;
   } else {
     const binding = clientBinding(req, ctx);
     const session = await verifyConciergeSessionToken(req.headers.get(CONCIERGE_SESSION_HEADER), abuseSecret, binding);
@@ -219,6 +223,17 @@ export default async (req: Request, ctx: Context) => {
   const body = await readJsonBody(req, member ? MEMBER_MAX_REQUEST_BYTES : CONCIERGE_MAX_REQUEST_BYTES);
   if (!body.ok) {
     return sse([{ type: "error", message: body.message }], body.status);
+  }
+  // The dashboard admits this exact request once, after its merchant and
+  // budget checks; the member context comes back with the admission.
+  let memberContext: { role: unknown; mode: unknown; ui_locale: unknown } | null = null;
+  if (member) {
+    const admitted = await redeemMemberAdmission(req.headers.get(MEMBER_ADMISSION_HEADER), memberSubject, body.raw);
+    if (!admitted.ok) {
+      console.warn("[concierge] member request not admitted", admitted.reason);
+      return sse([{ type: "error", message: "This question was not admitted. Reload the dashboard and try again." }], 403);
+    }
+    memberContext = { role: admitted.role, mode: admitted.mode, ui_locale: admitted.uiLocale };
   }
   const messages = member
     ? sanitize(body.body.messages, MEMBER_MAX_USER_CHARS, MEMBER_MAX_HISTORY_CHARS)
@@ -247,7 +262,7 @@ export default async (req: Request, ctx: Context) => {
   const integration = member && isMemberIntegrationTurn(messages);
   const systemContent = [{ type: "input_text", text: SYSTEM_PROMPT }];
   systemContent.push({ type: "input_text", text: member ? MEMBER_PROMPT : PUBLIC_INTEGRATION_NOTE });
-  const context = member ? memberContextNote(body.body.context) : null;
+  const context = memberContext ? memberContextNote(memberContext) : null;
   if (context) systemContent.push({ type: "input_text", text: context });
   if (removed.size) systemContent.push({ type: "input_text", text: REDACTION_NOTE });
   if (integration) systemContent.push({ type: "input_text", text: INTEGRATION_TURN_NOTE });

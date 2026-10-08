@@ -43,16 +43,36 @@ function ibanValid(raw: string): boolean {
   return rest === 1;
 }
 
-// A value that only points at a secret (an environment variable, a config
-// lookup, a placeholder, a type name) is code the merchant needs, not a
-// secret.
-const REFERENCE = /^(?:process\.env|import\.meta\.env|os\.environ|os\.getenv|getenv|env\(|ENV\[|\$|\{|<|config\.|settings\.|self\.|this\.|req\.|request\.|\[removed)/;
-const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
+// What only points at a secret, judged by the expression and never by how a
+// value is spelled (F-CONCIERGE-REDACT-2): a value in quotes is a literal
+// unless the whole value is an interpolation or a placeholder; a value
+// without quotes stays only when it is an environment lookup, an
+// interpolation, a function call, a config path, a type name or a word that
+// describes the field. A bare word without quotes goes: in YAML and .env
+// files it is the secret itself.
+const INTERPOLATION = /^(?:\$\{\{[^{}]+\}\}|\$\{[A-Za-z_][A-Za-z0-9_.:-]*\}|\$[A-Za-z_][A-Za-z0-9_]*|%[A-Za-z_][A-Za-z0-9_]*%)$/;
+const PLACEHOLDER = /^(?:<[^<>\n]{1,60}>|\[removed: [a-z -]+\]|\*{3,}|x{3,}|X{3,}|\.{3})$/;
+// An earlier rule's marker ("[removed: …]") counts as already handled.
+const ENV_LOOKUP = /^(?:process\.env\b|import\.meta\.env\b|os\.environ\b|os\.getenv\(|getenv\(|System\.getenv\(|Deno\.env\.get\(|ENV\[|env\(|\$|\{|<|\[removed)/;
+const CONFIG_PATH = /^(?:config|settings|self|this|req|request|secrets|ctx|options|opts|params|props)\.[\w$.]+$/;
+const CALL = /^[A-Za-z_$][\w$.]*\(/;
+const TYPE_NAME = /^(?:string|number|boolean|bool|str|int|bytes|any|unknown|object|String|Buffer|Uint8Array|SecretStr|SecretString|null|undefined|None|nil|true|false)\??$/;
+// Words that describe a field in prose rather than fill it.
+const DESCRIPTION = /^(?:required|optional|missing|empty|invalid|wrong|incorrect|changed|reset|unset|hidden|redacted|removed|placeholder)$/i;
 
-function looksSecret(value: string): boolean {
-  if (REFERENCE.test(value) || ENV_NAME.test(value) || value.includes("(")) return false;
-  return value.length >= 8 && /[^A-Za-z]/.test(value);
+function isQuotedReference(value: string): boolean {
+  return INTERPOLATION.test(value) || PLACEHOLDER.test(value);
 }
+
+function isCodeReference(value: string): boolean {
+  return ENV_LOOKUP.test(value) || isQuotedReference(value) || CONFIG_PATH.test(value) || CALL.test(value) ||
+    TYPE_NAME.test(value) || DESCRIPTION.test(value);
+}
+
+// The names that label a secret value: password=..., "client_secret": "...",
+// private_key = ..., mnemonic / seed phrase / passphrase.
+const SECRET_NAME = String.raw`\b((?:[A-Za-z0-9_]*?)(?:password|passwd|pwd|passphrase|secret|private[ _-]?key|api[ _-]?key|access[ _-]?token|client[ _-]?secret|mnemonic|seed[ _-]?phrase)[A-Za-z0-9_]*)(["']?\s*[=:]\s*)`;
+const PHRASE_NAME = String.raw`\b((?:[A-Za-z0-9_]*?)(?:mnemonic|seed[ _-]?phrase|passphrase)[A-Za-z0-9_]*)(["']?\s*[=:]\s*)`;
 
 const marker = (label: string) => `[removed: ${label}]`;
 
@@ -79,12 +99,31 @@ const RULES: Rule[] = [
     re: /\b([a-z][a-z0-9+.-]*:\/\/[^\s:/@]+):([^\s@/]+)@/gi,
     keep: (_m, head) => `${head}:${marker("password")}@`,
   },
-  // password=..., secret: "...", private_key = ..., mnemonic / seed phrase.
+  // A labelled value in quotes is a literal: the whole value goes, whatever
+  // its length, case, spaces, dots or brackets, unless the whole value is an
+  // interpolation or a placeholder.
   {
     label: "secret",
-    re: /\b((?:[A-Za-z0-9_]*?)(?:password|passwd|pwd|secret|private[_-]?key|api[_-]?key|access[_-]?token|client[_-]?secret|mnemonic|seed[_-]?phrase)[A-Za-z0-9_]*)(\s*[=:]\s*)(["']?)([^\s"'`,;]{6,})\3/gi,
+    re: new RegExp(SECRET_NAME + String.raw`(["'])((?:(?!\3)[^\n\\]|\\.)+)\3`, "gi"),
     keep: (_m, name, sep, quote, value) =>
-      looksSecret(value) ? `${name}${sep}${quote}${marker("secret")}${quote}` : null,
+      isQuotedReference(value) ? null : `${name}${sep}${quote}${marker("secret")}${quote}`,
+  },
+  // A mnemonic, seed phrase or passphrase written out without quotes: the
+  // words up to the end of the line.
+  {
+    label: "secret",
+    re: new RegExp(PHRASE_NAME + String.raw`([A-Za-z]+(?:[ \t]+[A-Za-z]+){2,})`, "gi"),
+    keep: (_m, name, sep) => `${name}${sep}${marker("secret")}`,
+  },
+  // A labelled value without quotes, unless it is code (see isCodeReference).
+  {
+    label: "secret",
+    re: new RegExp(SECRET_NAME + String.raw`([^\s"'\x60,;)}\]]+)`, "gi"),
+    keep: (_m, name, sep, value) => {
+      // A full stop or similar ending the sentence is not part of the value.
+      const [, core, end] = /^(.*?)([.!?:]*)$/.exec(value) ?? ["", value, ""];
+      return isCodeReference(core) ? null : `${name}${sep}${marker("secret")}${end}`;
+    },
   },
   // IBAN, only with valid check digits.
   {

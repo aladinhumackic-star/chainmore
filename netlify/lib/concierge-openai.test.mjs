@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
 import handler from "../edge-functions/concierge.ts";
 import { SYSTEM_PROMPT } from "./concierge-prompt.ts";
 import { CONCIERGE_KNOWLEDGE } from "./concierge-knowledge.ts";
@@ -17,7 +18,14 @@ import {
 } from "./concierge-openai.ts";
 import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
 import { INTEGRATION_TURN_NOTE } from "./concierge-integration.ts";
-import { MEMBER_CLIENT_ID, MEMBER_ISSUER, MEMBER_JWKS_URL, resetMemberKeyCache } from "./concierge-member.ts";
+import {
+  MEMBER_ADMISSION_HEADER,
+  MEMBER_ADMISSION_URL,
+  MEMBER_CLIENT_ID,
+  MEMBER_ISSUER,
+  MEMBER_JWKS_URL,
+  resetMemberKeyCache,
+} from "./concierge-member.ts";
 import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, memberContextNote, memberFallbackText } from "./concierge-prompt.ts";
 import { CONCIERGE_DASHBOARD_KNOWLEDGE } from "./concierge-dashboard-knowledge.ts";
 import { REDACTION_NOTE } from "./concierge-redact.ts";
@@ -319,12 +327,35 @@ function withConciergeEnv(t) {
   return secret;
 }
 
+// Stand-in for the dashboard's admission store
+// (frontend/merchant-dashboard/src/lib/concierge-admission.ts): single use,
+// bound to the user and the SHA-256 of the forwarded body.
+const admissions = new Map();
+const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+
+function admit(subject, body, context = {}) {
+  const admission = randomBytes(32).toString("base64url");
+  admissions.set(admission, { subject, bodySha256: sha256(body), ...context });
+  return admission;
+}
+
 function mockUpstream(t, reply) {
-  const calls = { openai: [], jwks: 0 };
+  const calls = { openai: [], jwks: 0, admission: 0 };
   t.mock.method(globalThis, "fetch", async (url, init) => {
     if (url === MEMBER_JWKS_URL) {
       calls.jwks += 1;
       return Response.json({ keys: [memberJwk] });
+    }
+    if (url === MEMBER_ADMISSION_URL) {
+      calls.admission += 1;
+      assert.equal(init.redirect, "error");
+      const asked = JSON.parse(init.body);
+      const entry = admissions.get(asked.admission);
+      admissions.delete(asked.admission);
+      if (!entry || entry.subject !== asked.subject || entry.bodySha256 !== asked.body_sha256) {
+        return Response.json({ admitted: false }, { status: 404 });
+      }
+      return Response.json({ admitted: true, role: entry.role, mode: entry.mode, ui_locale: entry.ui_locale });
     }
     assert.equal(url, "https://api.openai.com/v1/responses");
     calls.openai.push(JSON.parse(init.body));
@@ -338,13 +369,14 @@ async function events(response) {
   return (await response.text()).trim().split("\n\n").map((line) => JSON.parse(line.slice(6)));
 }
 
-function memberRequest(token, messages) {
-  // Server to server from the dashboard: no browser origin, no anonymous session.
-  return new Request("https://chainmore.io/api/concierge", {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-    body: JSON.stringify({ messages }),
-  });
+function memberRequest(token, messages, { admission, context, subject = "merchant-user-1", extra = {} } = {}) {
+  // Server to server from the dashboard: no browser origin, no anonymous
+  // session, the admission the dashboard issued for exactly this body.
+  const body = JSON.stringify({ messages, ...extra });
+  const headers = { "content-type": "application/json", authorization: `Bearer ${token}` };
+  const granted = admission === undefined ? admit(subject, body, context) : admission;
+  if (granted !== null) headers[MEMBER_ADMISSION_HEADER] = granted;
+  return new Request("https://chainmore.io/api/concierge", { method: "POST", headers, body });
 }
 
 test("a signed-in merchant gets the Integration Concierge with the larger budget for integration turns", async (t) => {
@@ -480,10 +512,11 @@ test("the member context shapes the prompt and accepts only known values", async
   withConciergeEnv(t);
   resetMemberKeyCache();
   const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Team, then Invite a teammate." }] }] });
-  const response = await handler(new Request("https://chainmore.io/api/concierge", {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${await memberIdToken()}` },
-    body: JSON.stringify({ messages: [{ role: "user", content: "How do I add a team member?" }], context: { role: "viewer", mode: "test" } }),
+  // Role and mode come back with the admission; a context in the body is
+  // ignored, whatever it claims.
+  const response = await handler(memberRequest(await memberIdToken(), [{ role: "user", content: "How do I add a team member?" }], {
+    context: { role: "viewer", mode: "test" },
+    extra: { context: { role: "owner", mode: "live" } },
   }), { ip: "198.51.100.16", userAgent: "node" });
   assert.equal(response.status, 200);
   const texts = calls.openai.at(-1).input[0].content.map((c) => c.text);
@@ -495,15 +528,11 @@ test("secrets in any message never reach the model provider", async (t) => {
   resetMemberKeyCache();
   const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Rotate that key in the dashboard." }] }] });
   const secret = "cm_live_9f8e7d6c5b4a3f2e1d0c";
-  const response = await handler(new Request("https://chainmore.io/api/concierge", {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${await memberIdToken()}` },
-    body: JSON.stringify({ messages: [
-      { role: "user", content: `My server sends Authorization: Bearer ${secret} and gets 401` },
-      { role: "assistant", content: `Earlier I saw ${secret}` },
-      { role: "user", content: "Why?" },
-    ] }),
-  }), { ip: "198.51.100.17", userAgent: "node" });
+  const response = await handler(memberRequest(await memberIdToken(), [
+    { role: "user", content: `My server sends Authorization: Bearer ${secret} and gets 401` },
+    { role: "assistant", content: `Earlier I saw ${secret}` },
+    { role: "user", content: "Why?" },
+  ]), { ip: "198.51.100.17", userAgent: "node" });
   assert.equal(response.status, 200);
   const sent = JSON.stringify(calls.openai.at(-1));
   assert.ok(!sent.includes(secret));
@@ -516,7 +545,7 @@ test("a refused reply in the dashboard gets a helpful note in the visitor's lang
   resetMemberKeyCache();
   mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "The Idempotency-Key guarantees one link per order." }] }] });
   const ask = async (content, ip) => {
-    const response = await handler(memberRequest(await memberIdToken({ sub: `refused-${ip}` }), [{ role: "user", content }]), { ip, userAgent: "node" });
+    const response = await handler(memberRequest(await memberIdToken({ sub: `refused-${ip}` }), [{ role: "user", content }], { subject: `refused-${ip}` }), { ip, userAgent: "node" });
     const all = await events(response);
     assert.equal(all[0].type, "delta", JSON.stringify(all));
     return all[0].text;
@@ -526,4 +555,94 @@ test("a refused reply in the dashboard gets a helpful note in the visitor's lang
   for (const text of [memberFallbackText("x"), memberFallbackText("und")]) assert.equal(guardReply(text).ok, true);
   assert.match(MEMBER_PROMPT, /Never write "guarantee"/);
   assert.match(MEMBER_PROMPT, /language of the visitor's latest message/);
+});
+
+// F-CONCIERGE-BOUNDARY-1: a valid ID token alone admits nothing. Every
+// member question needs the dashboard's single-use admission for exactly that
+// body and user; without it the model is never called.
+test("a member question without the dashboard's admission never reaches the model", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "unused" }] }] });
+  const user = "boundary-user-1";
+  const token = await memberIdToken({ sub: user });
+  const question = [{ role: "user", content: "How do I verify the webhook signature?" }];
+  const otherBody = JSON.stringify({ messages: [{ role: "user", content: "Something else" }] });
+  const cases = [
+    ["no admission", memberRequest(token, question, { admission: null })],
+    ["malformed admission", memberRequest(token, question, { admission: "not-an-admission" })],
+    ["unknown admission", memberRequest(token, question, { admission: randomBytes(32).toString("base64url") })],
+    ["admission for another body", memberRequest(token, question, { admission: admit(user, otherBody) })],
+    ["admission for another user", memberRequest(token, question, { admission: admit("boundary-user-2", JSON.stringify({ messages: question })) })],
+  ];
+  for (const [name, request] of cases) {
+    const response = await handler(request, { ip: "198.51.100.30", userAgent: "node" });
+    assert.equal(response.status, 403, name);
+  }
+  assert.equal(calls.openai.length, 0);
+});
+
+test("an admission is used once: a replay of the same request is refused", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Use the raw body." }] }] });
+  const token = await memberIdToken({ sub: "replay-user" });
+  const messages = [{ role: "user", content: "Why does my X-ChainMore-Signature check fail?" }];
+  const admission = admit("replay-user", JSON.stringify({ messages }));
+  const first = await handler(memberRequest(token, messages, { admission }), { ip: "198.51.100.31", userAgent: "node" });
+  assert.equal(first.status, 200);
+  await first.text();
+  const replay = await handler(memberRequest(token, messages, { admission }), { ip: "198.51.100.31", userAgent: "node" });
+  assert.equal(replay.status, 403);
+  assert.equal(calls.openai.length, 1);
+  assert.equal(calls.admission, 2);
+});
+
+test("the dashboard out of reach admits nothing", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = { openai: 0 };
+  t.mock.method(globalThis, "fetch", async (url) => {
+    if (url === MEMBER_JWKS_URL) return Response.json({ keys: [memberJwk] });
+    if (url === MEMBER_ADMISSION_URL) throw new TypeError("network");
+    calls.openai += 1;
+    return Response.json({ output: [] });
+  });
+  const response = await handler(memberRequest(await memberIdToken({ sub: "unreachable-user" }), [{ role: "user", content: "How do I verify the webhook signature?" }], { subject: "unreachable-user" }), { ip: "198.51.100.32", userAgent: "node" });
+  assert.equal(response.status, 403);
+  assert.equal(calls.openai, 0);
+});
+
+// F-CONCIERGE-REDACT-2: labelled secrets written as literals leave the
+// message in full, whatever their letters, spaces or length, on the real
+// path before the model call; code references stay.
+test("labelled secret literals never reach the model, code references stay", async (t) => {
+  withConciergeEnv(t);
+  resetMemberKeyCache();
+  const calls = mockUpstream(t, { output: [{ content: [{ type: "output_text", text: "Rotate it in the dashboard." }] }] });
+  const literals = [
+    "velvet" + "meadow" + "orbit",
+    Array(12).fill("syntheticword").join(" "),
+    "Demo" + " 42",
+    // The five of the FINAL 6049941756.
+    "velvet" + "Meadow" + "Orbit",
+    "velvet_meadow" + "_orbit",
+    "VELVET" + "MEADOWORBIT",
+    "velvet" + "(42)",
+    "velvet.meadow" + ".orbit",
+  ];
+  const response = await handler(memberRequest(await memberIdToken({ sub: "redact-user" }), [
+    { role: "user", content: `password = "${literals[0]}"\nmnemonic = "${literals[1]}"\npassword = "${literals[3]}"` },
+    { role: "assistant", content: `Earlier you sent client_secret = "${literals[2]}" and client_secret = "${literals[4]}".` },
+    { role: "user", content: `Also password = "${literals[5]}", client_secret = "${literals[6]}"` },
+    { role: "assistant", content: `And {"client_secret": "${literals[7]}"} in the JSON.` },
+    { role: "user", content: "My config: webhook_secret: process.env.CHAINMORE_WEBHOOK_SECRET, password = \"${DB_PASSWORD}\", password: string. Why 401?" },
+  ], { subject: "redact-user" }), { ip: "198.51.100.33", userAgent: "node" });
+  assert.equal(response.status, 200);
+  const sent = JSON.stringify(calls.openai.at(-1));
+  for (const literal of literals) assert.ok(!sent.includes(literal), literal);
+  assert.ok(sent.includes("process.env.CHAINMORE_WEBHOOK_SECRET"));
+  assert.ok(sent.includes("${DB_PASSWORD}"));
+  assert.ok(sent.includes("password: string"));
+  assert.ok(calls.openai.at(-1).input[0].content.some((c) => c.text === REDACTION_NOTE));
 });

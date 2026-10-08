@@ -127,3 +127,57 @@ export async function verifyMemberToken(
   if (!valid) return { ok: false, reason: "signature" };
   return { ok: true, subject: claims.sub };
 }
+
+// A valid ID token alone admits nothing. The dashboard server
+// (frontend/merchant-dashboard/src/app/api/concierge/route.ts) checks that the
+// user belongs to an active merchant account and takes one question from the
+// account's and the overall daily budget. For exactly that request it then
+// issues a single-use admission: a random value bound to the user and to the
+// SHA-256 of the body it forwards, valid for a minute. This edge function
+// redeems the admission at the dashboard before any model call; the dashboard
+// forgets it on the first redeem attempt, whatever its outcome. The member's
+// role, mode and display language come back with it, never from the request.
+export const MEMBER_ADMISSION_HEADER = "x-chainmore-concierge-admission";
+export const MEMBER_ADMISSION_URL = "https://app.chainmore.io/api/concierge-admission";
+const ADMISSION_SHAPE = /^[A-Za-z0-9_-]{43}$/;
+const ADMISSION_TIMEOUT_MS = 5_000;
+
+export type MemberAdmission =
+  | { ok: true; role: unknown; mode: unknown; uiLocale: unknown }
+  | { ok: false; reason: string };
+
+function hex(bytes: ArrayBuffer): string {
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function redeemMemberAdmission(
+  admission: string | null | undefined,
+  subject: string,
+  rawBody: Uint8Array<ArrayBuffer>,
+  opts: { fetchImpl?: typeof fetch } = {},
+): Promise<MemberAdmission> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  if (!admission || !ADMISSION_SHAPE.test(admission)) return { ok: false, reason: "admission-missing" };
+  const bodySha256 = hex(await crypto.subtle.digest("SHA-256", rawBody));
+  let response: Response;
+  try {
+    response = await fetchImpl(MEMBER_ADMISSION_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ admission, subject, body_sha256: bodySha256 }),
+      redirect: "error",
+      signal: AbortSignal.timeout(ADMISSION_TIMEOUT_MS),
+    });
+  } catch {
+    return { ok: false, reason: "admission-unreachable" };
+  }
+  if (response.status !== 200) return { ok: false, reason: `admission-${response.status}` };
+  let data: { admitted?: unknown; role?: unknown; mode?: unknown; ui_locale?: unknown };
+  try {
+    data = await response.json();
+  } catch {
+    return { ok: false, reason: "admission-malformed" };
+  }
+  if (!data || data.admitted !== true) return { ok: false, reason: "admission-refused" };
+  return { ok: true, role: data.role, mode: data.mode, uiLocale: data.ui_locale };
+}
