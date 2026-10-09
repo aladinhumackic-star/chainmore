@@ -512,6 +512,8 @@ components:
             - not_found
             - not_implemented
             - payment_lookup_failed
+            - payout_target_not_declared
+            - payout_targets_dashboard_only
             - pending_confirmation
             - rail_not_ready
             - rate_limited
@@ -745,9 +747,12 @@ components:
             account id on a chain the rails pay on (`eip155:<chain>:0x...`)
             or a TRON account (`tron:0x2b6653dc:T...`). A bare `0x` address
             names no network and is accepted only when it is the merchant's
-            declared target on Arbitrum for the payment's token
-            (`PUT /v1/settlement_destinations/<token>:arbitrum` or the legacy
-            `usdt0`); otherwise 400 invalid_request. Omitted: the merchant's
+            declared target on Arbitrum for the payment's token (or the
+            legacy `usdt0`); otherwise 400 invalid_request. Created with an
+            API key, any address must be an active payout target of the
+            merchant for the payment's mode, token and chain; otherwise 400
+            payout_target_not_declared. Payout targets are added by an owner
+            or admin in the dashboard. Omitted: the merchant's
             highest-priority payout target, which must lie on its own
             corridor's chain. Refused for methods that do not deliver on
             chain. ChainMore never substitutes an address of its own: the
@@ -932,6 +937,11 @@ components:
         merchant_wallet:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
+          description: |
+            Where the USDC is paid out on `dest_chain`. Must be the merchant's
+            active USDC payout target on that chain in the key's mode;
+            otherwise 400 payout_target_not_declared. Payout targets are added
+            by an owner or admin in the dashboard.
         customer_wallet:
           type: string
           pattern: '^0x[a-fA-F0-9]{40}$'
@@ -6381,10 +6391,79 @@ paths:
 
   /v1/settlement_destinations/{corridor}:
     put:
-      summary: Declare or replace the authenticated merchant's payout target for one corridor, in the key's mode.
+      summary: Refused. Payout targets are changed only by an owner or admin in the dashboard.
       operationId: putSettlementDestination
       description: |
-        Idempotent upsert (ADR-0075). The corridor names the token and chain
+        Always 403 payout_targets_dashboard_only, before the body is read.
+        Payout targets are where ChainMore pays out; only a merchant owner or
+        admin changes them, signed in to the dashboard
+        (`PUT /v1/dashboard/settlement_destinations/{corridor}`). An API key
+        reads them with `GET /v1/settlement_destinations`. As for every PUT,
+        a request without `Idempotency-Key` gets 400 idempotency_required
+        first.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+    delete:
+      summary: Refused. Payout targets are disabled only by an owner or admin in the dashboard.
+      operationId: disableSettlementDestination
+      description: |
+        Always 403 payout_targets_dashboard_only. Use
+        `DELETE /v1/dashboard/settlement_destinations/{corridor}` as an owner
+        or admin. As for every DELETE, a request without `Idempotency-Key`
+        gets 400 idempotency_required first.
+      parameters:
+        - name: corridor
+          in: path
+          required: true
+          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
+  /v1/dashboard/settlement_destinations:
+    get:
+      summary: List the merchant user's payout targets in the dashboard's resolved mode.
+      operationId: listDashboardSettlementDestinations
+      security:
+        - dashboardSession: []
+      description: |
+        The dashboard door to the same payout targets as
+        `/v1/settlement_destinations` (ADR-0075): OIDC merchant-user session,
+        mode from the server-side dashboard mode selection. The response
+        carries that mode so an empty list still names it.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Configured payout targets in the dashboard's mode.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ListSettlementDestinationsResponse" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/dashboard/settlement_destinations/{corridor}:
+    put:
+      summary: Declare or replace one payout target from the dashboard, in the dashboard's resolved mode.
+      operationId: putDashboardSettlementDestination
+      security:
+        - dashboardSession: []
+      description: |
+        Owner or admin only (other roles: 403 dashboard_role_forbidden). An
+        idempotent upsert (ADR-0075); every change writes one
+        `payout_target.created` or `payout_target.updated` audit event with
+        the state before and after. The corridor names the token and chain
         the merchant receives on: `usdt0` (legacy alias, USDT on Arbitrum) or
         `<token>:<chain>`, e.g. `usdt:tron`, `usdt:ethereum`, `usdc:base`.
         The account must be the merchant's own on that chain: for EVM chains
@@ -6414,83 +6493,17 @@ paths:
               schema: { $ref: "#/components/schemas/SettlementDestination" }
         '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
-    delete:
-      summary: Disable the authenticated merchant's payout target for one corridor, in the key's mode.
-      operationId: disableSettlementDestination
-      description: |
-        Sets the target to `disabled`; it stays listed and a later PUT
-        reactivates it. Payments created while it was active keep it.
-      parameters:
-        - name: corridor
-          in: path
-          required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
-        - $ref: "#/components/parameters/IdempotencyKey"
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '200':
-          description: The disabled payout target.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SettlementDestination" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-        '404': { $ref: "#/components/responses/NotFound" }
-
-  /v1/dashboard/settlement_destinations:
-    get:
-      summary: List the merchant user's payout targets in the dashboard's resolved mode.
-      operationId: listDashboardSettlementDestinations
-      security:
-        - dashboardSession: []
-      description: |
-        The dashboard door to the same payout targets as
-        `/v1/settlement_destinations` (ADR-0075): OIDC merchant-user session,
-        mode from the server-side dashboard mode selection. The response
-        carries that mode so an empty list still names it.
-      parameters:
-        - $ref: "#/components/parameters/CorrelationID"
-      responses:
-        '200':
-          description: Configured payout targets in the dashboard's mode.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ListSettlementDestinationsResponse" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
-
-  /v1/dashboard/settlement_destinations/{corridor}:
-    put:
-      summary: Declare or replace one payout target from the dashboard, in the dashboard's resolved mode.
-      operationId: putDashboardSettlementDestination
-      security:
-        - dashboardSession: []
-      description: Same contract as `PUT /v1/settlement_destinations/{corridor}`, for the merchant user's session.
-      parameters:
-        - name: corridor
-          in: path
-          required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
-        - $ref: "#/components/parameters/IdempotencyKey"
-        - $ref: "#/components/parameters/CorrelationID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/PutSettlementDestinationRequest" }
-      responses:
-        '200':
-          description: The stored payout target.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SettlementDestination" }
-        '400': { $ref: "#/components/responses/BadRequest" }
-        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
     delete:
       summary: Disable one payout target from the dashboard, in the dashboard's resolved mode.
       operationId: disableDashboardSettlementDestination
       security:
         - dashboardSession: []
-      description: Same contract as `DELETE /v1/settlement_destinations/{corridor}`, for the merchant user's session.
+      description: |
+        Owner or admin only (other roles: 403 dashboard_role_forbidden). Sets
+        the target to `disabled` and writes one `payout_target.disabled`
+        audit event; the target stays listed and a later PUT reactivates it.
+        Payments created while it was active keep it.
       parameters:
         - name: corridor
           in: path
@@ -6506,6 +6519,7 @@ paths:
               schema: { $ref: "#/components/schemas/SettlementDestination" }
         '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
         '404': { $ref: "#/components/responses/NotFound" }
   /v1/webhook_endpoints:
     get:

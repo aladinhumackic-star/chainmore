@@ -80,6 +80,12 @@
     <p>The OIDC JWT is valid, but the authenticated user is not a member of any active merchant in this environment. A JWT identity must resolve to exactly one active row in the <code>merchant_members</code> table (keyed by issuer + subject) to authorize dashboard or control-plane actions.</p>
     <p><strong>What to do:</strong> Contact your ChainMore operator to be added to a merchant as a member, or sign in with a different user that has an active merchant membership. This is a boundary refusal, the JWT itself is correct; the authorization binding is what&#39;s missing.</p>
   </article>
+  <article class="code" id="payout-targets-dashboard-only">
+    <h3><code>payout_targets_dashboard_only</code></h3>
+    <p class="meta">payout targets can only be changed in the dashboard · HTTP 403</p>
+    <p>Payout targets are where ChainMore pays out. They can be read with an API key, but only a merchant owner or admin can set or disable one, signed in to the dashboard.</p>
+    <p><strong>What to do:</strong> Ask an owner or admin to change the payout target under Payout targets in the dashboard. Retrying the same request with an API key is always refused.</p>
+  </article>
   <article class="code" id="unauthorized">
     <h3><code>unauthorized</code></h3>
     <p class="meta">unauthorized · HTTP 401</p>
@@ -559,6 +565,12 @@
     <p class="meta">the payment exceeds the merchant&#39;s limits · HTTP 409</p>
     <p>The payment would exceed a limit the merchant has, or the merchant is not yet set up with the limits live payments need. Nothing was handed out for signing.</p>
     <p><strong>What to do:</strong> The merchant contacts ChainMore to review its limits. The customer may pay a smaller amount or later.</p>
+  </article>
+  <article class="code" id="payout-target-not-declared">
+    <h3><code>payout_target_not_declared</code></h3>
+    <p class="meta">payout address is not a declared payout target · HTTP 400</p>
+    <p>The request names a payout address that is not an active payout target of your account for this mode, token and chain. Requests made with an API key may only pay out to declared payout targets.</p>
+    <p><strong>What to do:</strong> Leave the address out to use your declared payout target, or ask an owner or admin to add this address under Payout targets in the dashboard. The same request is refused again until the target is declared.</p>
   </article>
   <article class="code" id="wallet-account-unsupported">
     <h3><code>wallet_account_unsupported</code></h3>

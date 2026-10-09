@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
+import vm from "node:vm";
 import {
   codeOutsideScope,
   isChainMoreIntegrationTurn,
@@ -8,6 +10,143 @@ import {
   outOfScopeReply,
 } from "./concierge-integration.ts";
 import { guardReply } from "./concierge-guard.ts";
+import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
+import { CONCIERGE_DASHBOARD_KNOWLEDGE } from "./concierge-dashboard-knowledge.ts";
+
+const knowledgeRoot = new URL("../../../../docs/operations/openai-knowledge-upload/", import.meta.url);
+const integrationKnowledge = readFileSync(new URL("chainmore-concierge-integration-knowledge.md", knowledgeRoot), "utf8");
+
+function checkoutExample(language) {
+  const blocks = [...integrationKnowledge.matchAll(/```(\w+)\n([\s\S]*?)```/g)];
+  const block = blocks.find((m) => m[1] === language && /function createCheckoutLink|def create_checkout_link|function create_checkout_link/.test(m[2]));
+  assert.ok(block, `missing ${language} checkout example`);
+  return block[2];
+}
+
+test("the generated member knowledge exactly matches its canonical sources", () => {
+  assert.equal(CONCIERGE_INTEGRATION_KNOWLEDGE, integrationKnowledge);
+  assert.equal(CONCIERGE_DASHBOARD_KNOWLEDGE, readFileSync(new URL("chainmore-concierge-dashboard-knowledge.md", knowledgeRoot), "utf8"));
+});
+
+test("the documented Node checkout preserves the order and stops a tokenless replay", async () => {
+  const source = checkoutExample("js");
+  const saved = { merchant_order_id: "order-1042", checkout_link_id: "synthetic-link", url: "https://checkout.chainmore.io/checkout/?token=cl_synthetic" };
+  const replay = { checkout_link_id: saved.checkout_link_id };
+
+  async function run(body, { stored, status = 200, persistError, transportError } = {}) {
+    const requests = [];
+    const writes = [];
+    const context = vm.createContext({
+      process: { env: { CHAINMORE_API_KEY: "synthetic-only" } },
+      fetch: async (url, opts) => {
+        requests.push({ url, key: opts.headers["Idempotency-Key"], body: JSON.parse(opts.body) });
+        if (transportError) throw transportError;
+        return { ok: status >= 200 && status < 300, status, json: async () => body };
+      },
+    });
+    const create = vm.runInContext(`${source}\ncreateCheckoutLink`, context);
+    let value, error;
+    try {
+      value = await create({ id: "1042", amountMinor: 2500, checkoutLink: stored }, async (id, record) => {
+        if (persistError) throw persistError;
+        writes.push({ id, record });
+      });
+    } catch (err) { error = err; }
+    assert.equal(requests.length, 1, "must not start a replacement request");
+    assert.equal(requests[0].key, "order-1042");
+    assert.equal(requests[0].body.merchant_order_id, "order-1042");
+    return { value, error, writes };
+  }
+
+  const first = await run({ ...replay, checkout_token: "cl_synthetic" }, { status: 201 });
+  assert.equal(first.error, undefined);
+  assert.equal(first.value, saved.url);
+  assert.deepEqual(JSON.parse(JSON.stringify(first.writes)), [{ id: "1042", record: saved }]);
+
+  const resumed = await run(replay, { stored: saved });
+  assert.equal(resumed.value, saved.url);
+  assert.equal(resumed.writes.length, 0);
+  for (const stored of [undefined, { ...saved, checkout_link_id: "other-link" }, { ...saved, merchant_order_id: "order-other" }, { ...saved, url: "" }]) {
+    const result = await run(replay, { stored });
+    assert.equal(result.value, undefined);
+    assert.match(result.error?.message ?? "", /stop.*existing link.*Do not create a replacement/);
+    assert.equal(result.writes.length, 0);
+  }
+  for (const token of [undefined, null, "", 123]) {
+    const result = await run({ ...replay, checkout_token: token }, { status: 201 });
+    assert.equal(result.value, undefined);
+    assert.match(result.error?.message ?? "", /Checkout token unavailable/);
+  }
+  const notSaved = await run({ ...replay, checkout_token: "cl_synthetic" }, { status: 201, persistError: new Error("storage unavailable") });
+  assert.equal(notSaved.value, undefined);
+  assert.equal(notSaved.error.message, "storage unavailable");
+  const rejected = await run({ code: "invalid_request", detail: "different facts", correlation_id: "synthetic-correlation" }, { status: 400 });
+  assert.equal(rejected.value, undefined);
+  assert.match(rejected.error.message, /400 invalid_request/);
+  const lost = await run(null, { transportError: new Error("first response lost") });
+  assert.equal(lost.value, undefined);
+  assert.equal(lost.error.message, "first response lost");
+});
+
+test("the documented Python checkout stops without a stored URL and persists before returning", () => {
+  // Execute the exact documentation block with only the HTTP transport replaced.
+  // No request, merchant account or credential is involved.
+  const harness = String.raw`
+import json, sys, types
+source = sys.stdin.read()
+requests = types.ModuleType("requests")
+sys.modules["requests"] = requests
+namespace = {}
+exec(source, namespace)
+create = namespace["create_checkout_link"]
+saved = {"merchant_order_id": "order-1042", "checkout_link_id": "synthetic-link", "url": "https://checkout.chainmore.io/checkout/?token=cl_synthetic"}
+replay = {"checkout_link_id": "synthetic-link"}
+def run(body, stored=None, status=200, persist_error=False, transport_error=False):
+    calls, writes = [], []
+    def post(url, **kwargs):
+        calls.append(kwargs)
+        if transport_error:
+            raise RuntimeError("first response lost")
+        return types.SimpleNamespace(ok=200 <= status < 300, status_code=status, json=lambda: body)
+    requests.post = post
+    def save(order_id, record):
+        if persist_error:
+            raise RuntimeError("storage unavailable")
+        writes.append((order_id, record))
+    value, error = None, None
+    try:
+        value = create("1042", 2500, save, stored)
+    except Exception as err:
+        error = str(err)
+    assert len(calls) == 1, "replacement request"
+    assert calls[0]["headers"]["Idempotency-Key"] == "order-1042"
+    assert calls[0]["json"]["merchant_order_id"] == "order-1042"
+    return value, error, writes
+value, error, writes = run(dict(replay, checkout_token="cl_synthetic"), status=201)
+assert value == saved["url"] and error is None and writes == [("1042", saved)]
+value, error, writes = run(replay, saved)
+assert value == saved["url"] and error is None and not writes
+for stored in [None, dict(saved, checkout_link_id="other-link"), dict(saved, merchant_order_id="order-other"), dict(saved, url="")]:
+    value, error, writes = run(replay, stored)
+    assert value is None and "Checkout token unavailable" in (error or "") and not writes
+for token in [None, "", 123]:
+    value, error, writes = run(dict(replay, checkout_token=token), status=201)
+    assert value is None and "Checkout token unavailable" in (error or "") and not writes
+value, error, writes = run(dict(replay, checkout_token="cl_synthetic"), status=201, persist_error=True)
+assert value is None and error == "storage unavailable" and not writes
+value, error, writes = run({"code": "invalid_request", "detail": "different facts", "correlation_id": "synthetic-correlation"}, status=400)
+assert value is None and "400 invalid_request" in error and not writes
+value, error, writes = run(None, transport_error=True)
+assert value is None and error == "first response lost" and not writes
+print("documented Python checkout cases passed")
+`;
+  const result = spawnSync("python3", ["-c", harness], {
+    input: checkoutExample("python"), encoding: "utf8",
+    env: { PATH: process.env.PATH, CHAINMORE_API_KEY: "synthetic-only" },
+  });
+  assert.equal(result.status, 0, result.stderr || result.error?.message);
+  assert.match(result.stdout, /documented Python checkout cases passed/);
+});
 
 const user = (content) => ({ role: "user", content });
 const assistant = (content) => ({ role: "assistant", content });
