@@ -503,11 +503,14 @@ test("long member conversations keep the newest turns instead of failing", async
 });
 
 test("the member context shapes the prompt and accepts only known values", async (t) => {
-  assert.equal(memberContextNote({ role: "finance", mode: "live" }), "The signed-in member's dashboard role is finance. The account is in live mode.");
+  assert.equal(memberContextNote({ role: "finance", mode: "live" }), "The signed-in member's dashboard role is finance. Their dashboard shows live mode, so the account has live access.");
   assert.equal(memberContextNote({ role: "superuser", mode: "prod" }), null);
   assert.equal(memberContextNote({ ui_locale: "de" }), "The dashboard is shown in German; use its German page and button labels.");
   assert.equal(memberContextNote({ ui_locale: "fr" }), null);
   assert.equal(memberContextNote("owner"), null);
+  // The mode shown is the member's own choice; it never stands for the
+  // company's live access decision.
+  assert.match(MEMBER_PROMPT, /it\n  is not the company's live access decision/);
 
   withConciergeEnv(t);
   resetMemberKeyCache();
@@ -520,7 +523,7 @@ test("the member context shapes the prompt and accepts only known values", async
   }), { ip: "198.51.100.16", userAgent: "node" });
   assert.equal(response.status, 200);
   const texts = calls.openai.at(-1).input[0].content.map((c) => c.text);
-  assert.deepEqual(texts, [SYSTEM_PROMPT, MEMBER_PROMPT, "The signed-in member's dashboard role is viewer. The account is in test mode."]);
+  assert.deepEqual(texts, [SYSTEM_PROMPT, MEMBER_PROMPT, "The signed-in member's dashboard role is viewer. Their dashboard shows test mode. Whether the account has live access is not known here."]);
 });
 
 test("secrets in any message never reach the model provider", async (t) => {

@@ -28,6 +28,18 @@ test("the generated member knowledge exactly matches its canonical sources", () 
   assert.equal(CONCIERGE_DASHBOARD_KNOWLEDGE, readFileSync(new URL("chainmore-concierge-dashboard-knowledge.md", knowledgeRoot), "utf8"));
 });
 
+// The merchant guide is the readable source of the first sign-in, mode and
+// troubleshooting sections; the dashboard knowledge carries them word for word.
+test("the dashboard knowledge carries the merchant operations guide unchanged", () => {
+  const guide = readFileSync(new URL("../../../../docs/merchant/dashboard-operations.md", import.meta.url), "utf8");
+  const body = guide.slice(guide.indexOf("\n## First sign-in\n") + 1);
+  assert.ok(body.startsWith("## First sign-in\n") && body.includes("\n## Troubleshooting\n"));
+  assert.ok(CONCIERGE_DASHBOARD_KNOWLEDGE.includes(body));
+  for (const code of ["merchant_first_login_required", "merchant_acceptance_document_changed", "merchant_acceptance_forbidden", "merchant_acceptance_unavailable", "dashboard_mode_changed", "dashboard_context_changed", "dashboard_mode_required"]) {
+    assert.ok(CONCIERGE_DASHBOARD_KNOWLEDGE.includes(code), code);
+  }
+});
+
 test("the documented Node checkout preserves the order and stops a tokenless replay", async () => {
   const source = checkoutExample("js");
   const saved = { merchant_order_id: "order-1042", checkout_link_id: "synthetic-link", url: "https://checkout.chainmore.io/checkout/?token=cl_synthetic" };

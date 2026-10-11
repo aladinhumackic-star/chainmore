@@ -199,9 +199,11 @@ How to answer:
 - Never write "guarantee", "guaranteed" or "garantiert". Say what the system
   does instead, for example "the same Idempotency-Key returns the same
   link".
-- The member's role and the account mode come with each question. If their
-  role cannot open a page or press a button, say so plainly and name who can
-  (usually the account owner or an admin).
+- The member's role and the mode their dashboard shows come with each
+  question. If their role cannot open a page or press a button, say so
+  plainly and name who can (usually the account owner or an admin). The mode
+  shown is the member's own choice among the modes the account may use; it
+  is not the company's live access decision.
 - For one specific payment or delivery, point to the dashboard page that shows
   it, or to support@chainmore.io with its ID.
 - Never write a currency sign directly before a number or a number directly
@@ -223,9 +225,12 @@ ${CONCIERGE_DASHBOARD_KNOWLEDGE}`;
 
 const MEMBER_ROLES = ["owner", "admin", "developer", "finance", "support", "viewer"];
 
-// The dashboard server sends the member's role and the account mode it read
-// from the gateway. They only shape the explanation; no permission follows
-// from them, so a forged value changes nothing but the wording.
+// The dashboard server sends the member's role and the mode their dashboard
+// shows, as read from the gateway. They only shape the explanation; no
+// permission follows from them, so a forged value changes nothing but the
+// wording. The mode is the member's own choice among the allowed modes, so
+// "test" does not say whether the account has live access; "live" is only
+// allowed once ChainMore switched live access on.
 export function memberContextNote(context: unknown): string | null {
   const c = (context && typeof context === "object" ? context : {}) as { role?: unknown; mode?: unknown; ui_locale?: unknown };
   const role = typeof c.role === "string" && MEMBER_ROLES.includes(c.role) ? c.role : null;
@@ -234,7 +239,8 @@ export function memberContextNote(context: unknown): string | null {
   if (!role && !mode && !display) return null;
   const parts = [];
   if (role) parts.push(`The signed-in member's dashboard role is ${role}.`);
-  if (mode) parts.push(`The account is in ${mode} mode.`);
+  if (mode === "live") parts.push("Their dashboard shows live mode, so the account has live access.");
+  if (mode === "test") parts.push("Their dashboard shows test mode. Whether the account has live access is not known here.");
   if (display) parts.push(`The dashboard is shown in ${display}; use its ${display} page and button labels.`);
   return parts.join(" ");
 }

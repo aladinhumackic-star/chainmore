@@ -482,6 +482,8 @@ components:
             - create_key_failed
             - create_payment_failed
             - cross_merchant_forbidden
+            - dashboard_mode_changed
+            - dashboard_mode_required
             - dashboard_operation_failed
             - dashboard_role_forbidden
             - delivery_endpoint_mismatch
@@ -2370,6 +2372,67 @@ components:
         merchant_id:   { type: string, description: "Authenticated merchant id resolved by the server." }
         display_name:  { type: string, maxLength: 80, description: "Stored optional presentation label; omitted when cleared." }
         updated_at:    { type: string, format: date-time }
+
+    MerchantAcceptanceDocument:
+      type: object
+      required: [id, title, url, source_sha256, sha256, content]
+      properties:
+        id:            { type: string, enum: [test-environment, terms, confidentiality] }
+        title:         { type: string, maxLength: 160 }
+        url:           { type: string, format: uri, description: "Published https source of the document." }
+        source_sha256: { type: string, pattern: "^[a-f0-9]{64}$", description: "SHA-256 of the published source." }
+        sha256:        { type: string, pattern: "^[a-f0-9]{64}$", description: "SHA-256 of content." }
+        content:       { type: string, maxLength: 65536, description: "Exact text shown to the user." }
+
+    MerchantAcceptanceManifest:
+      type: object
+      required: [version, manifest_hash, documents]
+      properties:
+        version:       { type: string, maxLength: 64 }
+        manifest_hash: { type: string, pattern: "^[a-f0-9]{64}$" }
+        documents:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { $ref: "#/components/schemas/MerchantAcceptanceDocument" }
+
+    MerchantAcceptanceStatus:
+      type: object
+      required: [required, ready, role, can_accept_company, company_accepted, personal_accepted]
+      properties:
+        required:             { type: boolean, description: "The merchant was created at or after the cutoff." }
+        ready:                { type: boolean, description: "Dashboard requests are admitted." }
+        role:                 { type: string }
+        can_accept_company:   { type: boolean, description: "Owner or admin; may accept the company terms." }
+        company_accepted:     { type: boolean }
+        personal_accepted:    { type: boolean }
+        company_accepted_at:  { type: string, format: date-time }
+        personal_accepted_at: { type: string, format: date-time }
+        manifest:             { $ref: "#/components/schemas/MerchantAcceptanceManifest" }
+
+    MerchantAcceptanceRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        Explicit confirmations for the presented manifest. Merchant and user
+        identity are never read from the body. company_terms and
+        authorised_company_representative are set together or not at all.
+      required:
+        - version
+        - manifest_hash
+        - test_environment
+        - terms_acknowledgement
+        - confidentiality
+        - company_terms
+        - authorised_company_representative
+      properties:
+        version:                           { type: string, maxLength: 64 }
+        manifest_hash:                     { type: string, pattern: "^[a-f0-9]{64}$" }
+        test_environment:                  { type: boolean, enum: [true] }
+        terms_acknowledgement:             { type: boolean, enum: [true] }
+        confidentiality:                   { type: boolean, enum: [true] }
+        company_terms:                     { type: boolean }
+        authorised_company_representative: { type: boolean }
 
     AccountProfileReadbackResponse:
       type: object
@@ -5470,6 +5533,69 @@ paths:
   # -------------------------------------------------------------------------
   # Merchant onboarding control plane
   # -------------------------------------------------------------------------
+  /v1/onboarding/acceptance:
+    get:
+      summary: Read the first-login acknowledgement state of the signed-in merchant user.
+      operationId: getMerchantFirstLoginAcceptance
+      security:
+        - dashboardSession: []
+      description: |
+        Merchant-user control-plane read. The server resolves merchant, member,
+        issuer, subject and role from the authenticated dashboard user; API keys
+        are refused. When the merchant was created at or after the configured
+        cutoff, the response carries the exact document manifest the user has
+        to confirm before any other dashboard request is admitted.
+      parameters:
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Current acknowledgement state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MerchantAcceptanceStatus" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '503':
+          description: The acknowledgement state cannot be read; the dashboard stays closed.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+    post:
+      summary: Record the first-login acknowledgements of the signed-in merchant user.
+      operationId: recordMerchantFirstLoginAcceptance
+      security:
+        - dashboardSession: []
+      description: |
+        Merchant-user control-plane write. Records the personal
+        acknowledgement and, for an owner or admin who confirms the company
+        terms as authorised representative, the company acceptance. Both are
+        bound to the presented manifest version and hash and are append-only;
+        a repeat returns the rows recorded first.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MerchantAcceptanceRequest" }
+      responses:
+        '200':
+          description: Acknowledgements recorded; current state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MerchantAcceptanceStatus" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+        '409': { $ref: "#/components/responses/Conflict" }
+        '503':
+          description: The acknowledgement could not be recorded or confirmed; retry reads the same rows.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
   /v1/onboarding/account-profile:
     get:
       summary: Read the authenticated merchant's current business profile submission.

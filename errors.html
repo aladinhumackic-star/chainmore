@@ -524,6 +524,18 @@
     <p>Create-payment was rejected at the execution boundary.</p>
     <p><strong>What to do:</strong> Read <code>detail</code> for the specific rejection reason (e.g. unsupported case, missing canonical asset) and re-send with the correction.</p>
   </article>
+  <article class="code" id="dashboard-mode-changed">
+    <h3><code>dashboard_mode_changed</code></h3>
+    <p class="meta">dashboard mode changed · HTTP 409</p>
+    <p>The dashboard sent this request for test or live, but the account now uses the other mode. Nothing was changed.</p>
+    <p><strong>What to do:</strong> Load the current mode from <code>GET /v1/dashboard/mode-selection</code>, reload what the dashboard shows, and start the action again.</p>
+  </article>
+  <article class="code" id="dashboard-mode-required">
+    <h3><code>dashboard_mode_required</code></h3>
+    <p class="meta">dashboard mode required · HTTP 428</p>
+    <p>A dashboard change must name the mode it was made in (test or live) in the <code>X-ChainMore-Dashboard-Mode</code> header. Nothing was changed.</p>
+    <p><strong>What to do:</strong> Reload the dashboard so it sends the header, then start the action again.</p>
+  </article>
   <article class="code" id="delivery-endpoint-mismatch">
     <h3><code>delivery_endpoint_mismatch</code></h3>
     <p class="meta">delivery belongs to a different endpoint · HTTP 400</p>
