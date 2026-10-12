@@ -54,3 +54,27 @@ export function withoutTextVerbosity<T extends { text?: unknown }>(payload: T): 
 export function rejectsTextVerbosity(status: number, body: string): boolean {
   return status === 400 && /verbosity/i.test(body);
 }
+
+// A provider answer that says "try later" (overloaded, rate limited, a server
+// error) is a temporary outage, not a broken question. The Concierge then
+// says so and points to the integration guide and support instead of a
+// generic snag. Nothing is retried: a second paid call is not made.
+export function transientUpstreamStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+// Only the provider's error type and code reach the function log: bounded,
+// from a fixed alphabet. Never the error message, the prompt or the key.
+const UPSTREAM_ERROR_FIELD = /^[a-z0-9_.-]{1,64}$/i;
+
+export function upstreamErrorClass(body: string): string {
+  let error: { type?: unknown; code?: unknown } | undefined;
+  try {
+    const parsed = JSON.parse(body);
+    error = parsed && typeof parsed === "object" ? parsed.error : undefined;
+  } catch {
+    error = undefined;
+  }
+  const field = (value: unknown) => typeof value === "string" && UPSTREAM_ERROR_FIELD.test(value) ? value : "-";
+  return `type=${field(error?.type)} code=${field(error?.code)}`;
+}

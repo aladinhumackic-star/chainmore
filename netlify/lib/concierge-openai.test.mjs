@@ -14,6 +14,8 @@ import {
   buildConciergeResponsesPayload,
   cutOffByBudget,
   rejectsTextVerbosity,
+  transientUpstreamStatus,
+  upstreamErrorClass,
   withoutTextVerbosity,
 } from "./concierge-openai.ts";
 import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
@@ -649,3 +651,69 @@ test("labelled secret literals never reach the model, code references stay", asy
   assert.ok(sent.includes("password: string"));
   assert.ok(calls.openai.at(-1).input[0].content.some((c) => c.text === REDACTION_NOTE));
 });
+
+// Concierge outage 2026-10-12 13:21:26Z (#1322): the provider answered 503
+// and both clients showed a generic error. A temporary provider outage now
+// has its own code; nothing is retried, and only the error type and code of
+// the provider's answer reach the log.
+test("provider status classes: 429 and 5xx are temporary, the rest is not", () => {
+  for (const s of [429, 500, 502, 503, 504]) assert.equal(transientUpstreamStatus(s), true, String(s));
+  for (const s of [400, 401, 403, 404, 422]) assert.equal(transientUpstreamStatus(s), false, String(s));
+});
+
+test("only the bounded error type and code of the provider answer are logged", () => {
+  assert.equal(upstreamErrorClass(JSON.stringify({ error: { type: "server_error", code: "overloaded", message: "CANARY-MESSAGE" } })), "type=server_error code=overloaded");
+  assert.equal(upstreamErrorClass(JSON.stringify({ error: { type: "insufficient_quota", code: null } })), "type=insufficient_quota code=-");
+  assert.equal(upstreamErrorClass(JSON.stringify({ error: { type: "bad type with spaces", code: "x".repeat(65) } })), "type=- code=-");
+  assert.equal(upstreamErrorClass("<html>503 Service Unavailable</html>"), "type=- code=-");
+  assert.equal(upstreamErrorClass(""), "type=- code=-");
+});
+
+function mockFailingUpstream(t, failure) {
+  const calls = { openai: 0 };
+  t.mock.method(globalThis, "fetch", async (url, init) => {
+    if (url === MEMBER_JWKS_URL) return Response.json({ keys: [memberJwk] });
+    if (url === MEMBER_ADMISSION_URL) {
+      const asked = JSON.parse(init.body);
+      const entry = admissions.get(asked.admission);
+      admissions.delete(asked.admission);
+      if (!entry) return Response.json({ admitted: false }, { status: 404 });
+      return Response.json({ admitted: true, role: entry.role, mode: entry.mode, ui_locale: entry.ui_locale });
+    }
+    assert.equal(url, "https://api.openai.com/v1/responses");
+    calls.openai += 1;
+    return failure();
+  });
+  return calls;
+}
+
+for (const [name, failure, code] of [
+  ["503 overloaded", () => new Response(JSON.stringify({ error: { type: "server_error", code: "overloaded", message: "CANARY-MESSAGE" } }), { status: 503 }), "temporarily_unavailable"],
+  ["429 rate limit", () => new Response(JSON.stringify({ error: { type: "requests", code: "rate_limit_exceeded", message: "CANARY-MESSAGE" } }), { status: 429 }), "temporarily_unavailable"],
+  ["500 without a JSON body", () => new Response("CANARY-MESSAGE", { status: 500 }), "temporarily_unavailable"],
+  ["network error", () => { throw new TypeError("CANARY-MESSAGE"); }, "temporarily_unavailable"],
+  ["timeout", () => { throw new DOMException("CANARY-MESSAGE", "TimeoutError"); }, "temporarily_unavailable"],
+  ["401 key rejected", () => new Response(JSON.stringify({ error: { type: "invalid_request_error", code: "invalid_api_key", message: "CANARY-MESSAGE" } }), { status: 401 }), "failed"],
+  ["400 other than verbosity", () => new Response(JSON.stringify({ error: { type: "invalid_request_error", code: "model_not_found", message: "CANARY-MESSAGE" } }), { status: 400 }), "failed"],
+]) {
+  test(`provider failure ${name}: one call, code ${code}, no error text in the log`, async (t) => {
+    withConciergeEnv(t);
+    resetMemberKeyCache();
+    const logged = [];
+    t.mock.method(console, "error", (...args) => logged.push(args.map(String).join(" ")));
+    t.mock.method(console, "warn", (...args) => logged.push(args.map(String).join(" ")));
+    const calls = mockFailingUpstream(t, failure);
+    const subject = `outage-${code}-${name.replace(/[^a-z0-9]+/gi, "-")}`;
+    const response = await handler(memberRequest(await memberIdToken({ sub: subject }), [{ role: "user", content: "How do I verify the webhook signature?" }], { subject }), { ip: "198.51.100.40", userAgent: "node" });
+    assert.equal(response.status, 200);
+    const sent = await events(response);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].type, "error");
+    assert.equal(sent[0].code, code);
+    if (code === "temporarily_unavailable") assert.match(sent[0].message, /chainmore\.io\/docs\.html/);
+    assert.equal(calls.openai, 1, "no retry");
+    assert.ok(logged.length >= 1);
+    for (const line of logged) assert.ok(!line.includes("CANARY-MESSAGE"), line);
+  });
+}
+

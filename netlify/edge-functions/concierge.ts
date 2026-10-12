@@ -32,7 +32,7 @@ import { MEMBER_ADMISSION_HEADER, redeemMemberAdmission, verifyMemberToken } fro
 import { MEMBER_PROMPT, PUBLIC_INTEGRATION_NOTE, SYSTEM_PROMPT, memberContextNote, memberFallbackText } from "../lib/concierge-prompt.ts";
 import { REDACTION_NOTE, redact } from "../lib/concierge-redact.ts";
 import { INTEGRATION_TURN_NOTE, codeOutsideScope, isMemberIntegrationTurn, outOfScopeReply } from "../lib/concierge-integration.ts";
-import { buildConciergeResponsesPayload, cutOffByBudget, cutOffNote, rejectsTextVerbosity, withoutTextVerbosity } from "../lib/concierge-openai.ts";
+import { buildConciergeResponsesPayload, cutOffByBudget, cutOffNote, rejectsTextVerbosity, withoutTextVerbosity, transientUpstreamStatus, upstreamErrorClass } from "../lib/concierge-openai.ts";
 import { deterministicConciergeReply } from "../lib/concierge-sales.ts";
 
 const MAX_MESSAGES = 20;
@@ -276,7 +276,14 @@ export default async (req: Request, ctx: Context) => {
 
   // The response starts now and keeps the connection alive; the reply
   // follows once the guard has seen all of it (concierge-sse.ts).
-  const snag = { type: "error", message: "The Concierge hit a snag. Please try again." };
+  const snag = { type: "error", code: "failed", message: "The Concierge hit a snag. Please try again." };
+  // The provider is down, overloaded or out of reach: say so and point to the
+  // guide and support. Both Concierge clients show their own text for this code.
+  const unavailable = {
+    type: "error",
+    code: "temporarily_unavailable",
+    message: "The Concierge is temporarily unavailable. The integration guide is at https://chainmore.io/docs.html, and support@chainmore.io answers your questions.",
+  };
   return sseAfter(async () => {
     const call = (payload: unknown) => fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -285,17 +292,30 @@ export default async (req: Request, ctx: Context) => {
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
     const payload = buildConciergeResponsesPayload(input, { integration });
-    let upstream = await call(payload);
-    if (!upstream.ok && upstream.status === 400) {
-      const detail = await upstream.text();
-      if (rejectsTextVerbosity(upstream.status, detail)) {
-        console.warn("[concierge] model rejected text.verbosity; asking once without it");
-        upstream = await call(withoutTextVerbosity(payload));
+    let upstream: Response;
+    let detail = "";
+    try {
+      upstream = await call(payload);
+      if (!upstream.ok && upstream.status === 400) {
+        detail = await upstream.text();
+        if (rejectsTextVerbosity(upstream.status, detail)) {
+          console.warn("[concierge] model rejected text.verbosity; asking once without it");
+          upstream = await call(withoutTextVerbosity(payload));
+          detail = "";
+        }
       }
+    } catch (err) {
+      // No answer from the provider in time, or no connection at all.
+      if (err instanceof TypeError || (err instanceof DOMException && (err.name === "TimeoutError" || err.name === "AbortError"))) {
+        console.error("[concierge] upstream unreachable", err.name);
+        return [unavailable];
+      }
+      throw err;
     }
     if (!upstream.ok) {
-      console.error("[concierge] upstream status", upstream.status);
-      return [snag];
+      if (!detail) detail = await upstream.text().catch(() => "");
+      console.error("[concierge] upstream status", upstream.status, upstreamErrorClass(detail));
+      return [transientUpstreamStatus(upstream.status) ? unavailable : snag];
     }
     const data = await upstream.json();
     let reply = typeof data.output_text === "string" && data.output_text

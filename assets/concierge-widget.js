@@ -423,6 +423,24 @@
     scrollToBottom();
   }
 
+  // The provider is down or overloaded (code temporarily_unavailable): say so
+  // and link the integration guide, which answers most questions without us.
+  var UNAVAILABLE_TEXT = 'The Concierge is temporarily unavailable. The integration guide is at chainmore.io/docs.html, and support@chainmore.io answers your questions.';
+  var FAILED_TEXT = 'Something went wrong. Please try again, or email support@chainmore.io.';
+
+  function errorEventText(evt) {
+    return evt && evt.code === 'temporarily_unavailable' ? UNAVAILABLE_TEXT : FAILED_TEXT;
+  }
+
+  function showErrorEvent(evt) {
+    var text = errorEventText(evt);
+    var bubble = el('div', { class: 'cm-msg cm-msg--error' }, [
+      el('div', { class: 'cm-msg__bubble', html: renderMarkdown(text) }),
+    ]);
+    els.messages.appendChild(bubble);
+    scrollToBottom();
+  }
+
   function clearSessionToken() {
     window.__chainmoreConciergeSessionToken = '';
   }
@@ -578,7 +596,7 @@
               } else {
                 if (ref.wrap && ref.wrap.parentNode) ref.wrap.parentNode.removeChild(ref.wrap);
               }
-              showError('Something went wrong. Please try again, or email support@chainmore.io.');
+              showErrorEvent(evt);
               return;
             }
           }
@@ -638,6 +656,7 @@
     window.__chainmoreConciergeTestHooks.refreshSessionToken = refreshSessionToken;
     window.__chainmoreConciergeTestHooks.postConciergeWithSessionRetry = postConciergeWithSessionRetry;
     window.__chainmoreConciergeTestHooks.renderMarkdown = renderMarkdown;
+    window.__chainmoreConciergeTestHooks.errorEventText = errorEventText;
   }
 
   if (document.readyState === 'loading') {

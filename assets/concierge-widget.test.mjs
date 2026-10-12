@@ -131,3 +131,14 @@ test("renders a code block that is still streaming, and strips placeholder chara
   const indented = renderMarkdown("  ```python\n  print('hi')\n  ```\nafter");
   assert.match(indented, /<pre><code>print\(&#39;hi&#39;\)<\/code><\/pre>/);
 });
+
+test("a temporary provider outage names the integration guide and support, other errors stay generic", () => {
+  const hooks = loadWidget(async () => response(200)).__chainmoreConciergeTestHooks;
+  const unavailable = hooks.errorEventText({ type: "error", code: "temporarily_unavailable", message: "ignored" });
+  assert.match(unavailable, /temporarily unavailable/);
+  assert.match(hooks.renderMarkdown(unavailable), /<a href="https:\/\/chainmore\.io\/docs\.html" [^>]*>chainmore\.io\/docs\.html<\/a>/);
+  assert.match(unavailable, /support@chainmore\.io/);
+  assert.equal(hooks.errorEventText({ type: "error", code: "failed" }), "Something went wrong. Please try again, or email support@chainmore.io.");
+  assert.equal(hooks.errorEventText({ type: "error" }), "Something went wrong. Please try again, or email support@chainmore.io.");
+});
+
