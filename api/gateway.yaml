@@ -2335,6 +2335,21 @@ components:
           type: string
           enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, unknown]
           default: unknown
+          description: |
+            Older form: a dollar band. Do not send it together with
+            expected_monthly_volume_band or expected_monthly_volume_currency.
+        expected_monthly_volume_band:
+          type: string
+          enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, gt_250k, unknown]
+          description: |
+            Expected monthly volume band in expected_monthly_volume_currency,
+            which is required with it. USD admits lt_10k, 10k_50k, 50k_250k,
+            250k_1m, gt_1m and unknown; EUR admits lt_10k, 10k_50k, 50k_250k,
+            gt_250k and unknown (the bands of the public registration). A
+            band is never converted between currencies.
+        expected_monthly_volume_currency:
+          type: string
+          enum: [USD, EUR]
         use_case:
           type: string
           minLength: 20
@@ -2461,7 +2476,24 @@ components:
         expected_monthly_volume_usd_bucket:
           type: string
           enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, unknown]
+          description: Present only when the band is a dollar band.
+        expected_monthly_volume_band:
+          type: string
+          enum: [lt_10k, 10k_50k, 50k_250k, 250k_1m, gt_1m, gt_250k, unknown]
+          description: The band in expected_monthly_volume_currency.
+        expected_monthly_volume_currency:
+          type: string
+          enum: [USD, EUR]
         use_case:           { type: string, minLength: 20, maxLength: 1000 }
+        prefilled_from_registration:
+          type: array
+          items:
+            type: string
+            enum: [country, use_case, expected_monthly_volume]
+          description: |
+            Before any profile submission in either mode, the fields taken
+            from the registration this merchant was created from. Reading
+            stores and submits nothing.
         submitted_at:       { type: string, format: date-time }
         profile_updated_at: { type: string, format: date-time }
         destructive_actions:
