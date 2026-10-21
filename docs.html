@@ -72,11 +72,7 @@
 <section id="webhooks"><h2><span class="step">3</span>Receive the result</h2>
 <p>Add your endpoint in the dashboard under <a href="https://app.chainmore.io/webhooks">Webhooks</a>. It must be a public <code>https</code> address. You get a signing secret that starts with <code>whsec_</code>; it is shown once. Endpoints and keys are managed in the dashboard only. An API key gets <code>401 wrong_auth_kind</code> on those routes.</p>
 <p>When a payment has arrived, we send a <code>POST</code> to your endpoint. The JSON body has <code>event_type</code>, <code>event_id</code>, <code>merchant_order_id</code> and the payment ID.</p>
-<ul>
-<li><code>payment.settled</code>: USDT, USDC on the same network, and card.</li>
-<li><code>payment_intent.settled</code>: USDC that crosses networks.</li>
-</ul>
-<p>Listen for both. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
+<p>Ship the order on <code>payment.settled</code>. It comes for every way to pay: USDT, USDC on the same network or across networks, and card. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
 <p>Check every message before you trust it:</p>
 <ul>
 <li><code>X-ChainMore-Timestamp</code> is the send time in RFC 3339 UTC, for example <code>2026-10-07T08:00:00Z</code>. Reject it if it is more than 5 minutes away from your clock.</li>
@@ -101,7 +97,8 @@ app.post("/chainmore/webhook", express.raw({ type: "application/json" }), (req, 
   if (!valid || !fresh) return res.sendStatus(400);
 
   const event = JSON.parse(req.body);
-  if (event.event_type === "payment.settled" || event.event_type === "payment_intent.settled") {
+  if (event.test_event) return res.sendStatus(200); // "Send test event": nothing is paid
+  if (event.event_type === "payment.settled") {
     markOrderPaid(event.merchant_order_id, event.event_id);
   }
   res.sendStatus(200);
@@ -110,9 +107,10 @@ app.post("/chainmore/webhook", express.raw({ type: "application/json" }), (req, 
 <li>Answer with a 2xx status within 10 seconds. Any other answer, 4xx included, counts as failed. We try again after 1 second, 5 seconds, 30 seconds, 5 minutes and 30 minutes. After that the delivery stays failed and you can send it again in the dashboard under Deliveries.</li>
 <li>The same event can reach you more than once. Process each <code>event_id</code> once, and make "mark order paid" safe to run twice: a resend from the dashboard gets a new <code>event_id</code>.</li>
 <li>Each event goes to one endpoint. If several endpoints match, the oldest one gets it.</li>
+<li>"Send test event" in the dashboard sends a signed <code>payment.settled</code> with <code>"test_event": true</code> and made-up IDs. Answer 2xx and do not mark anything paid or ship anything for it.</li>
 <li>Ship the order only after this message. A customer coming back to your site, or a transaction hash, does not prove the payment.</li>
 </ul></section>
-<section id="check-status"><h2><span class="step">4</span>Check the status yourself</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>You can also ask for the state of a link. <code>bound</code> means the customer chose a payment method. It does not mean the order is paid. Follow the <code>payment_id</code> or <code>intent_id</code> in the response:</p><ul><li><code>GET /v1/payments/{id}</code>: paid when <code>public_status</code> is <code>completed</code>.</li><li><code>GET /v1/payment-intents/{id}</code>: paid when <code>surface_status</code> is <code>completed</code>.</li></ul></section>
+<section id="check-status"><h2><span class="step">4</span>Check the status yourself</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>You can also ask for the state of a link. <code>bound</code> means the customer chose a payment method. It does not mean the order is paid. Follow the <code>payment_id</code> in the response:</p><ul><li><code>GET /v1/payments/{id}</code>: paid when <code>public_status</code> is <code>completed</code>.</li></ul></section>
 <section id="go-live"><h2><span class="step">5</span>Go live</h2><p>When everything works in test mode, tell us by email. We switch your account to live mode. Then create a key that starts with <code>cm_live_</code> and replace the test key on your server.</p></section>
 <section id="retries"><h2>Errors and retries</h2><p>Every error comes as <code>application/problem+json</code> with a stable <code>code</code>, a <code>docs_url</code> that explains it, and a <code>correlation_id</code>. Match on <code>code</code>, not on the text. Send us the <code>correlation_id</code> when you need help.</p>
 <div class="tablewrap"><table><thead><tr><th>You see</th><th>Meaning</th><th>Fix</th></tr></thead><tbody>

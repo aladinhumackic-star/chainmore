@@ -107,72 +107,6 @@
     <p>The supplied attempt id does not match the payment/leg the request is targeting.</p>
     <p><strong>What to do:</strong> Re-fetch the payment&#39;s current attempts and re-issue the request against a matching (payment_id, attempt_id) pair.</p>
   </article>
-  <article class="code" id="cctp-attestation-pending">
-    <h3><code>cctp_attestation_pending</code></h3>
-    <p class="meta">processing · HTTP 200 · safe to retry</p>
-    <p>The burn is confirmed; we&#39;re waiting for Circle&#39;s attestation before minting on your destination chain.</p>
-    <p><strong>What to do:</strong> No action needed. Attestation typically arrives within 30 seconds for Fast Transfer, longer for standard finality.</p>
-  </article>
-  <article class="code" id="cctp-awaiting-deposit">
-    <h3><code>cctp_awaiting_deposit</code></h3>
-    <p class="meta">awaiting payment · HTTP 200</p>
-    <p>We&#39;ve created your payment intent and are waiting for the customer to send USDC. Until they do, the intent stays in this state.</p>
-    <p><strong>What to do:</strong> Share the checkout link or QR code with the customer. The intent expires automatically if no deposit arrives within the configured window.</p>
-  </article>
-  <article class="code" id="cctp-burn-pending">
-    <h3><code>cctp_burn_pending</code></h3>
-    <p class="meta">processing · HTTP 200 · safe to retry</p>
-    <p>The customer&#39;s payment transaction has been seen on the source chain. We&#39;re waiting for the burn to confirm before bridging to your destination chain.</p>
-    <p><strong>What to do:</strong> No action needed. The transaction will progress automatically. Typically less than a minute on Base/Arbitrum/Polygon, longer on Ethereum mainnet.</p>
-  </article>
-  <article class="code" id="cctp-customer-sanctioned">
-    <h3><code>cctp_customer_sanctioned</code></h3>
-    <p class="meta">customer wallet on sanctions list · HTTP 403</p>
-    <p>The customer wallet attempting to pay has been flagged by AML screening as on a sanctions list (OFAC, UN, EU). We refuse the intent at creation to comply with industry-standard practice.</p>
-    <p><strong>What to do:</strong> This is a hard refusal, no override available. Direct the customer to a different wallet, or contact support if you believe this is a false positive.</p>
-  </article>
-  <article class="code" id="cctp-manual-review">
-    <h3><code>cctp_manual_review</code></h3>
-    <p class="meta">under review · HTTP 200</p>
-    <p>An operator is investigating this intent. This typically happens after multiple automatic retries failed or when an unusual condition (reorg, sanctions, or attestation timeout) needs human judgment.</p>
-    <p><strong>What to do:</strong> No action needed. The operator will either retry the route until it settles or mark the intent failed-safely with an explanation. Any customer compensation or refund path is handled separately through a reviewed operator process when that capability is available.</p>
-  </article>
-  <article class="code" id="cctp-merchant-blocked">
-    <h3><code>cctp_merchant_blocked</code></h3>
-    <p class="meta">merchant address blocklisted · HTTP 400</p>
-    <p>The destination merchant address is on Circle&#39;s USDC blocklist. Mints to blocklisted addresses are rejected at the protocol level. This is rare and usually indicates a sanctions-list match or chain-attribution issue.</p>
-    <p><strong>What to do:</strong> Update the merchant settlement address in your dashboard to a different wallet, or contact Circle to resolve the blocklist entry. We cannot bypass this, it is enforced by the USDC token contract itself.</p>
-  </article>
-  <article class="code" id="cctp-merchant-sanctioned">
-    <h3><code>cctp_merchant_sanctioned</code></h3>
-    <p class="meta">merchant settlement address on sanctions list · HTTP 400</p>
-    <p>The merchant&#39;s destination wallet has been flagged by AML screening as on a sanctions list. This blocks intent creation until the address is updated or the screening result is overridden.</p>
-    <p><strong>What to do:</strong> Update the settlement address in your dashboard to a different wallet, or contact support to file a false-positive review.</p>
-  </article>
-  <article class="code" id="cctp-mint-pending">
-    <h3><code>cctp_mint_pending</code></h3>
-    <p class="meta">processing · HTTP 200 · safe to retry</p>
-    <p>Attestation received. We&#39;re submitting the mint transaction on the destination chain right now.</p>
-    <p><strong>What to do:</strong> No action needed. The mint settles within seconds of attestation.</p>
-  </article>
-  <article class="code" id="cctp-source-reorged">
-    <h3><code>cctp_source_reorged</code></h3>
-    <p class="meta">transaction reorganized, re-submitting · HTTP 200 · safe to retry</p>
-    <p>The customer&#39;s deposit transaction was dropped from the canonical source chain due to a chain reorganization. The customer needs to re-sign.</p>
-    <p><strong>What to do:</strong> The Hosted Checkout will automatically prompt the customer to re-submit. No merchant action required.</p>
-  </article>
-  <article class="code" id="cctp-stuck-attestation">
-    <h3><code>cctp_stuck_attestation</code></h3>
-    <p class="meta">delayed, attestation taking longer than expected · HTTP 200 · safe to retry</p>
-    <p>The source burn is confirmed, but Circle has not signed the attestation within the expected window. Destination settlement cannot proceed until the attestation arrives.</p>
-    <p><strong>What to do:</strong> We&#39;re monitoring this automatically. If attestation doesn&#39;t resolve within 30 minutes (Fast Transfer) or 60 minutes (standard finality), the intent will move to manual review.</p>
-  </article>
-  <article class="code" id="cctp-stuck-mint">
-    <h3><code>cctp_stuck_mint</code></h3>
-    <p class="meta">delayed, mint transaction failed, retrying · HTTP 200 · safe to retry</p>
-    <p>We received the attestation, but the destination receive-and-settle transaction reverted or could not be confirmed. The attestation is tied to the selected settlement route and can normally be retried through that route.</p>
-    <p><strong>What to do:</strong> We retry automatically with adjusted gas and the same settlement route. If multiple retries fail, the intent moves to manual review for route-specific investigation. Any customer compensation or refund path is a separate reviewed process, not an automatic retry outcome.</p>
-  </article>
   <article class="code" id="checkout-link-already-bound">
     <h3><code>checkout_link_already_bound</code></h3>
     <p class="meta">checkout link already bound · HTTP 409</p>
@@ -311,30 +245,6 @@
 </section>
 <section class="group" id="group-server">
   <h2>Server-Side Failure</h2>
-  <article class="code" id="cctp-capacity-unobserved">
-    <h3><code>cctp_capacity_unobserved</code></h3>
-    <p class="meta">treasury capacity cannot be observed · HTTP 503 · safe to retry</p>
-    <p>We cannot currently read what our own treasury holds, so we will not quote a price against it. This is deliberately a different answer from &#34;not enough&#34;: a reading we do not have is not a shortage, and treating the two the same once sent us refilling wallets that were already full while the real fault - a stopped observer - stayed invisible.</p>
-    <p><strong>What to do:</strong> No merchant action. The balance observer is behind or stopped; payments resume as soon as a fresh reading exists.</p>
-  </article>
-  <article class="code" id="cctp-coverage-unavailable">
-    <h3><code>cctp_coverage_unavailable</code></h3>
-    <p class="meta">gas coverage unavailable for this corridor · HTTP 503 · safe to retry</p>
-    <p>We advance the gas for both legs of this corridor and cannot cover them right now. No payment was created and nothing was charged. This is our side, not yours.</p>
-    <p><strong>What to do:</strong> Retry shortly. If it persists, the corridor is short of native gas and we are refilling it; another corridor may be available in the meantime.</p>
-  </article>
-  <article class="code" id="cctp-destination-gas-exhausted">
-    <h3><code>cctp_destination_gas_exhausted</code></h3>
-    <p class="meta">destination chain tx-sender out of gas · HTTP 503 · safe to retry</p>
-    <p>ChainMore&#39;s destination-chain sender does not currently have enough native gas (ETH/MATIC) to submit receive-and-settle transactions. The intent is queued and will resume after the sender is refilled or the route is reviewed.</p>
-    <p><strong>What to do:</strong> No merchant action needed. ChainMore monitors destination gas and keeps the intent queued until the tx-sender can be refilled or the route can be reviewed.</p>
-  </article>
-  <article class="code" id="cctp-provider-degraded">
-    <h3><code>cctp_provider_degraded</code></h3>
-    <p class="meta">CCTP service degraded, new intents paused · HTTP 503 · safe to retry</p>
-    <p>Circle&#39;s CCTP attestation service or one of our destination-chain RPC providers is reporting reduced availability. Per your merchant policy, we&#39;ve paused creating new intents until conditions normalize.</p>
-    <p><strong>What to do:</strong> No action needed. Existing intents continue to settle. New intents will be accepted automatically once the underlying provider recovers.</p>
-  </article>
   <article class="code" id="checkout-operation-failed">
     <h3><code>checkout_operation_failed</code></h3>
     <p class="meta">checkout operation failed · HTTP 500</p>
@@ -506,12 +416,6 @@
 </section>
 <section class="group" id="group-validation">
   <h2>Validation</h2>
-  <article class="code" id="cctp-amount-below-minimum">
-    <h3><code>cctp_amount_below_minimum</code></h3>
-    <p class="meta">amount below this corridor&#39;s minimum · HTTP 400</p>
-    <p>The payment is smaller than what it costs to move it on this corridor. Both gas legs are sponsored, so an invoice below that cost would be settled at a loss on every payment rather than occasionally. The refusal names the smallest amount that would have worked at the moment it was priced.</p>
-    <p><strong>What to do:</strong> Raise the amount to at least the stated minimum, or choose a corridor with lower network cost. Gas prices move, so the minimum is a reading rather than a fixed floor; re-pricing a few minutes later can give a different one.</p>
-  </article>
   <article class="code" id="checkout-terms-changed">
     <h3><code>checkout_terms_changed</code></h3>
     <p class="meta">the accepted payment terms no longer hold · HTTP 409</p>

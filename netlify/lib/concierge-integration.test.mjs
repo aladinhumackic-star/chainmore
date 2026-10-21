@@ -254,3 +254,47 @@ test("code placeholders pass the price guard only for signed-in merchants", () =
   assert.equal(guardReply("```\nfee = \"$25\"\n```", { allowCodePlaceholders: true }).ok, false);
   assert.equal(guardReply("Fees start at $1 per payment.", { allowCodePlaceholders: true }).ok, false);
 });
+
+// The public guide's webhook example runs as published: it books a signed
+// payment.settled once, acknowledges a signed test event without booking it,
+// and refuses a wrong signature or a stale timestamp.
+test("the public webhook example books a real event and acknowledges a test event", async () => {
+  const crypto = await import("node:crypto");
+  const page = readFileSync(new URL("../../docs.html", import.meta.url), "utf8");
+  const block = page.match(/<pre aria-label="Webhook verification example"><code>([\s\S]*?)<\/code><\/pre>/);
+  assert.ok(block, "missing webhook example in docs.html");
+  const entities = { "&lt;": "<", "&gt;": ">", "&amp;": "&", "&quot;": '"', "&#39;": "'" };
+  const source = block[1]
+    .replace(/&(?:lt|gt|amp|quot|#39);/g, (e) => entities[e])
+    .replace(/^import crypto from "node:crypto";$/m, "");
+  const secret = "whsec_synthetic";
+  const sign = (timestamp, body) => crypto.createHmac("sha256", secret).update(timestamp + ".").update(body).digest("hex");
+
+  function deliver(event, { timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), signature } = {}) {
+    let handler;
+    const paid = [];
+    const context = vm.createContext({
+      crypto, Buffer, Date, JSON, Math,
+      process: { env: { CHAINMORE_WEBHOOK_SECRET: secret } },
+      express: { raw: () => "raw-body-parser" },
+      app: { post: (_path, _parser, fn) => { handler = fn; } },
+      markOrderPaid: (orderID, eventID) => paid.push([orderID, eventID]),
+    });
+    vm.runInContext(source, context);
+    const body = Buffer.from(JSON.stringify(event));
+    const headers = { "x-chainmore-timestamp": timestamp, "x-chainmore-signature": signature ?? sign(timestamp, body) };
+    let status;
+    handler({ body, get: (name) => headers[name.toLowerCase()] }, { sendStatus: (code) => { status = code; } });
+    return { status, paid };
+  }
+
+  const settled = {
+    schema_version: 1, event_type: "payment.settled", event_id: "evt-synthetic", occurred_at: "2026-10-21T08:00:00Z",
+    payment_id: "pay-synthetic", merchant_id: "mer-synthetic", merchant_order_id: "order-1042", state: "settled",
+    amount: { minor: 2500, currency: "USD", asset: "USDC" },
+  };
+  assert.deepEqual(deliver(settled), { status: 200, paid: [["order-1042", "evt-synthetic"]] });
+  assert.deepEqual(deliver({ ...settled, test_event: true }), { status: 200, paid: [] });
+  assert.deepEqual(deliver(settled, { signature: "0".repeat(64) }), { status: 400, paid: [] });
+  assert.deepEqual(deliver(settled, { timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, "Z") }), { status: 400, paid: [] });
+});
