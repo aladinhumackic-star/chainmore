@@ -111,7 +111,13 @@ app.post("/chainmore/webhook", express.raw({ type: "application/json" }), (req, 
 <li>Ship the order only after this message. A customer coming back to your site, or a transaction hash, does not prove the payment.</li>
 </ul></section>
 <section id="check-status"><h2><span class="step">4</span>Check the status yourself</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>You can also ask for the state of a link. <code>bound</code> means the customer chose a payment method. It does not mean the order is paid. Follow the <code>payment_id</code> in the response:</p><ul><li><code>GET /v1/payments/{id}</code>: paid when <code>public_status</code> is <code>completed</code>.</li></ul></section>
-<section id="go-live"><h2><span class="step">5</span>Go live</h2><p>When everything works in test mode, tell us by email. We switch your account to live mode. Then create a key that starts with <code>cm_live_</code> and replace the test key on your server.</p></section>
+<section id="go-live"><h2><span class="step">5</span>Go live</h2>
+<ol>
+<li>Ask the account owner or an admin to submit the business profile under <a href="https://app.chainmore.io/onboarding">Onboarding</a>. Check missing information and review status there.</li>
+<li>ChainMore reviews your account and approves live access separately if the review is successful. A test payment, submitted profile or API key does not grant live access.</li>
+<li>Only after ChainMore has enabled live access and the dashboard offers live mode, deliberately switch to live mode. Then create a live key under <a href="https://app.chainmore.io/keys">API keys</a> (it starts with <code>cm_live_</code>) and replace the test key on your server.</li>
+</ol>
+<p>For help, email <a href="mailto:support@chainmore.io">support@chainmore.io</a>.</p></section>
 <section id="retries"><h2>Errors and retries</h2><p>Every error comes as <code>application/problem+json</code> with a stable <code>code</code>, a <code>docs_url</code> that explains it, and a <code>correlation_id</code>. Match on <code>code</code>, not on the text. Send us the <code>correlation_id</code> when you need help.</p>
 <div class="tablewrap"><table><thead><tr><th>You see</th><th>Meaning</th><th>Fix</th></tr></thead><tbody>
 <tr><td><code>400 idempotency_required</code></td><td>The header is missing.</td><td>Send <code>Idempotency-Key</code>, one value per order.</td></tr>

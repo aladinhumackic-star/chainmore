@@ -310,6 +310,20 @@ components:
           - failed
           - expired
 
+    DashboardPaymentExceptionStatus:
+      name: exception_status
+      in: query
+      required: false
+      description: |
+        Confirmed, disjoint warning group, identical to the exception summary.
+        needs_review takes precedence over failed_safely and expired. It names
+        a review status, not a cause or a merchant repair permission.
+        Supported on the payments list and synchronous CSV export only;
+        asynchronous export requests reject this field.
+      schema:
+        type: string
+        enum: [needs_review, failed_safely, expired]
+
     DashboardPaymentCreatedFrom:
       name: created_from
       in: query
@@ -428,7 +442,10 @@ components:
     StablecoinDecisionQuoteOFT:
       type: object
       additionalProperties: false
-      description: The USDT0 corridor; delivered on Arbitrum after `delivery_seconds`.
+      description: |
+        The USDT0 corridor; delivered on Arbitrum after `delivery_seconds`.
+        With the merchant's fee terms it names them: `fee_terms_id` and
+        `native_fee_terms`.
       required: [id, payment_method, asset, chain_id, network, token, recipient,
         route, merchant_atomic, fee_atomic, gross_atomic, native_fee_atomic,
         native_currency, native_decimals, wallet_actions, gas_financed, expires_at, snapshot,
@@ -445,6 +462,18 @@ components:
             symbol: `binance` for USDT on BNB Chain (chain 56). Absent
             otherwise.
         adapter: { type: string }
+        fee_terms_id: { type: string }
+        native_fee_terms:
+          type: object
+          additionalProperties: false
+          required: [merchant_id, mode, version, fee_payer, bps, minimum_minor]
+          properties:
+            merchant_id: { type: string }
+            mode: { type: string, enum: [test, live] }
+            version: { type: string }
+            fee_payer: { type: string, enum: [buyer, merchant] }
+            bps: { type: integer, minimum: 0, maximum: 10000 }
+            minimum_minor: { type: integer, minimum: 0 }
         destination_chain_id: { type: integer, minimum: 1 }
         destination_network: { type: string }
         delivery_seconds: { type: integer, minimum: 1 }
@@ -512,6 +541,24 @@ components:
             `total_usd_atomic` stays an estimate.
         chainmore_fee_atomic: { type: string, pattern: '^[0-9]+$' }
         fee_terms_id: { type: string }
+        forward_fee_terms:
+          type: object
+          additionalProperties: false
+          description: |
+            The merchant's fee terms that priced `chainmore_fee_atomic`: the
+            agreement id and its basis points for this merchant and mode, on
+            the invoice, paid by the customer. `fee_terms_id` then names
+            exactly these terms.
+          required: [version, merchant_id, mode, raw_agreement_id, bps, asset, fee_payer, fee_basis]
+          properties:
+            version: { type: string, const: cctp.forward.fee-terms.v1 }
+            merchant_id: { type: string }
+            mode: { type: string, enum: [test, live] }
+            raw_agreement_id: { type: string }
+            bps: { type: integer, minimum: 0, maximum: 10000 }
+            asset: { type: string, const: USDC }
+            fee_payer: { type: string, const: buyer }
+            fee_basis: { type: string, const: invoice }
         delivery_unconfirmed: { type: boolean, const: true }
         delivery_estimate_seconds:
           type: integer
@@ -860,7 +907,7 @@ components:
       additionalProperties: false
       properties:
         merchant_id:           { type: string }
-        settlement_profile_id: { type: string, description: "Merchant provider profile the payment settles through (merchant_provider_profiles.id)." }
+        settlement_profile_id: { type: string, description: "Merchant provider profile the payment settles through (merchant_provider_profiles.id), always in the environment of the bearer's mode: sandbox for test, production for live. A named profile must be an active profile of the authenticated merchant in that environment. Omitted: the merchant's default active profile there, or its only active one. No such profile, two or more without a default, and a named profile that is another merchant's, inactive, of the other environment or unknown are refused with 400 invalid_request; no payment and no idempotency key is written. A mode other than test or live binds no profile and creates no payment. A retry that replays a stored payment keeps that payment's profile and is never resolved again; a named profile must equal it." }
         merchant_order_id:     { type: string, description: "Merchant order reference; idempotency key of the payment per merchant." }
         amount_minor:          { type: integer, minimum: 1 }
         currency:              { type: string, description: "ISO-4217 fiat code of the requested amount, e.g. EUR." }
@@ -917,7 +964,15 @@ components:
 
     PaymentView:
       type: object
-      description: Read-model view of a Payment aggregate.
+      description: Read-model view of a Payment aggregate; the payment, and its attempts once there are any.
+      required: [payment]
+      properties:
+        payment:  { $ref: "#/components/schemas/Payment" }
+        attempts: { type: array, items: { type: object } }
+
+    Payment:
+      type: object
+      description: A payment as GET /v1/payments/{id} and the checkout state carry it under "payment".
       required: [id, merchant_id, public_status, orchestration_state]
       properties:
         id:                     { type: string }
@@ -1028,25 +1083,12 @@ components:
 
     CheckoutState:
       type: object
-      description: Read-model view the hosted-checkout frontend polls.
-      required: [state]
+      description: Read-model view of a payment's checkout session, with the payment.
+      required: [session_id, state]
       properties:
-        state:                      { type: string }
-        payment_id:                 { type: string }
-        wallet_address:             { type: string }
-        chain_id:                   { type: string }
-        selected_route_fingerprint: { type: string }
-        route_candidate_id:         { type: string }
-        route_validation_id:        { type: string }
-        dispatch_decision_id:       { type: string }
-        payment_attempt_id:         { type: string }
-        settlement_journal_id:      { type: string }
-        submitted_tx_hash:          { type: string }
-        failure_reason:             { type: string }
-        quote_expires_at:           { type: string, format: date-time }
-        expires_at:                 { type: string, format: date-time }
-        terminal_at:                { type: string, format: date-time }
-        updated_at:                 { type: string, format: date-time }
+        session_id: { type: string }
+        state:      { type: string }
+        payment:    { $ref: "#/components/schemas/Payment" }
 
     CheckoutSession:
       type: object
@@ -1236,12 +1278,12 @@ components:
         amount_minor: { type: integer, format: int64, minimum: 1, description: "Minor units of currency (USD/EUR cents)." }
         currency: { type: string, enum: [USD, EUR], description: "USD offers the stablecoin rails at par; EUR offers card." }
         merchant_order_id: { type: string, maxLength: 128 }
-        settlement_profile_id: { type: string, description: "Merchant provider profile (merchant_provider_profiles.id) the card/USDT payment settles through; omitted resolves the merchant's default or only active profile." }
+        settlement_profile_id: { type: string, description: "Merchant provider profile (merchant_provider_profiles.id) the card, USDT or USDC payment settles through, always in the environment of the link's mode: sandbox for test, production for live. A named profile must be an active profile of the merchant in that environment; omitted resolves the merchant's default active profile there, or its only active one. Without such a profile (none, two or more without a default, or a named one that is another merchant's, inactive, of the other environment or unknown) the link offers none of these methods and binds no payment. A bound link keeps the payment and profile it bound." }
         metadata: { type: object, additionalProperties: true }
         settlement_destination: { type: string, description: "The merchant's own USDT account on a chain the rails pay on: eip155 CAIP-10 (eip155:1:0x…, eip155:42161:0x…) or a TRON account (tron:0x2b6653dc:T…); a bare 0x address names no network and is accepted only when it is the merchant's declared USDT target on Arbitrum (otherwise 400 invalid_request); omitted: the merchant's highest-priority USDT payout target (ADR-0075). A mixed-case 0x address must carry a valid EIP-55 checksum unless it spells an account the merchant has declared (an active USDT payout target or the usdt0 default): that account is admitted in any spelling and stored lowercase. Any other spelling with a broken checksum is refused with the reason (400 invalid_request)." }
         usdc:
           type: object
-          description: Optional explicit USDC routing details. When omitted, same-chain USDC can be offered if the merchant has an active settlement profile, a USDC payout destination and the USDC route is enabled.
+          description: Optional explicit USDC routing details. When omitted, same-chain USDC can be offered if the merchant has an active settlement profile for the link's mode, a USDC payout destination and the USDC route is enabled.
           required: [merchant_wallet, source_chain, dest_chain]
           properties:
             merchant_wallet: { type: string }
@@ -2010,13 +2052,62 @@ components:
         merchant_order_id:      { type: string }
         environment:            { type: string, enum: [sandbox, production] }
         requested_amount_minor: { type: integer, format: int64 }
-        requested_currency:     { type: string, description: "ISO 4217 fiat code." }
+        requested_currency:     { type: string, description: "ISO 4217 fiat code, or USDT or USDC for a stablecoin payment; requested_amount_minor then counts six-decimal Core units." }
         canonical_asset:        { type: string, description: "Settlement asset symbol; omitted before resolution." }
         public_status:          { type: string, description: "Merchant-facing payment status (same enum the webhook payload carries)." }
+        exception_status:
+          type: string
+          enum: [needs_review, failed_safely, expired]
+          description: Confirmed warning group; omitted for unclassified payments. No raw orchestration state or specific failure cause is exposed.
         checkout_required:      { type: boolean }
         mode:                   { type: string, enum: [test, live], description: "Per-row mode mirror; redundant with the page-level scope but kept for single-row debug copies." }
         created_at:             { type: string, format: date-time }
         updated_at:             { type: string, format: date-time }
+        settlement_legs:
+          type: array
+          description: |
+            The on-chain steps this payment executed, newest last; omitted
+            while there are none. Each leg is reported as it was executed and
+            never summed into a merchant net.
+          items: { $ref: "#/components/schemas/DashboardSettlementLeg" }
+
+    DashboardSettlementLeg:
+      type: object
+      description: |
+        Mirrors `domain.MerchantDashboardSettlementLeg`: one step of a payment
+        as it was executed. An amount counts as moved only when `executed`
+        is true.
+      required: [leg_type, status, executed]
+      properties:
+        leg_type:            { type: string }
+        chain_id:            { type: string, description: "CAIP-2, e.g. eip155:8453." }
+        amount_atomic:       { type: string, description: "Integer as a decimal string: this leg's Core amount, six decimals for USDT and USDC. native_amount_unit never applies to it." }
+        unit_code:           { type: string }
+        tx_hash:             { type: string }
+        source_address:      { type: string }
+        destination_address: { type: string }
+        status:              { type: string }
+        confirmed_at:        { type: string, format: date-time }
+        executed:            { type: boolean, description: "True only for a leg confirmed on chain." }
+        step:                { type: string, description: "Native rail only: approve or pay." }
+        merchant_amount_atomic: { type: string, description: "Native rail, on the leg that moved the money: integer as a decimal string, net to the merchant in the token's own base units. Read it with native_amount_unit." }
+        fee_atomic:             { type: string, description: "Native rail, as merchant_amount_atomic: the fee." }
+        gross_amount_atomic:    { type: string, description: "Native rail, as merchant_amount_atomic: debited from the payer." }
+        native_amount_unit:
+          type: object
+          description: |
+            The historical token unit of merchant_amount_atomic, fee_atomic
+            and gross_amount_atomic only, bound to the execution's token and
+            the leg's chain and concrete asset. Omitted when that identity is
+            missing, conflicting or unknown; the three amounts then have no
+            known unit and are not converted. Never applies to amount_atomic
+            or requested_amount_minor.
+          required: [asset, decimals, chain_id, token]
+          properties:
+            asset:    { type: string, enum: [USDT, USDC] }
+            decimals: { type: integer, enum: [6, 18] }
+            chain_id: { type: string, pattern: '^eip155:[1-9][0-9]*$' }
+            token:    { type: string, pattern: '^0x[0-9a-f]{40}$' }
 
     DashboardRequestedAmountTotal:
       type: object
@@ -5230,6 +5321,7 @@ paths:
         - $ref: "#/components/parameters/DashboardLimit"
         - $ref: "#/components/parameters/DashboardPaymentSearch"
         - $ref: "#/components/parameters/DashboardPaymentStatus"
+        - $ref: "#/components/parameters/DashboardPaymentExceptionStatus"
         - $ref: "#/components/parameters/DashboardPaymentCreatedFrom"
         - $ref: "#/components/parameters/DashboardPaymentCreatedTo"
         - $ref: "#/components/parameters/CorrelationID"
@@ -5250,6 +5342,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/DashboardPaymentSearch"
         - $ref: "#/components/parameters/DashboardPaymentStatus"
+        - $ref: "#/components/parameters/DashboardPaymentExceptionStatus"
         - $ref: "#/components/parameters/DashboardPaymentCreatedFrom"
         - $ref: "#/components/parameters/DashboardPaymentCreatedTo"
         - $ref: "#/components/parameters/DashboardExportLimit"
@@ -6186,9 +6279,12 @@ webhooks:
     post:
       summary: Sent when a stablecoin wallet payment expires unpaid.
       description: |
-        `state` is `expired`; `failure_code` names the reason. Sent only
-        to endpoints that list `payment.expired` by name. Status: not yet
-        enabled on the production gateway.
+        Native USDC/USDT reconciliation can emit this event when an
+        unpaid checkout-backed payment expires after its checkout has
+        ended. Availability depends on the corresponding native rail
+        and Core event wiring. `state` is `expired`; `failure_code`
+        names the reason. Sent only to endpoints that list
+        `payment.expired` by name.
       requestBody:
         required: true
         content:
@@ -6201,14 +6297,16 @@ webhooks:
     post:
       summary: Sent when a further on-chain transfer is found for a payment that is already booked.
       description: |
-        For example, the customer's authorization was executed twice.
+        The configured native USDC/USDT reconciliation path can report
+        further verified on-chain executions. This requires the
+        corresponding rail and Core event wiring. For example, the
+        customer's authorization was executed twice.
         One event per further transfer; `state` is
         `late_payment_received`. `amount` is the amount the payment
         requested; `transfer` names the further transfer (chain,
         transaction, log) and what it moved to the merchant, in the
         token's units on that chain. Sent only to endpoints that list
-        `payment.late_payment_received` by name. Status: not yet enabled
-        on the production gateway.
+        `payment.late_payment_received` by name.
       requestBody:
         required: true
         content:
@@ -6219,17 +6317,22 @@ webhooks:
           description: Delivery acknowledged.
   payment.delivery_delayed:
     post:
-      summary: Sent when the delivery of a cross-chain stablecoin payment failed and is held for clarification.
+      summary: Sent when a cross-chain stablecoin delivery is held for clarification.
       description: |
-        The payment was received on the source chain, but the cross-chain
-        message that delivers it to the merchant's account failed or is
-        blocked on the destination chain. The destination chain and the
-        message provider's status both say so. `state` is
-        `delivery_delayed`. The payment is not ended and nothing is sent
-        again: if the delivery still arrives, `payment.settled` follows.
+        Availability depends on the corresponding rail runtime and Core
+        event wiring. CCTP Forward can emit this event for a recorded
+        open-delivery hold: an overdue attestation after the source burn,
+        an overdue final mint after attestation, or a finality mismatch.
+        These Forward holds do not require a LayerZero Scan reader.
+        USDT0 can emit it only when a destination delivery failure or
+        block is corroborated by LayerZero Scan for the same message
+        (`FAILED` or `BLOCKED`). This requires a configured `ScanReader`;
+        the default USDT0 configuration has none, so an alarm alone does
+        not produce this event.
+        `state` is `delivery_delayed`. The event does not end the payment;
+        a later completed delivery can be followed by `payment.settled`.
         At most one such event per payment. Sent only to endpoints that
-        list `payment.delivery_delayed` by name. Status: not yet enabled
-        on the production gateway.
+        list `payment.delivery_delayed` by name.
       requestBody:
         required: true
         content:
