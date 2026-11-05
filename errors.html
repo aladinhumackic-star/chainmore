@@ -111,7 +111,7 @@
     <h3><code>checkout_link_already_bound</code></h3>
     <p class="meta">checkout link already bound · HTTP 409</p>
     <p>The customer already chose a different payment method on this link and a payment exists on that rail. A link binds exactly once.</p>
-    <p><strong>What to do:</strong> Continue on the checkout the link already points to (GET the link view returns its checkout_token), or create a new link for a different method.</p>
+    <p><strong>What to do:</strong> Continue using the checkout URL saved securely with this order on first creation. <code>GET /v1/checkout/links/{id}</code> reports the existing state and <code>payment_id</code>, never <code>checkout_token</code>. If that URL is lost, stop and check the existing order or contact support with its non-secret link/order IDs. Do not create a replacement link, change <code>Idempotency-Key</code> or create a second order to recover the token.</p>
   </article>
   <article class="code" id="checkout-link-expired">
     <h3><code>checkout_link_expired</code></h3>
@@ -225,7 +225,7 @@
     <h3><code>checkout_link_not_found</code></h3>
     <p class="meta">checkout link not found · HTTP 404</p>
     <p>No checkout link matches the token or id. Link tokens start with cl_ and are shown once in the create response.</p>
-    <p><strong>What to do:</strong> Check the token in the URL; create a new link if it was lost.</p>
+    <p><strong>What to do:</strong> Check the token or link ID and the request&#39;s test/live mode. Reuse the checkout URL saved securely with the original order. If it was lost, stop and check that order&#39;s state or contact support with its non-secret link/order IDs. Do not create a replacement link, change <code>Idempotency-Key</code> or create another order to recover a token.</p>
   </article>
   <article class="code" id="not-found">
     <h3><code>not_found</code></h3>

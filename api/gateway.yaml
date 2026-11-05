@@ -514,7 +514,12 @@ components:
         payment_method: { type: string, const: usdc }
         asset: { type: string, const: USDC }
         adapter: { type: string }
-        adapter_version: { type: integer, const: 3 }
+        adapter_version:
+          type: integer
+          enum: [3, 4]
+          description: |
+            The generation of the forward adapter at `adapter`: 3 for
+            PaymentSourceBurnAdapterV3, 4 for PaymentSourceBurnAdapterV4.
         fee_recipient: { type: string }
         source_chain: { type: string }
         dest_chain: { type: string }
