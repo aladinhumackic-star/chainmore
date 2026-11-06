@@ -1629,6 +1629,18 @@ components:
           type: integer
           format: int64
           description: The source chain head the hand-out observed.
+        quote_expiry_mode:
+          type: string
+          enum: [TIMESTAMP]
+          description: Present for a forward quote with Unix expiry; legacy block quotes omit it.
+        quote_expires_at_unix:
+          type: integer
+          format: int64
+          minimum: 1
+          description: >-
+            With quote_expiry_mode TIMESTAMP: the provider quote expires at this
+            Unix second. quote_expires_at_block is absent. Fetch the call again
+            right before the wallet, as for a block-based forward quote.
         source_transaction: { type: string }
         source_guid: { type: string }
         destination_transaction: { type: string }
@@ -3326,10 +3338,11 @@ components:
           description: |
             Event types to subscribe to: `payment.settled`,
             `payment.expired`, `payment.late_payment_received`,
-            `payment.delivery_delayed`. An empty list receives
-            `payment.settled` only. `payment.expired`,
-            `payment.late_payment_received` and `payment.delivery_delayed`
-            reach only endpoints that list them by name.
+            `payment.delivery_delayed`, `payment.funds_confirmed`. An empty
+            list receives `payment.settled` only. Every event type except
+            `payment.settled` reaches only endpoints that list it by name.
+            `payment.funds_confirmation_revoked` needs no entry: it goes to the
+            endpoint that received the confirmation.
           items: { type: string }
 
     CreateEndpointResponse:
@@ -3397,7 +3410,7 @@ components:
             the same.
         event_type:
           type: string
-          enum: [payment.settled, payment.failed, payment.expired, payment.late_payment_received, payment.delivery_delayed]
+          enum: [payment.settled, payment.failed, payment.expired, payment.late_payment_received, payment.delivery_delayed, payment.funds_confirmed, payment.funds_confirmation_revoked]
         event_id:
           type: string
           description: "Delivery identity, set on every delivery. A replay has a new one."
@@ -3409,7 +3422,8 @@ components:
           type: string
           description: |
             The state the event reports: `settled`, `failed`, `expired`,
-            `late_payment_received` or `delivery_delayed`.
+            `late_payment_received`, `delivery_delayed`, `funds_confirmed` or
+            `funds_confirmation_revoked`.
         failure_code:
           type: string
           description: "Machine-readable reason of `payment.expired`; absent otherwise."
@@ -3427,8 +3441,9 @@ components:
         transfer:
           type: object
           description: |
-            Only on `payment.late_payment_received`: the further on-chain
-            transfer. `amount_atomic` is what it moved to the merchant's
+            On `payment.late_payment_received` the further on-chain transfer,
+            on `payment.funds_confirmed` the mint it confirms.
+            `amount_atomic` is what it moved to the merchant's
             address, in the token's base units on that chain;
             `amount_decimals` is that token's scale there (6, or 18 for USDT
             on BNB Chain). Absent on every other event.
@@ -6312,6 +6327,55 @@ webhooks:
         transaction, log) and what it moved to the merchant, in the
         token's units on that chain. Sent only to endpoints that list
         `payment.late_payment_received` by name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.funds_confirmed:
+    post:
+      summary: Sent when a cross-chain payment's full mint has reached the stated depth, before finality.
+      description: |
+        CCTP Forward to Arbitrum: the payment's full amount is minted to the
+        merchant's address on the canonical chain, the batch holding that block
+        has 12 Ethereum blocks on top, and under a Fast transfer the burn is
+        under the source chain's safe tag. A state of the chains, not a timer;
+        no probability and no time is promised.
+        Use it for something you can take back, such as a balance a customer
+        may spend inside your service. A withdrawal or another irreversible
+        step waits for `payment.settled`, which stays at the destination's
+        final mint and is the only event that completes an order. Consumed
+        services or game winnings may not be recoverable; that risk stays
+        with the merchant.
+        Keep one state per `payment_id`, delivery order is not guaranteed:
+        credit once, ignore a confirmation after a revocation, and let
+        `payment.settled` finalize an existing credit without booking again.
+        It may never come for a payment, for example on a route without this
+        depth read or when finality is reached first; `payment.settled` then
+        stands alone. At most one per payment. Sent only to endpoints that list
+        `payment.funds_confirmed` by name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        '2XX':
+          description: Delivery acknowledged.
+  payment.funds_confirmation_revoked:
+    post:
+      summary: Sent when a confirmed mint is not on the final chain.
+      description: |
+        Finality reached the block of a `payment.funds_confirmed` and the
+        destination's `usedNonces` shows this message unused there, so the mint
+        is not on the final chain. Take back what you released on it and ignore
+        a later confirmation of this payment. `payment.settled` still follows if
+        a final mint appears, and it wins. At most one per payment. Sent to the
+        endpoint that received the confirmation, without a subscription of its
+        own and whatever its subscriptions say by then.
       requestBody:
         required: true
         content:
