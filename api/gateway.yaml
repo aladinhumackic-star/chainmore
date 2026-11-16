@@ -2143,38 +2143,102 @@ components:
             never summed into a merchant net.
           items: { $ref: "#/components/schemas/DashboardSettlementLeg" }
         native_funds_confirmation:
-          type: object
-          description: Stored provisional native Arbitrum receipt, independent of webhook configuration. Not final settlement or final proceeds. Detail only; absence means unknown.
-          required: [chain_id, tx_hash, block_hash, block_number, log_index, asset, amount_atomic, l1_confirmations, confirmed_at]
-          properties:
-            chain_id: { type: integer, enum: [42161] }
-            tx_hash: { type: string }
-            block_hash: { type: string }
-            block_number: { type: integer, format: int64 }
-            log_index: { type: integer, format: int64 }
-            asset: { type: string, enum: [USDT, USDC] }
-            amount_atomic: { type: string, pattern: '^[0-9]+$', description: "Provisional merchant transfer in token base units, six decimals. Not booked proceeds." }
-            l1_confirmations: { type: integer, minimum: 12 }
-            confirmed_at: { type: string, format: date-time }
-            revoked_at: { type: string, format: date-time }
+          $ref: "#/components/schemas/DashboardNativeFundsConfirmation"
         usdt0_funds_confirmation:
           $ref: "#/components/schemas/DashboardUSDT0FundsConfirmation"
         cctp_forward_funds_confirmation:
-          type: object
-          description: |
-            Stored provisional receipt of a cross-chain USDC mint on the
-            destination network, at 12 parent-chain confirmations of its batch,
-            independent of webhook configuration. Neither final settlement nor
-            final proceeds, and no payment-status transition. When revoked_at
-            is present the observation was withdrawn and no longer confirms
-            receipt; the final payment status still applies. Detail only;
-            absence means unknown, not non-arrival.
-          required: [chain_id, tx_hash, confirmed_at]
-          properties:
-            chain_id: { type: integer, format: int64, minimum: 1 }
-            tx_hash: { type: string, description: "The stored destination transaction, lowercase hex." }
-            confirmed_at: { type: string, format: date-time }
-            revoked_at: { type: string, format: date-time, description: "When the observation was withdrawn; absent while it stands." }
+          $ref: "#/components/schemas/DashboardForwardFundsConfirmation"
+
+    DashboardNativeFundsConfirmation:
+      type: object
+      description: Stored provisional native Arbitrum receipt, independent of webhook configuration. Not final settlement or final proceeds. Detail only; absence means unknown.
+      required: [chain_id, tx_hash, block_hash, block_number, log_index, asset, amount_atomic, l1_confirmations, confirmed_at]
+      properties:
+        chain_id: { type: integer, enum: [42161] }
+        tx_hash: { type: string }
+        block_hash: { type: string }
+        block_number: { type: integer, format: int64 }
+        log_index: { type: integer, format: int64 }
+        asset: { type: string, enum: [USDT, USDC] }
+        amount_atomic: { type: string, pattern: '^[0-9]+$', description: "Provisional merchant transfer in token base units, six decimals. Not booked proceeds." }
+        l1_confirmations: { type: integer, minimum: 12 }
+        confirmed_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time }
+
+    DashboardForwardFundsConfirmation:
+      type: object
+      description: |
+        Stored provisional receipt of a cross-chain USDC mint on the
+        destination network, at 12 parent-chain confirmations of its batch,
+        independent of webhook configuration. Neither final settlement nor
+        final proceeds, and no payment-status transition. When revoked_at
+        is present the observation was withdrawn and no longer confirms
+        receipt; the final payment status still applies. Detail only;
+        absence means unknown, not non-arrival.
+      required: [chain_id, tx_hash, confirmed_at]
+      properties:
+        chain_id: { type: integer, format: int64, minimum: 1 }
+        tx_hash: { type: string, description: "The stored destination transaction, lowercase hex." }
+        confirmed_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time, description: "When the observation was withdrawn; absent while it stands." }
+
+    PaymentReceipt:
+      type: object
+      description: |
+        Mirrors `domain.PaymentReceipt`: one payment's receipt for the API
+        key's merchant and mode, from the same confirmed read as the dashboard
+        payment detail. Nothing in it is estimated, re-priced from current
+        terms or derived from the requested amount.
+      required: [schema_version, payment_id, merchant_order_id, public_status, requested_amount_minor, requested_currency, settlement_legs, core_receipt]
+      properties:
+        schema_version:         { type: integer, enum: [1] }
+        payment_id:             { type: string }
+        merchant_order_id:      { type: string }
+        mode:                   { type: string, enum: [test, live] }
+        public_status:          { type: string, description: "Confirmed merchant-facing status (same enum the webhook payload carries)." }
+        requested_amount_minor: { type: integer, format: int64, description: "The invoice. Never a received amount and never a token amount." }
+        requested_currency:     { type: string, description: "The invoice currency, e.g. USD. Not the settlement asset." }
+        canonical_asset:        { type: string, description: "Settlement asset symbol; omitted before resolution." }
+        settlement_legs:
+          type: array
+          description: The on-chain steps this payment executed, newest last; empty while there are none ("not yet", not "nothing arrived").
+          items: { $ref: "#/components/schemas/DashboardSettlementLeg" }
+        native_funds_confirmation:
+          $ref: "#/components/schemas/DashboardNativeFundsConfirmation"
+        cctp_forward_funds_confirmation:
+          $ref: "#/components/schemas/DashboardForwardFundsConfirmation"
+        usdt0_funds_confirmation:
+          $ref: "#/components/schemas/DashboardUSDT0FundsConfirmation"
+        core_receipt:
+          $ref: "#/components/schemas/PaymentCoreReceipt"
+
+    PaymentCoreReceipt:
+      type: object
+      description: |
+        The merchant receipt of a completed USDC payment from its retained
+        evidence, the same evidence the dashboard period totals sum. Amounts
+        are set only when status is confirmed: exactly one matching receipt
+        (native pay execution, or forward source with attestation and full
+        delivery). Otherwise status is unavailable with a reason and no amount
+        is stated; that is no claim that nothing arrived. Amounts are integers
+        as decimal strings in USDC base units (six decimals);
+        gross_amount_atomic = merchant_amount_atomic + chainmore_fee_atomic + circle_fee_atomic.
+      required: [status]
+      properties:
+        status:                 { type: string, enum: [confirmed, unavailable] }
+        reason:                 { type: string, enum: [payment_not_settled, asset_not_valued, receipt_evidence_incomplete, payment_not_found] }
+        rail:                   { type: string, enum: [native, cctp_forward] }
+        source_chain_id:        { type: string, pattern: '^eip155:[1-9][0-9]*$', description: "Network the payer paid on." }
+        asset:                  { type: string, enum: [USDC] }
+        decimals:               { type: integer, enum: [6] }
+        gross_amount_atomic:    { type: string, pattern: '^[0-9]+$', description: "Debited from the payer." }
+        merchant_amount_atomic: { type: string, pattern: '^[0-9]+$', description: "Received by the merchant." }
+        chainmore_fee_atomic:   { type: string, pattern: '^[0-9]+$' }
+        circle_fee_atomic:      { type: string, pattern: '^[0-9]+$', description: "CCTP fee on the forward rail; 0 on native." }
+        credit_chain_id:        { type: string, pattern: '^eip155:[1-9][0-9]*$', description: "Network of the transaction that credited the merchant." }
+        credit_tx_hash:         { type: string, description: "Stored transaction of the same matched evidence that credited merchant_amount_atomic: the native pay transfer, or the final forward mint on the destination network (not the source burn in settlement_legs, and independent of an early funds confirmation)." }
+        credit_block_number:    { type: integer, format: int64, minimum: 1 }
+        credit_log_index:       { type: integer, format: int64, minimum: 0 }
 
     DashboardUSDT0FundsConfirmation:
       type: object
@@ -3771,6 +3835,27 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaymentView" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+
+  /v1/payments/{id}/receipt:
+    get:
+      summary: Read a payment's receipt.
+      description: |
+        For the API key's merchant and mode only; another merchant's payment,
+        or one of the other mode, answers 404 like a missing one. Use it after
+        payment.settled to reconcile what arrived, the fees and the
+        transactions. Not cached (Cache-Control no-store).
+      operationId: getPaymentReceipt
+      parameters:
+        - $ref: "#/components/parameters/PaymentID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        '200':
+          description: Payment receipt.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentReceipt" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '404': { $ref: "#/components/responses/NotFound" }
 
@@ -6172,12 +6257,22 @@ paths:
         Owner or admin only (other roles: 403 dashboard_role_forbidden); an API
         key is refused. Merchant and mode come from the session and the bound
         dashboard mode (`X-ChainMore-Dashboard-Mode`). The body takes only
-        `amount_minor`, `currency` (USD) and an optional `merchant_order_id`;
-        any other field is refused, so no payout address, profile or
-        cross-network block can be named. The link pays only to the merchant's
-        declared payout targets, and every payment still passes the merchant's
-        live limits. The `checkout_token` is returned once; a repeat under the
-        same Idempotency-Key returns the same link without it.
+        `amount_minor`, `currency` (USD), an optional `merchant_order_id` and
+        an optional fixed USDC route `usdc` with its two networks; any other
+        field is refused, so no payout address, fee or profile can be named.
+        Without `usdc` the customer's route stays free. With it, the link is
+        the same as a `POST /v1/checkout/links` link with a `usdc` block: the
+        server takes `merchant_wallet` from the merchant's single active USDC
+        payout target on `dest_chain` and `fee_bps` from the merchant's terms,
+        and admits only a pair offered for the merchant in this mode
+        (otherwise 400 invalid_request, or payout_target_not_declared without
+        such a target). Such a link offers and binds that route alone: USDC
+        from `source_chain` to that target, no USDT and no other network. An
+        API link with a `usdc` block keeps its routes as before.
+        The link pays only to the merchant's declared payout targets, and
+        every payment still passes the merchant's live limits. The
+        `checkout_token` is returned once; a repeat under the same
+        Idempotency-Key returns the same link without it.
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
@@ -6193,6 +6288,14 @@ paths:
                 amount_minor: { type: integer, format: int64, minimum: 1 }
                 currency: { type: string, enum: [USD] }
                 merchant_order_id: { type: string, pattern: "^[A-Za-z0-9._:-]{1,128}$" }
+                usdc:
+                  type: object
+                  additionalProperties: false
+                  required: [source_chain, dest_chain]
+                  description: A fixed USDC route by its two different networks. No account and no fee.
+                  properties:
+                    source_chain: { type: string, description: "The customer's network, e.g. base." }
+                    dest_chain: { type: string, description: "The network of one of the merchant's saved USDC payout targets, e.g. ethereum." }
       responses:
         '201':
           description: Link created.
