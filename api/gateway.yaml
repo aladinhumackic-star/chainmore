@@ -1485,6 +1485,16 @@ components:
             payment is planned when prepare is asked again after the approval is
             covered. Without it the exact contract stays. An unknown value is
             refused.
+        selection_fingerprint:
+          type: string
+          maxLength: 128
+          description: >-
+            Optional. The fingerprint of the forward selection this client
+            confirmed itself through stablecoin/renewal/select. A payment
+            whose selection a confirmed new offer replaced is prepared, and its
+            attempt resumed, only for a request naming exactly that
+            fingerprint; without one, or with another, prepare refuses with
+            checkout_terms_changed. Everywhere else it changes nothing.
 
     WidgetUSDT0TronTxRequest:
       type: object
@@ -1618,6 +1628,22 @@ components:
             and the Circle fee maximum the customer accepted, not the debit: the
             payment pulls only its actual total, and any rest of the approval
             stays unused.
+        tron_network_fee:
+          type: object
+          additionalProperties: false
+          required: [estimated_sun, maximum_sun]
+          description: >-
+            For a prepared direct TRON call, in sun (1 TRX = 1000000 sun),
+            separate from the USDT amounts and also present without `fee` (the
+            0 bps direct path). `estimated_sun` is what the chain would burn for
+            the part the wallet's own Energy and Bandwidth do not cover, from
+            the check made when the call was handed out (0 when they cover it).
+            `maximum_sun` is the per-step quote limit the customer accepted,
+            checked before sending. Neither is a debit or the transaction's
+            fee limit: resources and prices can change before execution.
+          properties:
+            estimated_sun: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+            maximum_sun: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
         quote_expires_at_block:
           type: integer
           format: int64
@@ -1644,6 +1670,18 @@ components:
         source_transaction: { type: string }
         source_guid: { type: string }
         destination_transaction: { type: string }
+        funds_confirmation:
+          type: object
+          description: >-
+            Stored provisional merchant receipt for this payment's current
+            leg and transaction, read through the checkout token. Present
+            only while unrevoked and readable; absence is unknown. This
+            neither completes the payment nor establishes final settlement.
+          required: [chain_id, tx_hash, confirmed_at]
+          properties:
+            chain_id: { type: integer, format: int64 }
+            tx_hash: { type: string, pattern: '^0x[0-9a-fA-F]{64}$' }
+            confirmed_at: { type: string, format: date-time }
         detail:
           type: string
           description: |
@@ -1759,6 +1797,23 @@ components:
         account_approval_status:        { type: string, enum: [sandbox, needs_info, live_approved, rejected, not_configured], description: "Server-side account live-access state; not a provider or rail readiness claim." }
         live_mode_enabled:              { type: boolean, description: "True only after the server-side live access gate is approved." }
         live_enabled_at:                { type: string, format: date-time, nullable: true, description: "Timestamp when live access was approved, if any." }
+        live_caps:
+          type: object
+          description: |
+            Present only in the bearer-resolved live mode. A read-time cap
+            snapshot for this merchant, not a reservation or approval of a
+            particular payment. Read failures yield unknown while other
+            integration fields remain available. Older servers omit it.
+          required: [state]
+          properties:
+            state:
+              type: string
+              enum: [missing, incomplete, invalid, complete, reached, unknown]
+              description: Complete means configured and not currently exhausted; the checkout still checks the actual amount and concurrent usage.
+            checked_at:
+              type: string
+              format: date-time
+              description: Absent when the cap snapshot could not be read.
         active_api_key_count:           { type: integer, minimum: 0 }
         webhook_endpoint_count:         { type: integer, minimum: 0 }
         webhook_endpoint_enabled_count: { type: integer, minimum: 0 }
@@ -2087,6 +2142,57 @@ components:
             while there are none. Each leg is reported as it was executed and
             never summed into a merchant net.
           items: { $ref: "#/components/schemas/DashboardSettlementLeg" }
+        native_funds_confirmation:
+          type: object
+          description: Stored provisional native Arbitrum receipt, independent of webhook configuration. Not final settlement or final proceeds. Detail only; absence means unknown.
+          required: [chain_id, tx_hash, block_hash, block_number, log_index, asset, amount_atomic, l1_confirmations, confirmed_at]
+          properties:
+            chain_id: { type: integer, enum: [42161] }
+            tx_hash: { type: string }
+            block_hash: { type: string }
+            block_number: { type: integer, format: int64 }
+            log_index: { type: integer, format: int64 }
+            asset: { type: string, enum: [USDT, USDC] }
+            amount_atomic: { type: string, pattern: '^[0-9]+$', description: "Provisional merchant transfer in token base units, six decimals. Not booked proceeds." }
+            l1_confirmations: { type: integer, minimum: 12 }
+            confirmed_at: { type: string, format: date-time }
+            revoked_at: { type: string, format: date-time }
+        usdt0_funds_confirmation:
+          $ref: "#/components/schemas/DashboardUSDT0FundsConfirmation"
+        cctp_forward_funds_confirmation:
+          type: object
+          description: |
+            Stored provisional receipt of a cross-chain USDC mint on the
+            destination network, at 12 parent-chain confirmations of its batch,
+            independent of webhook configuration. Neither final settlement nor
+            final proceeds, and no payment-status transition. When revoked_at
+            is present the observation was withdrawn and no longer confirms
+            receipt; the final payment status still applies. Detail only;
+            absence means unknown, not non-arrival.
+          required: [chain_id, tx_hash, confirmed_at]
+          properties:
+            chain_id: { type: integer, format: int64, minimum: 1 }
+            tx_hash: { type: string, description: "The stored destination transaction, lowercase hex." }
+            confirmed_at: { type: string, format: date-time }
+            revoked_at: { type: string, format: date-time, description: "When the observation was withdrawn; absent while it stands." }
+
+    DashboardUSDT0FundsConfirmation:
+      type: object
+      description: |
+        Stored early USDT0 receipt evidence, present only on payment details.
+        This is neither final delivery nor a payment-status transition.
+        When revoked_at is present the earlier confirmation was withdrawn;
+        it must no longer be presented as a confirmed receipt. Final
+        payment.settled/completed still wins, including after a revocation.
+        Absence means unknown, not non-arrival: the table may not exist yet
+        before schema 176, or no subscribed endpoint caused a record to be
+        written. Reading this field performs no chain or provider request.
+      required: [chain_id, tx_hash, confirmed_at]
+      properties:
+        chain_id: { type: integer, format: int64, minimum: 1 }
+        tx_hash: { type: string, description: "The stored destination transaction, lowercase hex." }
+        confirmed_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time, description: "When the early confirmation was withdrawn; absent while it has not been withdrawn." }
 
     DashboardSettlementLeg:
       type: object
@@ -3442,7 +3548,7 @@ components:
           type: object
           description: |
             On `payment.late_payment_received` the further on-chain transfer,
-            on `payment.funds_confirmed` the mint it confirms.
+            on `payment.funds_confirmed` the mint, corridor delivery or native transfer it confirms.
             `amount_atomic` is what it moved to the merchant's
             address, in the token's base units on that chain;
             `amount_decimals` is that token's scale there (6, or 18 for USDT
@@ -4197,6 +4303,110 @@ paths:
           description: Discovery busy; Retry-After 1 second.
         '500':
           description: Decision not wired or internal failure; no internal detail.
+        '503':
+          description: Observations unavailable; retry without assuming a route.
+
+  /v1/checkout/widget/stablecoin/renewal:
+    post:
+      summary: Observe a new offer for the forward route a payment retains.
+      description: |
+        Requires the short-lived checkout session token, not a merchant API
+        key. For a USDC payment whose retained forward selection carries an
+        accepted Circle fee maximum, bound by its link or through the API,
+        while the payment has no attempt and the session is open. Offers only
+        that route: the same source and destination network, recipient,
+        merchant amount, adapter, fee recipient and ChainMore terms, with the
+        Circle fee shown as a maximum. The wallet must be the payer's.
+        Read-only: creates no payment, attempt, signature or reservation.
+        ADR-0078 amendment 2026-11-15.
+      operationId: quoteWidgetStablecoinRenewal
+      security:
+        - checkoutSessionToken: []
+        - checkoutSessionTokenQuery: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StablecoinDecisionWallet"
+      responses:
+        '200':
+          description: Observed new offer for the retained route; Cache-Control no-store.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StablecoinDecisionProposal"
+        '400':
+          description: Invalid input or expired session.
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409':
+          description: Not renewable (no forward selection with a maximum, an attempt exists, another wallet) or the session state refuses.
+        '429':
+          description: Discovery busy; Retry-After 1 second.
+        '500':
+          description: Renewal not wired or internal failure; no internal detail.
+        '503':
+          description: Observations unavailable; retry without assuming a route.
+
+  /v1/checkout/widget/stablecoin/renewal/select:
+    post:
+      summary: Bind the new offer the customer confirmed again to the payment.
+      description: |
+        Requires the short-lived checkout session token. The customer
+        confirmed the shown new offer with the Circle fee maximum it showed
+        (`accepted_circle_fee_max_atomic`); without it nothing binds. The
+        offer must keep the retained route as above and still be quoted
+        inside that maximum, with the 0.001 USDC reserve unchanged. Core
+        replaces the retained selection only while the payment has no
+        attempt, by compare-and-set, drops the bounded approval's earlier
+        context and marks the payment renewed. The answer names the new
+        selection's fingerprint: from now on prepare plans the payment only
+        for a request naming it (`selection_fingerprint`). Does not start
+        execution or sign. ADR-0078 amendment 2026-11-15.
+      operationId: selectWidgetStablecoinRenewal
+      security:
+        - checkoutSessionToken: []
+        - checkoutSessionTokenQuery: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [wallet, stablecoin, accepted_circle_fee_max_atomic]
+              properties:
+                wallet: { $ref: "#/components/schemas/StablecoinDecisionWallet" }
+                stablecoin: { $ref: "#/components/schemas/StablecoinDecisionQuote" }
+                accepted_circle_fee_max_atomic: { type: string, pattern: '^[0-9]{1,30}$' }
+      responses:
+        '200':
+          description: New offer retained; Cache-Control no-store. No execution started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [selected, selection_fingerprint]
+                properties:
+                  selected: { type: boolean, enum: [true] }
+                  selection_fingerprint: { type: string, maxLength: 128 }
+        '400':
+          description: Invalid input or expired session.
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '404': { $ref: "#/components/responses/NotFound" }
+        '409':
+          description: Not renewable, an attempt exists, the route differs, or the offer moved above the shown maximum.
+        '429':
+          description: Discovery busy; Retry-After 1 second.
+        '500':
+          description: Renewal not wired or internal failure; no internal detail.
         '503':
           description: Observations unavailable; retry without assuming a route.
 
@@ -5950,6 +6160,54 @@ paths:
         '401': { $ref: "#/components/responses/Unauthorized" }
         '403': { $ref: "#/components/responses/Forbidden" }
         '404': { $ref: "#/components/responses/NotFound" }
+  /v1/dashboard/checkout_links:
+    post:
+      summary: Create a payment link from the dashboard, in the dashboard's resolved mode.
+      operationId: createDashboardCheckoutLink
+      security:
+        - dashboardSession: []
+      description: |
+        The dashboard door to the same checkout links as `POST /v1/checkout/links`,
+        for merchants without their own server (an invoice, a payment request).
+        Owner or admin only (other roles: 403 dashboard_role_forbidden); an API
+        key is refused. Merchant and mode come from the session and the bound
+        dashboard mode (`X-ChainMore-Dashboard-Mode`). The body takes only
+        `amount_minor`, `currency` (USD) and an optional `merchant_order_id`;
+        any other field is refused, so no payout address, profile or
+        cross-network block can be named. The link pays only to the merchant's
+        declared payout targets, and every payment still passes the merchant's
+        live limits. The `checkout_token` is returned once; a repeat under the
+        same Idempotency-Key returns the same link without it.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [amount_minor, currency]
+              properties:
+                amount_minor: { type: integer, format: int64, minimum: 1 }
+                currency: { type: string, enum: [USD] }
+                merchant_order_id: { type: string, pattern: "^[A-Za-z0-9._:-]{1,128}$" }
+      responses:
+        '201':
+          description: Link created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLink" }
+        '200':
+          description: Replayed under the same Idempotency-Key with identical facts (the token is not echoed again).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutLink" }
+        '400': { $ref: "#/components/responses/BadRequest" }
+        '401': { $ref: "#/components/responses/Unauthorized" }
+        '403': { $ref: "#/components/responses/Forbidden" }
+
   /v1/webhook_endpoints:
     get:
       summary: List webhook endpoints for the authenticated merchant, in the dashboard's selected mode.
@@ -6337,13 +6595,15 @@ webhooks:
           description: Delivery acknowledged.
   payment.funds_confirmed:
     post:
-      summary: Sent when a cross-chain payment's full mint has reached the stated depth, before finality.
+      summary: Sent when a cross-chain payment's full destination transfer has reached the stated depth, before finality.
       description: |
-        CCTP Forward to Arbitrum: the payment's full amount is minted to the
-        merchant's address on the canonical chain, the batch holding that block
-        has 12 Ethereum blocks on top, and under a Fast transfer the burn is
-        under the source chain's safe tag. A state of the chains, not a timer;
-        no probability and no time is promised.
+        For CCTP Forward (USDC) to Arbitrum or Base, or USDT0 from
+        Ethereum to Arbitrum, the payment's full amount is observed at the merchant's
+        address on the canonical destination chain, and the batch holding
+        that block has 12 Ethereum blocks on top. For CCTP Fast only, the
+        source burn must also be under the source chain's safe tag.
+        A state of the chains, not a timer; no probability and no time is
+        promised.
         Use it for something you can take back, such as a balance a customer
         may spend inside your service. A withdrawal or another irreversible
         step waits for `payment.settled`, which stays at the destination's
@@ -6367,13 +6627,25 @@ webhooks:
           description: Delivery acknowledged.
   payment.funds_confirmation_revoked:
     post:
-      summary: Sent when a confirmed mint is not on the final chain.
+      summary: Sent when a previously confirmed destination transfer is proven absent from the final chain.
       description: |
-        Finality reached the block of a `payment.funds_confirmed` and the
-        destination's `usedNonces` shows this message unused there, so the mint
-        is not on the final chain. Take back what you released on it and ignore
-        a later confirmation of this payment. `payment.settled` still follows if
-        a final mint appears, and it wins. At most one per payment. Sent to the
+        Finality has reached the block of a `payment.funds_confirmed`.
+        The proof depends on the rail:
+
+        - CCTP Forward: the destination's `usedNonces` shows this message
+          unused on the final chain.
+        - USDT0: against one finalized destination checkpoint, the previously
+          confirmed destination block is positively proven non-canonical and
+          the pinned EndpointV2 shows the exact bound packet payload in
+          `verified_not_executed` or `blocked` state at that same checkpoint.
+
+        A missing receipt or a read error is not such proof. For USDT0,
+        `consumed`, `not_verified` and `nilified` are not such proof either,
+        so on USDT0 a confirmation can stand while the final chain does not
+        hold the transfer yet.
+        Take back what you released on it and ignore a later confirmation of
+        this payment. `payment.settled` still follows if a final mint or
+        delivery appears, and it wins. At most one per payment. Sent to the
         endpoint that received the confirmation, without a subscription of its
         own and whatever its subscriptions say by then.
       requestBody:
