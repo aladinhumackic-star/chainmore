@@ -2211,6 +2211,8 @@ components:
           $ref: "#/components/schemas/DashboardUSDT0FundsConfirmation"
         core_receipt:
           $ref: "#/components/schemas/PaymentCoreReceipt"
+        usdt0_final_delivery:
+          $ref: "#/components/schemas/PaymentUSDT0Delivery"
 
     PaymentCoreReceipt:
       type: object
@@ -2239,6 +2241,37 @@ components:
         credit_tx_hash:         { type: string, description: "Stored transaction of the same matched evidence that credited merchant_amount_atomic: the native pay transfer, or the final forward mint on the destination network (not the source burn in settlement_legs, and independent of an early funds confirmation)." }
         credit_block_number:    { type: integer, format: int64, minimum: 1 }
         credit_log_index:       { type: integer, format: int64, minimum: 0 }
+
+    PaymentUSDT0Delivery:
+      type: object
+      description: |
+        Present only for a payment through the USDT0 corridor whose send was
+        observed. The final receipt on the destination network, from the
+        retained delivery bound to the payment's completed attempt, its source
+        send (GUID) and the quote snapshot the send was verified against
+        (destination network, OFT, token and recipient). Stated only when the
+        payment is completed and settled and exactly one such chain matches;
+        otherwise status is unavailable with a reason and nothing else. It does
+        not depend on the optional early funds confirmation. Amounts are
+        integers as decimal strings in the token's base units; the difference
+        between request_amount_atomic and received_amount_atomic is not
+        attributed, and no USD or native-gas value is mixed in.
+      required: [status]
+      properties:
+        status:                   { type: string, enum: [confirmed, unavailable] }
+        reason:                   { type: string, enum: [payment_not_settled, receipt_evidence_incomplete, delivery_evidence_missing, receipt_evidence_conflict] }
+        source_chain_id:          { type: string, pattern: '^eip155:[1-9][0-9]*$' }
+        source_tx_hash:           { type: string }
+        guid:                     { type: string, description: "LayerZero message GUID shared by the source send and the delivery." }
+        destination_chain_id:     { type: string, pattern: '^eip155:[1-9][0-9]*$' }
+        destination_token:        { type: string, pattern: '^0x[0-9a-f]{40}$' }
+        recipient:                { type: string, pattern: '^0x[0-9a-f]{40}$' }
+        received_amount_atomic:   { type: string, pattern: '^[0-9]+$', description: "Actually delivered to the recipient. Not the minimum receive floor." }
+        request_amount_atomic:    { type: string, pattern: '^[0-9]+$', description: "What the send request pulled from the payer." }
+        chainmore_fee_atomic:     { type: string, pattern: '^[0-9]+$', description: "Adapter fee inside the request amount; 0 on a direct send." }
+        destination_tx_hash:      { type: string }
+        destination_block_number: { type: integer, format: int64, minimum: 1 }
+        destination_log_index:    { type: integer, format: int64, minimum: 0 }
 
     DashboardUSDT0FundsConfirmation:
       type: object
