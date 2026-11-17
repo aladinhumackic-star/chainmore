@@ -860,12 +860,16 @@ components:
         One payout target: where the merchant receives one token on one
         chain (ADR-0075). `corridor` is `usdt0` (the legacy alias for USDT on
         Arbitrum) or `<token>:<chain>` with token `usdt`|`usdc` and chain
-        `ethereum`|`arbitrum`|`polygon`|`optimism`|`bsc`|`base`|`tron`.
-        `token` and `chain` repeat the parsed corridor.
+        `ethereum`|`arbitrum`|`polygon`|`optimism`|`bsc`|`base`|`tron`, or
+        `eurc:ethereum`: EURC on Ethereum (contract
+        `0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c`), the only EURC target.
+        An EURC target is saved and listed like the others, but no payment
+        route delivers EURC yet. `token` and `chain` repeat the parsed
+        corridor.
       required: [corridor, mode, settlement_destination, status, priority, updated_at]
       properties:
-        corridor:               { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$", example: "usdt:tron" }
-        token:                  { type: string, enum: [usdt, usdc] }
+        corridor:               { type: string, pattern: "^(usdt0|eurc:ethereum|(usdt|usdc):[a-z0-9-]{1,32})$", example: "usdt:tron" }
+        token:                  { type: string, enum: [usdt, usdc, eurc] }
         chain:                  { type: string, enum: [ethereum, arbitrum, polygon, optimism, bsc, base, tron] }
         mode:                   { type: string, enum: [test, live] }
         settlement_destination: { type: string, description: "The merchant's own account: lowercase CAIP-10 for EVM chains (e.g. eip155:1:0x…), or the TRON account tron:0x2b6653dc:T…" }
@@ -6162,7 +6166,7 @@ paths:
         - name: corridor
           in: path
           required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+          schema: { type: string, pattern: "^(usdt0|eurc:ethereum|(usdt|usdc):[a-z0-9-]{1,32})$" }
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
@@ -6181,7 +6185,7 @@ paths:
         - name: corridor
           in: path
           required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+          schema: { type: string, pattern: "^(usdt0|eurc:ethereum|(usdt|usdc):[a-z0-9-]{1,32})$" }
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
@@ -6222,7 +6226,11 @@ paths:
         `payout_target.created` or `payout_target.updated` audit event with
         the state before and after. The corridor names the token and chain
         the merchant receives on: `usdt0` (legacy alias, USDT on Arbitrum) or
-        `<token>:<chain>`, e.g. `usdt:tron`, `usdt:ethereum`, `usdc:base`.
+        `<token>:<chain>`, e.g. `usdt:tron`, `usdt:ethereum`, `usdc:base`, or
+        `eurc:ethereum` (EURC on Ethereum only, with an `eip155:1` account; no
+        payment route delivers EURC yet). While the server cannot store EURC
+        targets yet, an `eurc:ethereum` put answers 409 `invalid_state` and
+        changes nothing.
         The account must be the merchant's own on that chain: for EVM chains
         `eip155:<chain>:0x…` or a bare `0x` address, a mixed-case address
         with a valid EIP-55 checksum (an all-lowercase one is checked for
@@ -6234,7 +6242,7 @@ paths:
         - name: corridor
           in: path
           required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+          schema: { type: string, pattern: "^(usdt0|eurc:ethereum|(usdt|usdc):[a-z0-9-]{1,32})$" }
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       requestBody:
@@ -6251,6 +6259,7 @@ paths:
         '400': { $ref: "#/components/responses/BadRequest" }
         '401': { $ref: "#/components/responses/Unauthorized" }
         '403': { $ref: "#/components/responses/Forbidden" }
+        '409': { $ref: "#/components/responses/Conflict" }
     delete:
       summary: Disable one payout target from the dashboard, in the dashboard's resolved mode.
       operationId: disableDashboardSettlementDestination
@@ -6265,7 +6274,7 @@ paths:
         - name: corridor
           in: path
           required: true
-          schema: { type: string, pattern: "^(usdt0|(usdt|usdc):[a-z0-9-]{1,32})$" }
+          schema: { type: string, pattern: "^(usdt0|eurc:ethereum|(usdt|usdc):[a-z0-9-]{1,32})$" }
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/CorrelationID"
       responses:
