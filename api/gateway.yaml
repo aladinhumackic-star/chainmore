@@ -6300,9 +6300,11 @@ paths:
         key is refused. Merchant and mode come from the session and the bound
         dashboard mode (`X-ChainMore-Dashboard-Mode`). The body takes only
         `amount_minor`, `currency` (USD), an optional `merchant_order_id` and
-        an optional fixed USDC route `usdc` with its two networks; any other
-        field is refused, so no payout address, fee or profile can be named.
-        Without `usdc` the customer's route stays free. With it, the link is
+        either an optional fixed USDC route `usdc` with its two networks or
+        `usdt_target`, the corridor key and `updated_at` revision of a saved USDT receiving target on
+        Arbitrum. These two options cannot be combined. Any other field is
+        refused, so no payout address, fee or profile can be named.
+        Without either option the customer's route stays free. With `usdc`, the link is
         the same as a `POST /v1/checkout/links` link with a `usdc` block: the
         server takes `merchant_wallet` from the merchant's single active USDC
         payout target on `dest_chain` and `fee_bps` from the merchant's terms,
@@ -6311,6 +6313,15 @@ paths:
         such a target). Such a link offers and binds that route alone: USDC
         from `source_chain` to that target, no USDT and no other network. An
         API link with a `usdc` block keeps its routes as before.
+        With `usdt_target`, the server resolves that active, chain-consistent
+        target in the session's merchant and mode, requires its `updated_at`
+        revision to match the unchanged value read from the target list,
+        and sets the existing link
+        `settlement_destination`. For USDT payments, this chooses receipt on
+        Arbitrum, not an exclusive source route. Other offered payment
+        methods remain available. The customer chooses the route in the
+        normal wallet checkout, including Ethereum to Arbitrum (USDT0/OFT)
+        when offered. It does not change any saved target.
         The link pays only to the merchant's declared payout targets, and
         every payment still passes the merchant's live limits. The
         `checkout_token` is returned once; a repeat under the same
@@ -6326,9 +6337,18 @@ paths:
               type: object
               additionalProperties: false
               required: [amount_minor, currency]
+              not: { required: [usdc, usdt_target] }
               properties:
                 amount_minor: { type: integer, format: int64, minimum: 1 }
                 currency: { type: string, enum: [USD] }
+                usdt_target:
+                  type: object
+                  additionalProperties: false
+                  required: [corridor, updated_at]
+                  description: Saved USDT-Arbitrum target reference in this merchant and mode. A changed revision is refused before link creation. No address, fee or source network; cannot be combined with usdc.
+                  properties:
+                    corridor: { type: string, enum: ["usdt:arbitrum", usdt0] }
+                    updated_at: { type: string, format: date-time, description: "Echo the exact updated_at from the selected payout target without rounding or reformatting." }
                 merchant_order_id: { type: string, pattern: "^[A-Za-z0-9._:-]{1,128}$" }
                 usdc:
                   type: object
