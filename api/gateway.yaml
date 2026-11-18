@@ -2200,8 +2200,8 @@ components:
         merchant_order_id:      { type: string }
         mode:                   { type: string, enum: [test, live] }
         public_status:          { type: string, description: "Confirmed merchant-facing status (same enum the webhook payload carries)." }
-        requested_amount_minor: { type: integer, format: int64, description: "The invoice. Never a received amount and never a token amount." }
-        requested_currency:     { type: string, description: "The invoice currency, e.g. USD. Not the settlement asset." }
+        requested_amount_minor: { type: integer, format: int64, description: "What the payment asked for, in requested_currency. For USDT or USDC the token amount in six-decimal units (500000 is 0.50 USDT). Never a received amount; what moved is in settlement_legs and core_receipt." }
+        requested_currency:     { type: string, description: "The currency of requested_amount_minor: USDT or USDC for a stablecoin payment, an ISO 4217 code for a card payment." }
         canonical_asset:        { type: string, description: "Settlement asset symbol; omitted before resolution." }
         settlement_legs:
           type: array
