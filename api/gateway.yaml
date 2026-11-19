@@ -2158,6 +2158,8 @@ components:
           $ref: "#/components/schemas/DashboardUSDT0FundsConfirmation"
         cctp_forward_funds_confirmation:
           $ref: "#/components/schemas/DashboardForwardFundsConfirmation"
+        usdt0_final_delivery:
+          $ref: "#/components/schemas/PaymentUSDT0Delivery"
 
     DashboardNativeFundsConfirmation:
       type: object
@@ -2264,9 +2266,10 @@ components:
         payment is completed and settled and exactly one such chain matches;
         otherwise status is unavailable with a reason and nothing else. It does
         not depend on the optional early funds confirmation. Amounts are
-        integers as decimal strings in the token's base units; the difference
-        between request_amount_atomic and received_amount_atomic is not
-        attributed, and no USD or native-gas value is mixed in.
+        integers as decimal strings in the token's base units, which asset and
+        decimals name; the difference between request_amount_atomic and
+        received_amount_atomic is not attributed, and no USD or native-gas
+        value is mixed in.
       required: [status]
       properties:
         status:                   { type: string, enum: [confirmed, unavailable] }
@@ -2280,6 +2283,9 @@ components:
         received_amount_atomic:   { type: string, pattern: '^[0-9]+$', description: "Actually delivered to the recipient. Not the minimum receive floor." }
         request_amount_atomic:    { type: string, pattern: '^[0-9]+$', description: "What the send request pulled from the payer." }
         chainmore_fee_atomic:     { type: string, pattern: '^[0-9]+$', description: "Adapter fee inside the request amount; 0 on a direct send." }
+        merchant_fee_atomic:      { type: string, pattern: '^[0-9]+$', description: "The part of chainmore_fee_atomic the merchant bore under the fee agreement the send was signed with, as this payment's quote snapshot retains it: the agreement's invoice less what it delivers to the merchant. 0 when that agreement put the whole fee on the payer. Absent when the send carries no agreement (priced by the fee schedule, or before agreements): no part was stored, so it is unknown, not zero. Never derived from the requested or received amount." }
+        asset:                    { type: string, enum: [USDT], description: "Token unit of every amount in this object: USDT on the source network, USDT0 on the destination." }
+        decimals:                 { type: integer, enum: [6] }
         destination_tx_hash:      { type: string }
         destination_block_number: { type: integer, format: int64, minimum: 1 }
         destination_log_index:    { type: integer, format: int64, minimum: 0 }
