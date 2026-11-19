@@ -408,6 +408,7 @@ components:
         adapter_version: { type: integer }
         fee_recipient: { type: string }
         fee_terms_id: { type: string }
+        merchant_fee_atomic: { type: string, pattern: '^[0-9]+$', description: "Only under fee terms with a merchant part (fee_payer buyer_and_merchant): that part inside the fee, deducted from the invoice. The invoice is merchant_atomic plus it; the customer's own fee is the fee less it." }
         native_fee_terms:
           type: object
           additionalProperties: false
@@ -416,9 +417,10 @@ components:
             merchant_id: { type: string }
             mode: { type: string, enum: [test, live] }
             version: { type: string }
-            fee_payer: { type: string, enum: [buyer, merchant] }
+            fee_payer: { type: string, enum: [buyer, merchant, buyer_and_merchant] }
             bps: { type: integer, minimum: 0, maximum: 10000 }
             minimum_minor: { type: integer, minimum: 0 }
+            merchant_bps: { type: integer, minimum: 1, maximum: 9999, description: "Only with fee_payer buyer_and_merchant: the merchant's part, deducted from the invoice; bps (at least minimum_minor) is the customer's part on top of it." }
         terms_signature: { type: boolean }
         id: { type: string }
         chain_id: { type: integer, minimum: 1 }
@@ -463,6 +465,7 @@ components:
             otherwise.
         adapter: { type: string }
         fee_terms_id: { type: string }
+        merchant_fee_atomic: { type: string, pattern: '^[0-9]+$', description: "Only under fee terms with a merchant part (fee_payer buyer_and_merchant): that part inside the fee, deducted from the invoice. The invoice is merchant_atomic plus it; the customer's own fee is the fee less it." }
         native_fee_terms:
           type: object
           additionalProperties: false
@@ -471,9 +474,10 @@ components:
             merchant_id: { type: string }
             mode: { type: string, enum: [test, live] }
             version: { type: string }
-            fee_payer: { type: string, enum: [buyer, merchant] }
+            fee_payer: { type: string, enum: [buyer, merchant, buyer_and_merchant] }
             bps: { type: integer, minimum: 0, maximum: 10000 }
             minimum_minor: { type: integer, minimum: 0 }
+            merchant_bps: { type: integer, minimum: 1, maximum: 9999, description: "Only with fee_payer buyer_and_merchant: the merchant's part, deducted from the invoice; bps (at least minimum_minor) is the customer's part on top of it." }
         destination_chain_id: { type: integer, minimum: 1 }
         destination_network: { type: string }
         delivery_seconds: { type: integer, minimum: 1 }
@@ -546,6 +550,7 @@ components:
             `total_usd_atomic` stays an estimate.
         chainmore_fee_atomic: { type: string, pattern: '^[0-9]+$' }
         fee_terms_id: { type: string }
+        merchant_fee_atomic: { type: string, pattern: '^[0-9]+$', description: "Only under fee terms with a merchant part (fee_payer buyer_and_merchant): that part inside the fee, deducted from the invoice. The invoice is merchant_atomic plus it; the customer's own fee is the fee less it." }
         forward_fee_terms:
           type: object
           additionalProperties: false
@@ -556,13 +561,14 @@ components:
             exactly these terms.
           required: [version, merchant_id, mode, raw_agreement_id, bps, asset, fee_payer, fee_basis]
           properties:
-            version: { type: string, const: cctp.forward.fee-terms.v1 }
+            version: { type: string, enum: [cctp.forward.fee-terms.v1, cctp.forward.fee-terms.v2] }
             merchant_id: { type: string }
             mode: { type: string, enum: [test, live] }
             raw_agreement_id: { type: string }
             bps: { type: integer, minimum: 0, maximum: 10000 }
+            merchant_bps: { type: integer, minimum: 1, maximum: 9999, description: "v2 only: the merchant's part, deducted from what is delivered; bps is the customer's part on top of the invoice." }
             asset: { type: string, const: USDC }
-            fee_payer: { type: string, const: buyer }
+            fee_payer: { type: string, enum: [buyer, buyer_and_merchant], description: "buyer under v1, buyer_and_merchant under v2." }
             fee_basis: { type: string, const: invoice }
         delivery_unconfirmed: { type: boolean, const: true }
         delivery_estimate_seconds:
@@ -2240,6 +2246,7 @@ components:
         gross_amount_atomic:    { type: string, pattern: '^[0-9]+$', description: "Debited from the payer." }
         merchant_amount_atomic: { type: string, pattern: '^[0-9]+$', description: "Received by the merchant." }
         chainmore_fee_atomic:   { type: string, pattern: '^[0-9]+$' }
+        merchant_fee_atomic:    { type: string, pattern: '^[0-9]+$', description: "The part of chainmore_fee_atomic the merchant bore, deducted from the invoice (requested amount less merchant_amount_atomic). The customer paid the rest on top. Absent when the customer paid the whole fee." }
         circle_fee_atomic:      { type: string, pattern: '^[0-9]+$', description: "CCTP fee on the forward rail; 0 on native." }
         credit_chain_id:        { type: string, pattern: '^eip155:[1-9][0-9]*$', description: "Network of the transaction that credited the merchant." }
         credit_tx_hash:         { type: string, description: "Stored transaction of the same matched evidence that credited merchant_amount_atomic: the native pay transfer, or the final forward mint on the destination network (not the source burn in settlement_legs, and independent of an early funds confirmation)." }
@@ -2317,6 +2324,7 @@ components:
         merchant_amount_atomic: { type: string, description: "Native rail, on the leg that moved the money: integer as a decimal string, net to the merchant in the token's own base units. Read it with native_amount_unit." }
         fee_atomic:             { type: string, description: "Native rail, as merchant_amount_atomic: the fee." }
         gross_amount_atomic:    { type: string, description: "Native rail, as merchant_amount_atomic: debited from the payer." }
+        merchant_fee_atomic:    { type: string, description: "Native rail, as merchant_amount_atomic: the part of fee_atomic the merchant bore, deducted from the invoice. Absent when the payer paid the whole fee." }
         native_amount_unit:
           type: object
           description: |
@@ -6760,10 +6768,11 @@ webhooks:
           description: Delivery acknowledged.
   payment.funds_confirmed:
     post:
-      summary: Sent when a cross-chain payment's full destination transfer has reached the stated depth, before finality.
+      summary: Sent when a payment's full transfer to the merchant has reached the stated depth, before finality.
       description: |
-        For CCTP Forward (USDC) to Arbitrum or Base, or USDT0 from
-        Ethereum to Arbitrum, the payment's full amount is observed at the merchant's
+        For CCTP Forward (USDC) to Arbitrum or Base, USDT0 from Ethereum to
+        Arbitrum, or a USDT or USDC payment made on Arbitrum itself, the
+        payment's full amount is observed at the merchant's
         address on the canonical destination chain, and the batch holding
         that block has 12 Ethereum blocks on top. For CCTP Fast only, the
         source burn must also be under the source chain's safe tag.

@@ -46,11 +46,13 @@
 <li><strong>Account.</strong> You need a ChainMore account. <a href="https://app.chainmore.io/get-started">Request access</a>; we review every company and reply by email. You start in test mode.</li>
 <li><strong>Two addresses.</strong> The API is <code>https://api.chainmore.io</code>. The checkout page is <code>https://checkout.chainmore.io</code>.</li>
 <li><strong>API key.</strong> Create one in the dashboard under <a href="https://app.chainmore.io/keys">API keys</a>. A key that starts with <code>cm_test_</code> works in test mode, <code>cm_live_</code> in live mode. It is shown once. Keep it on your server only, never in a browser or app.</li>
-<li><strong>Where your money goes.</strong> Add a receiving target in the dashboard under <a href="https://app.chainmore.io/payouts">Receiving targets</a>. Without one, the checkout has no payment method to offer. Targets belong to a mode: the ones you add in test mode do not apply in live mode.</li>
+<li><strong>Where your money goes.</strong> Add a receiving target in the dashboard under <a href="https://app.chainmore.io/payouts">Receiving targets</a>. Only the account owner or an admin can add one; the finance role can view them. Without a target, the checkout has no payment method to offer. Targets belong to a mode: the ones you add in test mode do not apply in live mode.</li>
+<li><strong>What your customers can pay with.</strong> A USD link offers USDT and USDC. Today that is USDC on Ethereum, Arbitrum, Base and Polygon, and USDT on Ethereum, Arbitrum, BNB Chain and TRON. The checkout offers a network where you have a receiving target for that token, or from where the money can be sent on to one of your targets. Which of these apply depends on your targets and your agreement with us. Card payments exist only for EUR links in test mode; a live EUR link has no payment method.</li>
+<li><strong>Fees.</strong> ChainMore's fee depends on the payment method and your agreement with us. Part of it can be added on top of the invoice for the customer, part can be deducted from what you receive. Both are taken once, in the same payment. The checkout shows the customer the total before they confirm. The customer's wallet pays the network fee.</li>
 </ul>
 <p class="note"><strong>Test mode uses real money for stablecoins.</strong> USDT and USDC payments in test mode run on the real networks. Test with small amounts and a wallet you control.</p>
 </section>
-<section id="quickstart"><h2><span class="step">1</span>Create a payment</h2><div class="endpoint"><span class="method">POST</span><code>/v1/checkout/links</code></div><p>When a customer wants to pay, your server sends this request. <code>amount_minor</code> is the amount in cents: 1000 means USD 10.00.</p>
+<section id="quickstart"><h2><span class="step">1</span>Create a payment</h2><div class="endpoint"><span class="method">POST</span><code>/v1/checkout/links</code></div><p>When a customer wants to pay, your server sends this request. <code>amount_minor</code> is the amount in cents: 1000 means USD 10.00. For a stablecoin payment, the link today asks for the same number of tokens before fees: USD 10.00 asks for 10 USDT or 10 USDC, plus any fee the customer pays. That is the token amount requested, not an exchange rate.</p>
 <pre aria-label="Create checkout link example"><code>curl https://api.chainmore.io/v1/checkout/links \
   --request POST \
   --header "Authorization: Bearer ${CHAINMORE_API_KEY}" \
@@ -63,68 +65,77 @@
     "return_url": "https://shop.example/thanks"
   }'</code></pre>
 <ul>
-<li><code>Idempotency-Key</code> is required on every POST, PUT, PATCH and DELETE. Use one key per order. If a response gets lost, send the same request with the same key: you get the same payment back instead of a second one.</li>
-<li><code>merchant_order_id</code> is your own order number. It comes back in every webhook, so you can match the payment to the order. Allowed: letters, digits and <code>. _ : -</code>, up to 128 characters.</li>
+<li><code>Idempotency-Key</code> is required on every POST, PUT, PATCH and DELETE. Use one key per order. If a response gets lost, send the same request with the same key: you get the same link back instead of a second one. The repeat does not contain the checkout token, so store the token from the first response before you send the customer to the checkout.</li>
+<li><code>merchant_order_id</code> is your own order number. Send it with every link: it keeps an order from being paid twice, even if you create more than one link for it. Use a new number for each order. It is unique per account across test and live mode, so a number you used in test mode cannot be paid in live mode. It comes back in every webhook, so you can match the payment to the order. Allowed: letters, digits and <code>. _ : -</code>, up to 128 characters.</li>
 <li><code>return_url</code> is optional and must start with <code>https://</code>. After a successful payment the checkout shows a button back to this address.</li>
 </ul>
-<p>The response contains <code>checkout_link_id</code>, <code>checkout_token</code> and <code>available_payment_methods</code>. Save the link ID with your order. The token comes only in the first response, not when you repeat the request. A link stays open for 24 hours.</p></section>
-<section id="open-checkout"><h2><span class="step">2</span>Send the customer to the checkout</h2><p>Redirect the customer to this address, with the token URL-encoded:</p><pre><code>https://checkout.chainmore.io/checkout/?token=&lt;checkout_token&gt;</code></pre><p>The checkout does the rest: it shows the payment methods for this link and guides the customer through the wallet or card steps. Open it as a full page or in a new tab. It does not work inside an iframe on your site. Never put your API key in this URL.</p></section>
+<p>The response contains <code>checkout_link_id</code>, <code>checkout_token</code> and <code>available_payment_methods</code>. Save the link ID with your order. The token comes only in the first response. A link stays open for 24 hours.</p>
+<p>If that first response is lost, the same request with the same key gives you the same link back with its <code>checkout_link_id</code>, but without a token and with an empty <code>available_payment_methods</code>. A repeat does not recover a lost token, a token cannot be sent again, and a link cannot be cancelled. Check the link with <code>GET /v1/checkout/links/{id}</code>:</p>
+<ul>
+<li>If it has a <code>payment_id</code>, follow that payment and match it against your order before you do anything else.</li>
+<li>Create a new link, with a new <code>Idempotency-Key</code> and the same <code>merchant_order_id</code>, only if you know the old token never reached the customer, or if the old link's <code>expires_at</code> has passed and it has no <code>payment_id</code>. A link that is still <code>open</code> is not enough: the customer may already have it. If you are not sure, wait until it expires.</li>
+</ul></section>
+<section id="open-checkout"><h2><span class="step">2</span>Send the customer to the checkout</h2><p>Redirect the customer to this address, with the token URL-encoded:</p><pre><code>https://checkout.chainmore.io/checkout/?token=&lt;checkout_token&gt;</code></pre><p>The checkout does the rest: it shows the payment methods for this link and guides the customer through the wallet steps. Open it as a full page or in a new tab. It does not work inside an iframe on your site. Never put your API key in this URL.</p></section>
 <section id="webhooks"><h2><span class="step">3</span>Receive the result</h2>
-<p>Add your endpoint in the dashboard under <a href="https://app.chainmore.io/webhooks">Webhooks</a>. It must be a public <code>https</code> address. You get a signing secret that starts with <code>whsec_</code>; it is shown once. Endpoints and keys are managed in the dashboard only. An API key gets <code>401 wrong_auth_kind</code> on those routes. Endpoints belong to a mode as well: a test payment goes to a test endpoint, a live payment to a live endpoint.</p>
+<p>Add your endpoint in the dashboard under <a href="https://app.chainmore.io/webhooks">Webhooks</a>. It must be a public <code>https</code> address. You get a signing secret that starts with <code>whsec_</code>; it is shown once. Endpoints and keys are managed in the dashboard only. An API key gets <code>401 wrong_auth_kind</code> there; only sending a test event also works with an API key. Endpoints belong to a mode as well: a test payment goes to a test endpoint, a live payment to a live endpoint.</p>
 <p>When a payment has arrived, we send a <code>POST</code> to your endpoint. The JSON body has <code>event_type</code>, <code>event_id</code>, <code>merchant_order_id</code> and the payment ID.</p>
-<p>Ship the order on <code>payment.settled</code>. It comes for every way to pay: USDT, USDC on the same network or across networks, and card. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
-<p>Want to credit a balance earlier? On cross-chain payments to Arbitrum or Base, <code>payment.funds_confirmed</code> comes before finality. Your endpoint gets it only if its events list names it. An empty list means <code>payment.settled</code> only and a list replaces that, so use <code>payment.settled, payment.funds_confirmed</code>. A payment may have no such event, and it promises no time. <code>payment.funds_confirmation_revoked</code> takes the credit back and needs no entry of its own. Hold shipping and withdrawals until <code>payment.settled</code>. That risk stays with you.</p>
+<p>Ship the order on <code>payment.settled</code>. It comes for every way to pay: USDT and USDC, on the same network or across networks. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
+<p>Want to credit a balance earlier? On payments that arrive on Arbitrum, and on payments sent to Base from another network, <code>payment.funds_confirmed</code> can come before finality. Your endpoint gets it only if its events list names it. Event names are not checked when you save the endpoint: a misspelled name receives nothing. An empty list means <code>payment.settled</code> only and a list replaces that, so use <code>payment.settled, payment.funds_confirmed</code>. A payment may have no such event, and it promises no time. <code>payment.funds_confirmation_revoked</code> takes the credit back and needs no entry of its own. Hold shipping and withdrawals until <code>payment.settled</code>. That risk stays with you.</p>
 <p>Check every message before you trust it:</p>
 <ul>
 <li><code>X-ChainMore-Timestamp</code> is the send time in RFC 3339 UTC, for example <code>2026-10-07T08:00:00Z</code>. Reject it if it is more than 5 minutes away from your clock.</li>
 <li><code>X-ChainMore-Signature</code> is a lowercase hex HMAC-SHA256. The key is your whole <code>whsec_…</code> secret as text. The signed message is the timestamp, a dot, and the raw request body. Compare in constant time.</li>
-<li>While you rotate the secret, we also send <code>X-ChainMore-Signature-Previous</code>, signed with the old secret, for 14 days.</li>
+<li>When you rotate the secret in the dashboard, the old one stays valid for 14 days. New messages then also carry <code>X-ChainMore-Signature-Previous</code>, signed with the old secret. Messages queued before the rotation, and their retries, carry only <code>X-ChainMore-Signature</code> with the old secret. Keep the old secret on your server for these 14 days and accept a message when either secret matches either header.</li>
 </ul>
 <pre aria-label="Webhook verification example"><code>// Node.js with Express. Read the body raw, not as parsed JSON.
 import crypto from "node:crypto";
 
+// The whole whsec_… values: the current secret and, for 14 days after a rotation, the old one.
+const secrets = [process.env.CHAINMORE_WEBHOOK_SECRET, process.env.CHAINMORE_WEBHOOK_SECRET_PREVIOUS].filter(Boolean);
+
+function signedWith(secret, timestamp, body, signature) {
+  const want = Buffer.from(crypto.createHmac("sha256", secret).update(timestamp + ".").update(body).digest("hex"));
+  const got = Buffer.from(signature);
+  return got.length === want.length &amp;&amp; crypto.timingSafeEqual(got, want);
+}
+
 app.post("/chainmore/webhook", express.raw({ type: "application/json" }), (req, res) =&gt; {
   const timestamp = req.get("X-ChainMore-Timestamp") ?? "";
-  const signature = req.get("X-ChainMore-Signature") ?? "";
-  const expected = crypto
-    .createHmac("sha256", process.env.CHAINMORE_WEBHOOK_SECRET) // the whole whsec_… value
-    .update(timestamp + ".")
-    .update(req.body)
-    .digest("hex");
-  const got = Buffer.from(signature);
-  const want = Buffer.from(expected);
-  const valid = got.length === want.length &amp;&amp; crypto.timingSafeEqual(got, want);
+  const signatures = [req.get("X-ChainMore-Signature"), req.get("X-ChainMore-Signature-Previous")].filter(Boolean);
+  const valid = secrets.some((secret) =&gt; signatures.some((signature) =&gt; signedWith(secret, timestamp, req.body, signature)));
   const fresh = Math.abs(Date.now() - Date.parse(timestamp)) &lt; 5 * 60 * 1000;
   if (!valid || !fresh) return res.sendStatus(400);
 
   const event = JSON.parse(req.body);
   if (event.test_event) return res.sendStatus(200); // "Send test event": nothing is paid
   if (event.event_type === "payment.settled") {
-    markOrderPaid(event.merchant_order_id, event.event_id);
+    markOrderPaid(event.merchant_order_id, event.event_id); // safe to run twice
   }
   res.sendStatus(200);
 });</code></pre>
 <ul>
-<li>Answer with a 2xx status within 10 seconds. Any other answer, 4xx included, counts as failed. We try again after 1 second, 5 seconds, 30 seconds, 5 minutes and 30 minutes. After that the delivery stays failed and you can send it again in the dashboard under Deliveries.</li>
+<li>Answer with a 2xx status within 10 seconds. Any other answer, 4xx included, counts as failed. Redirects are not followed: a 3xx counts as failed too. We try again after 1 second, 5 seconds, 30 seconds, 5 minutes and 30 minutes. After that the delivery stays failed and you can send it again in the dashboard under Deliveries.</li>
 <li>The same event can reach you more than once. Process each <code>event_id</code> once, and make "mark order paid" safe to run twice: a resend from the dashboard gets a new <code>event_id</code>.</li>
+<li>Events can arrive in any order, for example <code>payment.settled</code> before <code>payment.funds_confirmed</code>. Keep one state per <code>payment_id</code> and credit it once.</li>
 <li>Each event goes to one endpoint of its mode. An endpoint that lists the event comes before one with an empty list; among equals, the oldest one gets it.</li>
 <li>"Send test event" in the dashboard sends a signed <code>payment.settled</code> with <code>"test_event": true</code> and made-up IDs. Answer 2xx and do not mark anything paid or ship anything for it.</li>
 <li>Ship the order only after this message. A customer coming back to your site, or a transaction hash, does not prove the payment.</li>
 </ul></section>
-<section id="check-status"><h2><span class="step">4</span>Check the status yourself</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>You can also ask for the state of a link. <code>bound</code> means the customer chose a payment method. It does not mean the order is paid. Follow the <code>payment_id</code> in the response:</p><ul><li><code>GET /v1/payments/{id}</code>: paid when <code>public_status</code> is <code>completed</code>.</li><li><code>GET /v1/payments/{id}/receipt</code>: after <code>payment.settled</code>, the receipt to reconcile with: the on-chain steps with their transactions, and what was debited, charged as fee and received where that is confirmed. <code>requested_amount_minor</code> and <code>requested_currency</code> there are what the payment asked for: for USDT and USDC the token amount in units of six decimals, for example <code>500000</code> USDT for 0.50 USDT. They are never a received amount.</li></ul></section>
+<section id="check-status"><h2><span class="step">4</span>Check the status yourself</h2><div class="endpoint"><span class="method">GET</span><code>/v1/checkout/links/{id}</code></div><p>You can also ask for the state of a link. <code>bound</code> means the customer chose a payment method. It does not mean the order is paid. Follow the <code>payment_id</code> in the response:</p><ul><li><code>GET /v1/payments/{id}</code>: paid when the <code>public_status</code> field under <code>payment</code> is <code>completed</code>.</li><li><code>GET /v1/payments/{id}/receipt</code>: after <code>payment.settled</code>, the receipt to reconcile with: the on-chain steps with their transactions, and what was debited, charged as fee and received where that is confirmed. <code>requested_amount_minor</code> and <code>requested_currency</code> there are what the payment asked for: for USDT and USDC the token amount in units of six decimals, for example <code>500000</code> USDT for 0.50 USDT. They are never a received amount. The summary <code>core_receipt</code> covers USDC payments only; where you bore part of the fee, its <code>merchant_fee_atomic</code> names that part. USDT payments, including those sent from Ethereum to Arbitrum, have no such summary: the receipt lists the confirmed steps, each in the unit it names, for example 18 decimals on BNB Chain in <code>native_amount_unit</code>.</li></ul></section>
 <section id="go-live"><h2><span class="step">5</span>Go live</h2>
 <ol>
 <li>Ask the account owner or an admin to submit the business profile under <a href="https://app.chainmore.io/onboarding">Onboarding</a>. Check missing information and review status there.</li>
 <li>ChainMore reviews your account and approves live access separately if the review is successful. A test payment, submitted profile or API key does not grant live access.</li>
 <li>Only after ChainMore has enabled live access and the dashboard offers live mode, deliberately switch to live mode. Test settings do not carry over. In live mode, add your receiving targets and your webhook endpoint again; the live endpoint gets its own <code>whsec_</code> secret. Then create a live key under <a href="https://app.chainmore.io/keys">API keys</a> (it starts with <code>cm_live_</code>) and replace the test key and the webhook secret on your server.</li>
 </ol>
+<p>Live accounts have amount limits agreed with ChainMore. They are checked when the customer pays, not when you create the link: a link above them is created, but the checkout cannot take the payment.</p>
 <p>For help, email <a href="mailto:support@chainmore.io">support@chainmore.io</a>.</p></section>
 <section id="retries"><h2>Errors and retries</h2><p>Every error comes as <code>application/problem+json</code> with a stable <code>code</code>, a <code>docs_url</code> that explains it, and a <code>correlation_id</code>. Match on <code>code</code>, not on the text. Send us the <code>correlation_id</code> when you need help.</p>
 <div class="tablewrap"><table><thead><tr><th>You see</th><th>Meaning</th><th>Fix</th></tr></thead><tbody>
 <tr><td><code>400 idempotency_required</code></td><td>The header is missing.</td><td>Send <code>Idempotency-Key</code>, one value per order.</td></tr>
 <tr><td><code>401 unauthorized</code></td><td>The key is missing or wrong.</td><td>Check <code>Authorization: Bearer cm_test_…</code>.</td></tr>
 <tr><td><code>401 wrong_auth_kind</code></td><td>This route is for the dashboard only.</td><td>Manage keys and webhooks in the dashboard.</td></tr>
-<tr><td>No payment method in the checkout</td><td>No receiving target in this mode yet.</td><td>Add one under Receiving targets.</td></tr>
+<tr><td>No payment method in the checkout</td><td>No receiving target in this mode yet, or an EUR link in live mode.</td><td>Add one under Receiving targets. Use USD for live payments.</td></tr>
 <tr><td>Checkout page shows 404</td><td>Wrong host.</td><td>The checkout lives on <code>checkout.chainmore.io</code>, not on the API host.</td></tr>
 <tr><td>Signature never matches</td><td>The body was parsed before the check.</td><td>Read the raw body and use the whole <code>whsec_…</code> value as key.</td></tr>
 <tr><td><code>429 rate_limited</code></td><td>Too many requests.</td><td>Wait a moment, then retry with the same <code>Idempotency-Key</code>.</td></tr>
