@@ -81,7 +81,7 @@ test("ships the canonical knowledge and complete comparison criteria in the real
   assert.ok(MEMBER_PROMPT.includes(integration));
   assert.ok(MEMBER_PROMPT.endsWith(dashboard));
   // Dashboard help is for signed-in merchants only, like the integration knowledge.
-  for (const detail of ["Payout targets / Auszahlungsziele", "Invite a teammate", "Export CSV"]) {
+  for (const detail of ["Receiving targets / Empfangsziele", "Invite a teammate", "Export CSV"]) {
     assert.ok(!SYSTEM_PROMPT.includes(detail), detail);
     assert.ok(MEMBER_PROMPT.includes(detail), detail);
   }

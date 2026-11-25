@@ -12,6 +12,7 @@ import {
 import { guardReply } from "./concierge-guard.ts";
 import { CONCIERGE_INTEGRATION_KNOWLEDGE } from "./concierge-integration-knowledge.ts";
 import { CONCIERGE_DASHBOARD_KNOWLEDGE } from "./concierge-dashboard-knowledge.ts";
+import { MERCHANT_DASHBOARD_ROUTE_CONTRACTS } from "../../../../frontend/merchant-dashboard/src/lib/dashboard-readiness.ts";
 
 const knowledgeRoot = new URL("../../../../docs/operations/openai-knowledge-upload/", import.meta.url);
 const integrationKnowledge = readFileSync(new URL("chainmore-concierge-integration-knowledge.md", knowledgeRoot), "utf8");
@@ -38,6 +39,78 @@ test("the dashboard knowledge carries the merchant operations guide unchanged", 
   for (const code of ["merchant_first_login_required", "merchant_acceptance_document_changed", "merchant_acceptance_forbidden", "merchant_acceptance_unavailable", "dashboard_mode_changed", "dashboard_context_changed", "dashboard_mode_required"]) {
     assert.ok(CONCIERGE_DASHBOARD_KNOWLEDGE.includes(code), code);
   }
+});
+
+const dashboardMessages = Object.fromEntries(["de", "en"].map((locale) => [
+  locale,
+  JSON.parse(readFileSync(new URL(`../../../../frontend/merchant-dashboard/messages/${locale}.json`, import.meta.url), "utf8")),
+]));
+
+const conciergeTitleKeys = ["integration.liveCaps.title", "payments.accountingExport.title", "payouts.title"];
+const conciergeActionKeys = [
+  "onboarding.accountProfile.submit",
+  "integration.liveCaps.actions.retry",
+  "payments.filters.apply",
+  "payments.accountingExport.download",
+  "paymentLinks.button",
+  "reconciliation.search.submit",
+  "keys.actions.create",
+  "payouts.actions.add",
+  "payouts.actions.edit",
+  "payouts.dialog.submitConfirm",
+  "webhooks.actions.create",
+  "webhooks.actions.sendTestEvent",
+  "billing.apply",
+];
+
+function navigationRow(labelKey) {
+  const en = dashboardMessages.en.nav[labelKey];
+  const de = dashboardMessages.de.nav[labelKey];
+  assert.ok(en && de, `missing navigation translation: ${labelKey}`);
+  return `| ${en} / ${de} |`;
+}
+
+function quotedDashboardLabel(locale, key) {
+  const label = key.split(".").reduce((value, part) => value?.[part], dashboardMessages[locale]);
+  assert.ok(typeof label === "string" && label.length > 0, `missing dashboard translation: ${locale} ${key}`);
+  return `"${label}"`;
+}
+
+function verifyDashboardLabels(knowledge) {
+  for (const route of MERCHANT_DASHBOARD_ROUTE_CONTRACTS.filter((route) => route.showInNavigation)) {
+    assert.ok(knowledge.includes(navigationRow(route.labelKey)), `missing Concierge navigation: ${route.labelKey}`);
+  }
+  for (const locale of ["de", "en"]) {
+    for (const key of conciergeTitleKeys) {
+      assert.ok(knowledge.includes(quotedDashboardLabel(locale, key)), `missing Concierge title: ${locale} ${key}`);
+    }
+    for (const key of conciergeActionKeys) {
+      assert.ok(knowledge.includes(quotedDashboardLabel(locale, key)), `missing Concierge action: ${locale} ${key}`);
+    }
+  }
+}
+
+test("the Concierge dashboard knowledge carries visible navigation, titles and primary actions", () => {
+  verifyDashboardLabels(CONCIERGE_DASHBOARD_KNOWLEDGE);
+});
+
+test("omitting a visible page, title or primary action fails the Concierge knowledge check", () => {
+  assert.throws(
+    () => verifyDashboardLabels(CONCIERGE_DASHBOARD_KNOWLEDGE.replace(navigationRow("payouts"), "")),
+    /missing Concierge navigation: payouts/,
+  );
+  assert.throws(
+    () => verifyDashboardLabels(CONCIERGE_DASHBOARD_KNOWLEDGE.replaceAll(quotedDashboardLabel("en", "payments.accountingExport.title"), "")),
+    /missing Concierge title: en payments\.accountingExport\.title/,
+  );
+  assert.throws(
+    () => verifyDashboardLabels(CONCIERGE_DASHBOARD_KNOWLEDGE.replaceAll(quotedDashboardLabel("de", "payments.accountingExport.download"), "")),
+    /missing Concierge action: de payments\.accountingExport\.download/,
+  );
+  assert.throws(
+    () => verifyDashboardLabels(CONCIERGE_DASHBOARD_KNOWLEDGE.replaceAll(quotedDashboardLabel("de", "paymentLinks.button"), "")),
+    /missing Concierge action: de paymentLinks\.button/,
+  );
 });
 
 test("the documented Node checkout preserves the order and stops a tokenless replay", async () => {
