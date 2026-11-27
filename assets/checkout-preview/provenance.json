@@ -81,8 +81,8 @@
   ],
   "sourceSha256": {
     "checkout.html": "e1a64a532a7c04ae1847774c7ae920f245530843369c13ebf8b186851ec5838a",
-    "checkout.js": "b66433418cc9114d04505304d6a6e182995f13bd670b45ec10b9255c55434b43",
-    "checkout.css": "145d345bf6ec8ece7a993e6a5e3bfcf5cfc9a0b725b02b824c27225b6b825481",
+    "checkout.js": "9842b62d771f24d004dadb70cfe6e4030c8fc0f38cf10bd2e82df13032b10572",
+    "checkout.css": "5666fe940789f8225df259684a0e1f016cba79b3197180b26f158ed8b71229ad",
     "checkout-tokens.css": "e5934b1318f64b524ea428875d9ea87b30d3b0fc9882ba39758a1c397bef637a",
     "inter-latin.woff2": "dd8a4575be9806105ac3decd02805cd2782fe7c05abb02c582316bc436ce03ae",
     "inter-latin-ext.woff2": "8bc9dee39deab5dc6599980e563c5023053387e4c391f5c419543e493e024c39"
@@ -103,8 +103,8 @@
     "confirming-desktop.webp": "0d973897df01d48982d257229c0beef6353114f1bc662923f232090aed8c90de",
     "confirming-mobile.png": "f7dbbc821b86b98464383921ad27747d63cbb809aad08783c055edaee8366d7a",
     "confirming-mobile.webp": "2dfeaebfd742c507f5d7375e63594caf480be1da4203d574997e4a15859152f3",
-    "completed-desktop.png": "3900f3bdca16086642edef1f3e89076cceb646785c5e9559b19d9e7d1f29422a",
-    "completed-mobile.png": "f3e6e8f588c9e16c20e715fe436e1f295860b4bd42a85644bbc70cb8225d9e99",
+    "completed-desktop.png": "0de87aff5570adf003caf94f6a29da6cc5fd23a9101363d2a6d2db7e61547221",
+    "completed-mobile.png": "3ead2eaacbb8f1657f237d7e2f383717cf6e25d54fc90d1fcda34b007c97da03",
     "failed-desktop.png": "b8a0cdcad36ce50f56255233a61a80613aea2991289465f72a3a8d3f8ab22d53",
     "failed-mobile.png": "86339faeb488c1328afd844a8d520d121efdfbb7735aef00d4b025327b7ab616",
     "expired-desktop.png": "a298c1ce8ad13f7db62d02a1631ef18f27ac0a6516a8c5850b2260d679dfd99e",
