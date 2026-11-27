@@ -1,9 +1,9 @@
 {
   "renderer": "internal/hostedcheckout/assets",
   "fixture": "scripts/preview-hostedcheckout-design.mjs",
-  "fixtureSha256": "fd10330c0dc092eed30f263434478208e22119fc5695c71245576a5c063fa50c",
+  "fixtureSha256": "8413b3b3e409959d96c78b96613d4fe5f4f78a7e1c857c52ca84709cac905188",
   "presentationFixture": "tools/checkout-marketing-fixture.mjs",
-  "presentationFixtureSha256": "6aaa8248286659f1976fbaf26cbe19daa55e7f2ea4f38dce5177d97884e0c21e",
+  "presentationFixtureSha256": "c2c14cf7cb653b684e39d84acd851e1ddfe997caec5dd114a528748f65e323a8",
   "presentation": "Proposed unified Stablecoin entry; synthetic merchant offers all displayed methods. Not a change to production availability or asset selection.",
   "checks": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "state": "confirming",
-      "renderedStateCopy": "You're done",
+      "renderedStateCopy": "Payment is being confirmed",
       "unavailableMethods": 0,
       "methods": [],
       "stablecoinEntries": 0,
@@ -80,29 +80,31 @@
     }
   ],
   "sourceSha256": {
-    "checkout.html": "aba409c1dd49418230edb843f4ea89b0a226e53ed652ef371ac2aa7d4f580d95",
-    "checkout.js": "677e3ab563b6e06c9f32e8f114f0a562b01154bc7902677a1b3f71bc95aaa6b2",
-    "checkout.css": "f02731e32faa37dfe3ed924148a75e9491d364e5580452e7cfb82fc8166e6b88",
-    "checkout-tokens.css": "5d53be7317826bc539853a49d463e5b1a15614052030a8b02097699349c20e98"
+    "checkout.html": "e1a64a532a7c04ae1847774c7ae920f245530843369c13ebf8b186851ec5838a",
+    "checkout.js": "395450b4e438e4f4cffe47cd9e0e450cca6ae9317160368928e657f217b111d9",
+    "checkout.css": "8a9f767fc47132e5f4ef26a9ab007c19a980ee00078689c4be05df56861028f5",
+    "checkout-tokens.css": "e5934b1318f64b524ea428875d9ea87b30d3b0fc9882ba39758a1c397bef637a",
+    "inter-latin.woff2": "dd8a4575be9806105ac3decd02805cd2782fe7c05abb02c582316bc436ce03ae",
+    "inter-latin-ext.woff2": "8bc9dee39deab5dc6599980e563c5023053387e4c391f5c419543e493e024c39"
   },
   "imageSha256": {
-    "wallet-desktop.png": "f7d07bd51769a5c0f7f3ca22fa0cd6683b336567e92781ffd58d524072ccc816",
-    "wallet-mobile.png": "50b432bedada1c6d495c9bcfa98deebe5a03ab98973b5759c1cee4d1a0c156ee",
-    "qr-desktop.png": "5ae1fa2b0015703eadba1b17bcc304c65ae372f20236c14d21a66aac7a93e102",
-    "qr-mobile.png": "932c7ee90d575bc0178265e816c6e3676852228b073fcafa91dfaad7594846ed",
-    "approve-desktop.png": "74db08808342f541a2c3910c395376ac4886c8b031b6c71cc4e4e42d3a6dc5cc",
-    "approve-mobile.png": "9ad0ea424d20a70142326f679f9643f7f41acef63fe4497f8d16d712133aba14",
-    "payment_review-desktop.png": "29b7fd46bfc67d70233ac12be24df60413b853a4850b0aa148d5f5d5ce1de36c",
-    "payment_review-mobile.png": "64f1f097bae1aca1f8da0a5a93a1db1de57089420a4da911464a9950257bd9b4",
-    "confirming-desktop.png": "ed2ac66b649286891ec66a58163ac3b6097b23496511f1e88fcc0ec4e5c03d16",
-    "confirming-mobile.png": "13f2acef19d5636f37fe72c6dc709ba229775ec3b1f6afb273e393712637556d",
-    "completed-desktop.png": "c577182cb1bd69ac0c3b8a84f3aae1434203a34c089123b53db51e7fc47fc9e5",
-    "completed-mobile.png": "ef81e3e13cb3c27a60589c1a4f1db9a38de26f076b4f72cf666b82be0a989acc",
-    "failed-desktop.png": "4fc1ff5f982864ec29ba9803ceb01ee375deb13d528f2fe0029c30e13d2a6a5d",
-    "failed-mobile.png": "6da9dca61a56579bb98945d4e82fcd393c22b0e19c297c4338682d14a8db476b",
-    "expired-desktop.png": "ca29eda95dc0895bcb8eede0ff13c1158269727d9d2febacb253e4ed37a844bf",
-    "expired-mobile.png": "13c91dae0bd66309594d49ee0504dec2c15cf31834b986ab98536ef6198cc92d",
-    "website-qr.svg": "ec2bd43a5a5c970f2428f09afc08346a9212a4c0733aa2ff6fd6f1d6d95027fe"
+    "website-qr.svg": "ec2bd43a5a5c970f2428f09afc08346a9212a4c0733aa2ff6fd6f1d6d95027fe",
+    "wallet-desktop.png": "bd4ad722f9689efffe1860ee4af99b2e78b49e197b2d21e55870c9901b12e366",
+    "wallet-mobile.png": "13bddbb03abf05b8ca9e4d7f499a2c86c1a54e8a355ef3ee26bf2de73bb97545",
+    "qr-desktop.png": "f55242ad1e916e3505b3338f9708dba48f554ab364e98a226f63e535b81be78b",
+    "qr-mobile.png": "01bdeb781756b7291686aed82bc36c6efbff336bc4432ab044e4c78daced306f",
+    "approve-desktop.png": "0568f7321799580af1a66f71ca0326c628bd0bbce20ced38507b986906992be4",
+    "approve-mobile.png": "76925fbaffc12dfac2432bbc83848292441e5f920be9b7812bb01889fb99e134",
+    "payment_review-desktop.png": "9ccf13f2b3073d9a1b6fe2463a665aef6fd62f27e58bb79f7a0c14f0bb23c946",
+    "payment_review-mobile.png": "3207c85c020b6e74e4cea7ae39285a5bab632fa33b64d0c8d49d7c3c1b13a06d",
+    "confirming-desktop.png": "1ddb126c2ec578bd8fc7adcdf4a358f217d43460b39ebf52bf9ca472918d7c4f",
+    "confirming-mobile.png": "f0738b25d9a5b6125f64c2939f8a79f7bb7b1ea751ebfd7f1a57649436141b4f",
+    "completed-desktop.png": "5c468bcf2dec38c6cba3276a50aa27e7c54465f745071ccb4937976a818e0338",
+    "completed-mobile.png": "ae9781b14a62e3fc0259f033b210e4443f0736966df1369c8946fb8bad34cb8e",
+    "failed-desktop.png": "37ff0c269bd7f9ce1faf11c056842a9ac06ae95ae6a932c8ff7b0f3407271ab4",
+    "failed-mobile.png": "564b8a397ea15dde4fc91b9c10a95a2ab15e8c3d2530b23a233a1d7c05790bdc",
+    "expired-desktop.png": "1f4ebe9fa436f5bbefdd31cb76dc6562d943faeaa6f515ff796f6cca162368e2",
+    "expired-mobile.png": "fa6fb6a6e4ef504372051da92f42a79ee29db57df52b73df0a7e7a50489f196e"
   },
   "states": [
     "wallet",
