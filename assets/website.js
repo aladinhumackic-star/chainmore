@@ -227,10 +227,14 @@
     expired: "An expired session is explained clearly. No ambiguous success screen."
   };
   let current = "wallet";
+  // Aldin 27.11.: what moves in the checkout moves in the tour too. Moving
+  // states show a looping image; reduced motion keeps the still one.
+  const movingStates = ["approve","confirming"];
   function showCheckoutImage() {
     const path = "/assets/checkout-preview/" + current;
-    previewSource.srcset = path + "-mobile.png";
-    previewImage.src = path + (stage.dataset.size === "mobile" ? "-mobile.png" : "-desktop.png");
+    const ext = !motion.matches && movingStates.includes(current) ? ".webp" : ".png";
+    previewSource.srcset = path + "-mobile" + ext;
+    previewImage.src = path + (stage.dataset.size === "mobile" ? "-mobile" : "-desktop") + ext;
     previewImage.alt = "ChainMore checkout product preview with example data. " + captions[current];
   }
   function selectCheckout(state) {
@@ -243,6 +247,7 @@
     get("checkout-next").textContent = state === "completed" ? "Start again ↻" : "Next step →";
   }
   all("[data-checkout-state]").forEach(button => button.addEventListener("click", () => selectCheckout(button.dataset.checkoutState)));
+  if (motion.addEventListener) motion.addEventListener("change", showCheckoutImage);
   get("checkout-back").addEventListener("click", () => selectCheckout(states[Math.max(0,states.indexOf(current)-1)]));
   get("checkout-next").addEventListener("click", () => selectCheckout(states[(states.indexOf(current)+1)%states.length]));
   all("[data-checkout-size]").forEach(button => button.addEventListener("click", () => {
