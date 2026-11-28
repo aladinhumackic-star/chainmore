@@ -84,12 +84,12 @@
 <p>Ship the order on <code>payment.settled</code>. It comes for every way to pay: USDT and USDC, on the same network or across networks. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
 <p>Want to credit a balance earlier? On payments that arrive on Arbitrum, payments sent to Base from another network, and eligible direct USDC payments on Base, <code>payment.funds_confirmed</code> can come before finality. Your endpoint gets it only if its events list names it. Event names are not checked when you save the endpoint: a misspelled name receives nothing. An empty list means <code>payment.settled</code> only and a list replaces that, so use <code>payment.settled, payment.funds_confirmed</code>. A payment may have no such event, and it promises no time. <code>payment.funds_confirmation_revoked</code> takes the credit back and needs no entry of its own. Hold shipping and withdrawals until <code>payment.settled</code>. That risk stays with you.</p>
 <h3 id="base-usdc-timing">Timing for direct USDC on Base</h3>
+<p>The transfer appears in a Base block. ChainMore sends <code>payment.settled</code> after the network finalizes the transfer. Both measurements below start at the Base transfer block and were observed on 24 November 2026.</p>
 <div class="tablewrap"><table class="payment-timing" aria-labelledby="base-usdc-timing">
-<thead><tr><th scope="col">Stage</th><th scope="col">What it means and when</th></tr></thead>
+<thead><tr><th scope="col">Mode</th><th scope="col">End of measurement</th><th scope="col">Elapsed time</th></tr></thead>
 <tbody>
-<tr><th scope="row">Seen</th><td>ChainMore verifies the transfer to your receiving wallet in a Base block. This is a provisional observation. Time to this stage was not measured.</td></tr>
-<tr><th scope="row">Early confirmation</th><td>For live payments on accounts enabled for early confirmation, an endpoint subscribed to <code>payment.funds_confirmed</code> can receive it once there are at least 12 canonical Ethereum blocks after the block containing the Base batch. Time to this stage was not measured.</td></tr>
-<tr><th scope="row">Settled</th><td>The transfer is final. Use <code>payment.settled</code> to complete the order. In two payments observed on 24 November 2026, the time from the Base transfer block to receipt of this webhook was 16 min 8 sec in test mode and 16 min 29 sec in live mode.</td></tr>
+<tr><th scope="row">Test</th><td>Payment marked Confirmed in the merchant receipt</td><td>16 min 8 sec</td></tr>
+<tr><th scope="row">Live</th><td>Merchant received <code>payment.settled</code></td><td>16 min 29 sec</td></tr>
 </tbody>
 </table></div>
 <p>Check every message before you trust it:</p>
