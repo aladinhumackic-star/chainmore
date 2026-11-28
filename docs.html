@@ -96,7 +96,8 @@
 <ul>
 <li><code>X-ChainMore-Timestamp</code> is the send time in RFC 3339 UTC, for example <code>2026-10-07T08:00:00Z</code>. Reject it if it is more than 5 minutes away from your clock.</li>
 <li><code>X-ChainMore-Signature</code> is a lowercase hex HMAC-SHA256. The key is your whole <code>whsec_…</code> secret as text. The signed message is the timestamp, a dot, and the raw request body. Compare in constant time.</li>
-<li>When you rotate the secret in the dashboard, the old one stays valid for 14 days. New messages then also carry <code>X-ChainMore-Signature-Previous</code>, signed with the old secret. Messages queued before the rotation, and their retries, carry only <code>X-ChainMore-Signature</code> with the old secret. Keep the old secret on your server for these 14 days and accept a message when either secret matches either header.</li>
+<li>When you rotate the secret in the dashboard, original payment notifications and their automatic retries use the current secret in <code>X-ChainMore-Signature</code>, including messages queued before rotation. For 14 days they also carry <code>X-ChainMore-Signature-Previous</code>, signed with the immediately previous secret. Requests already sent can still carry their earlier signature. Install the new secret promptly; during cutover accept either secret against either header. Remove the previous secret after the overlap. Another rotation replaces the previous-secret slot.</li>
+<li>Explicit replays and "Send test event" deliveries keep the secret snapshot from when they were created. A later rotation does not update those queued snapshots. If one no longer verifies after cutover, request that replay or test event again; do not restore a retired secret or create another payment.</li>
 </ul>
 <pre aria-label="Webhook verification example"><code>// Node.js with Express. Read the body raw, not as parsed JSON.
 import crypto from "node:crypto";

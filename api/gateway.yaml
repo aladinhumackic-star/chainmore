@@ -6554,13 +6554,23 @@ paths:
         one-way hash; a lost plaintext means the merchant must call
         this endpoint again.
 
-        Cutover semantics - any payload already signed with the OLD
-        secret that arrives after the rotate commits will fail HMAC
-        verification on the merchant side. Operate rotate around a
-        verifier-update window; the suggested sequence is (1) call
-        rotate-secret, (2) deploy the returned plaintext to the
-        verifier, (3) observe that new deliveries verify, (4) accept
-        the old secret is dead.
+        Rotation retains the immediately previous secret for 14 days.
+        Original payment notifications, including automatic retries of
+        events queued before rotation, use the endpoint's current secret
+        in `X-ChainMore-Signature`. During the overlap they also carry
+        `X-ChainMore-Signature-Previous`, signed with the previous secret.
+        Each delivery attempt has a fresh timestamp. Requests already
+        sent can still carry their earlier signature. Deploy the returned
+        secret promptly and, during cutover, accept either secret against
+        either signature header. After the overlap, remove the previous
+        secret from your verifier; another rotation replaces the previous
+        secret slot.
+
+        Explicit replays and "Send test event" deliveries keep the secret
+        snapshot taken when they are created. A later rotation does not
+        update those queued snapshots. If one no longer verifies after
+        cutover, request that replay or test event again with the current
+        secret; do not restore a retired secret or create another payment.
 
         Mode-scoped: a request in live mode cannot rotate a test-mode
         endpoint's secret, and the reverse. Such a request returns 404.
@@ -6598,17 +6608,17 @@ paths:
         Writes a new `webhook_outbox` row that targets the same endpoint
         and carries the same semantic event, but is:
 
-          - Signed with the CURRENT endpoint signing secret (not the
-            historical secret stored on the original row).
-          - Signed with a fresh `sig_timestamp` (now, RFC3339 UTC).
+          - Queued with the endpoint's current primary signing secret
+            and any active previous-secret overlap at replay creation,
+            rather than the original delivery's secret snapshot.
+          - Signed with a fresh RFC3339 UTC timestamp on every delivery
+            attempt.
           - Stamped with a fresh `event_id` (the UNIQUE idempotency key).
 
-        This signing contract is deliberate: if the merchant rotated the
-        endpoint's signing secret via the rotate-secret endpoint between
-        the original emit and this replay, the merchant's verifier no
-        longer accepts signatures from the old secret. Re-signing with
-        the current secret is the only shape that can verify at the
-        merchant.
+        A later endpoint-secret rotation does not rewrite this replay's
+        stored secret snapshot. If a queued replay no longer verifies
+        after cutover, request a new replay with the current secret;
+        do not restore a retired secret or create another payment.
 
         The merchant correlates a replay back to the original delivery
         via the `replayed_from_event_id` field on the body. That field
