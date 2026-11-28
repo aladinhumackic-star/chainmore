@@ -26,6 +26,7 @@
     pre{overflow:auto;background:#101a2c;color:#e2e8f0;border-radius:10px;padding:22px;font-size:13px;line-height:1.7;tab-size:2}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}p code,li code{background:#eef3f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
     ul{padding-left:20px}li{margin-bottom:8px}.endpoint{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:16px}.method{color:#00758d;font-weight:700}
     .tablewrap{overflow-x:auto;margin:0 0 16px}table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #dce4ee;vertical-align:top}th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+    .payment-timing{min-width:0}.payment-timing code{overflow-wrap:anywhere}
     .reference-title{max-width:1240px;margin:auto;padding:24px}.reference-title p{color:var(--muted);max-width:720px}
     #reference{background:white;border-top:1px solid #dce4ee;scroll-margin-top:72px}#redoc-container{min-height:300px}
     footer{padding:32px 24px;background:var(--navy);color:#94a3b8;font-size:13px}footer>div{max-width:1192px;margin:auto;display:flex;gap:24px;justify-content:space-between;flex-wrap:wrap}footer a{color:#cbd5e1}
@@ -81,7 +82,16 @@
 <p>Add your endpoint in the dashboard under <a href="https://app.chainmore.io/webhooks">Webhooks</a>. It must be a public <code>https</code> address. You get a signing secret that starts with <code>whsec_</code>; it is shown once. Endpoints and keys are managed in the dashboard only. An API key gets <code>401 wrong_auth_kind</code> there; only sending a test event also works with an API key. Endpoints belong to a mode as well: a test payment goes to a test endpoint, a live payment to a live endpoint.</p>
 <p>When a payment has arrived, we send a <code>POST</code> to your endpoint. The JSON body has <code>event_type</code>, <code>event_id</code>, <code>merchant_order_id</code> and the payment ID.</p>
 <p>Ship the order on <code>payment.settled</code>. It comes for every way to pay: USDT and USDC, on the same network or across networks. If you sent no <code>merchant_order_id</code>, the field holds the <code>checkout_link_id</code>.</p>
-<p>Want to credit a balance earlier? On payments that arrive on Arbitrum, and on payments sent to Base from another network, <code>payment.funds_confirmed</code> can come before finality. Your endpoint gets it only if its events list names it. Event names are not checked when you save the endpoint: a misspelled name receives nothing. An empty list means <code>payment.settled</code> only and a list replaces that, so use <code>payment.settled, payment.funds_confirmed</code>. A payment may have no such event, and it promises no time. <code>payment.funds_confirmation_revoked</code> takes the credit back and needs no entry of its own. Hold shipping and withdrawals until <code>payment.settled</code>. That risk stays with you.</p>
+<p>Want to credit a balance earlier? On payments that arrive on Arbitrum, payments sent to Base from another network, and eligible direct USDC payments on Base, <code>payment.funds_confirmed</code> can come before finality. Your endpoint gets it only if its events list names it. Event names are not checked when you save the endpoint: a misspelled name receives nothing. An empty list means <code>payment.settled</code> only and a list replaces that, so use <code>payment.settled, payment.funds_confirmed</code>. A payment may have no such event, and it promises no time. <code>payment.funds_confirmation_revoked</code> takes the credit back and needs no entry of its own. Hold shipping and withdrawals until <code>payment.settled</code>. That risk stays with you.</p>
+<h3 id="base-usdc-timing">Timing for direct USDC on Base</h3>
+<div class="tablewrap"><table class="payment-timing" aria-labelledby="base-usdc-timing">
+<thead><tr><th scope="col">Stage</th><th scope="col">What it means and when</th></tr></thead>
+<tbody>
+<tr><th scope="row">Seen</th><td>ChainMore verifies the transfer to your receiving wallet in a Base block. This is a provisional observation. Time to this stage was not measured.</td></tr>
+<tr><th scope="row">Early confirmation</th><td>For live payments on accounts enabled for early confirmation, an endpoint subscribed to <code>payment.funds_confirmed</code> can receive it once there are at least 12 canonical Ethereum blocks after the block containing the Base batch. Time to this stage was not measured.</td></tr>
+<tr><th scope="row">Settled</th><td>The transfer is final. Use <code>payment.settled</code> to complete the order. In two payments observed on 24 November 2026, the time from the Base transfer block to receipt of this webhook was 16 min 8 sec in test mode and 16 min 29 sec in live mode.</td></tr>
+</tbody>
+</table></div>
 <p>Check every message before you trust it:</p>
 <ul>
 <li><code>X-ChainMore-Timestamp</code> is the send time in RFC 3339 UTC, for example <code>2026-10-07T08:00:00Z</code>. Reject it if it is more than 5 minutes away from your clock.</li>
